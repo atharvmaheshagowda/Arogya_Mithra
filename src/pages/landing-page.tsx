@@ -59,7 +59,7 @@ export function LandingPage() {
   return (
     <div
       ref={containerRef}
-      className="relative min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent overflow-x-clip"
+      className="relative min-h-screen bg-transparent text-foreground antialiased selection:bg-accent/20 selection:text-accent overflow-x-clip"
     >
       {/* 1. Global Reading Scroll Progress Indicator Line */}
       <motion.div
@@ -68,7 +68,7 @@ export function LandingPage() {
       />
 
       {/* 2. Fixed Cinematic Parallax Clinical Sanctuary Background Image */}
-      <div className="fixed inset-0 pointer-events-none -z-20 overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
         <motion.div
           style={{ y: backgroundY, scale: backgroundScale }}
           className="relative w-full h-[125vh] -top-[12vh]"
@@ -77,13 +77,14 @@ export function LandingPage() {
           <img
             src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2600&q=85"
             alt="Aarogya Mithra Modern Clinical Sanctuary"
-            className="size-full object-cover object-center filter brightness-[1.02] contrast-[0.98] dark:brightness-[0.38] dark:contrast-[1.12]"
+            className="size-full object-cover object-center filter brightness-[1.02] contrast-[1.02] dark:brightness-[0.72] dark:contrast-[1.08]"
+            loading="eager"
           />
 
           {/* Luxury Adaptive Overlays: Warm Porcelain in light mode, Deep Atlantic in dark mode */}
-          <div className="absolute inset-0 bg-[#F5F5EF]/72 dark:bg-[#102B3F]/82 backdrop-blur-[1px] transition-colors duration-500" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/45 to-background" />
-          <div className="absolute inset-0 surface-dots opacity-25 dark:opacity-15" />
+          <div className="absolute inset-0 bg-[#F5F5EF]/80 dark:bg-[#102B3F]/75 backdrop-blur-[0.5px] transition-colors duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/90" />
+          <div className="absolute inset-0 surface-dots opacity-20 dark:opacity-10" />
         </motion.div>
       </div>
 
