@@ -1,14 +1,11 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { ApplicationShell } from "@/components/app-shell";
+import { LandingPage } from "@/pages/landing-page";
 import { LoginPage, RegisterPage } from "@/pages/auth-pages";
 import { DashboardPage, ModulePage } from "@/pages/app-pages";
 
-function DevelopmentReady() {
-  return <div className="sr-only">AAROGYA MITHRA development environment ready.</div>;
-}
-
 export const router = createBrowserRouter([
-  { path: "/", element: <DevelopmentReady /> },
+  { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
   {
@@ -26,6 +23,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/" replace />,
   },
 ]);
