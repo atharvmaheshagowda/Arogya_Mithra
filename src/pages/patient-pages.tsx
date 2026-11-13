@@ -1012,7 +1012,7 @@ export function PatientProfilePage() {
             { id: "medications", label: `Medications (${patient.medications.length})`, icon: Pill },
             { id: "labs", label: `Laboratory Reports (${patient.labReports.length})`, icon: FileSpreadsheet },
             { id: "consultations", label: `Consultations (${patient.consultations.length})`, icon: Stethoscope },
-            { id: "timeline", label: `Timeline (${patient.timeline.length})`, icon: Clock },
+            { id: "timeline", label: `Mithra Safety Timeline (${patient.timeline.length})`, icon: Clock },
           ].map((tab) => {
             const Icon = tab.icon;
             const isSelected = activeTab === tab.id;
@@ -1648,21 +1648,26 @@ export function PatientProfilePage() {
       )}
 
       {/* ====================================================================
-          TAB 6: MEDICAL TIMELINE
+          TAB 6: MITHRA SAFETY TIMELINE (CONNECT)
           ==================================================================== */}
       {activeTab === "timeline" && (
         <div className="space-y-6">
-          {/* Timeline Filter Controls */}
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <h3 className="font-display text-lg font-bold text-foreground">
-                Chronological Medical Events
+          {/* Header Banner & Clinical Context */}
+          <div className="flex flex-col justify-between gap-4 rounded-3xl border border-border bg-card p-6 shadow-xs sm:flex-row sm:items-center">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-eyebrow">CONNECT MODULE • LONGITUDINAL EHR</span>
+                <Badge variant="teal" size="sm" dot>ABHA & FHIR Linked</Badge>
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                Mithra Safety Timeline
               </h3>
-              <p className="text-xs text-muted-foreground">
-                Unified cross-encounter longitudinal timeline with preserved provenance.
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                Unified cross-encounter longitudinal journey. Automatically connects OPD visits, laboratory pathology, active prescriptions, and critical allergy hard-stops into a chronological clinical record.
               </p>
             </div>
 
+            {/* Filter Pills */}
             <div className="flex flex-wrap gap-1.5 text-xs">
               {[
                 { id: "all", label: "All Events" },
@@ -1677,10 +1682,10 @@ export function PatientProfilePage() {
                   type="button"
                   onClick={() => setTimelineFilter(f.id)}
                   className={cn(
-                    "rounded-lg px-2.5 py-1 font-medium transition-colors",
+                    "rounded-full px-3 py-1 text-xs font-semibold transition-all",
                     timelineFilter === f.id
-                      ? "bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground font-semibold shadow-xs"
-                      : "bg-muted/40 text-muted-foreground hover:text-foreground",
+                      ? "bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground shadow-xs"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   {f.label}
@@ -1690,57 +1695,85 @@ export function PatientProfilePage() {
           </div>
 
           {/* Timeline Stream */}
-          <div className="relative pl-6 before:absolute before:bottom-0 before:left-2 before:top-2 before:w-0.5 before:bg-border space-y-6">
+          <div className="relative pl-7 sm:pl-9 before:absolute before:bottom-2 before:left-3 sm:before:left-4 before:top-3 before:w-0.5 before:bg-border/80 space-y-6">
             {filteredTimeline.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-6">
-                No events match the selected timeline filter.
-              </p>
+              <div className="rounded-2xl border border-border bg-card p-8 text-center text-xs text-muted-foreground">
+                No clinical events match the &quot;{timelineFilter}&quot; filter.
+              </div>
             ) : (
-              filteredTimeline.map((item) => (
-                <div key={item.id} className="relative group">
-                  {/* Timeline Node Dot */}
-                  <div
-                    className={cn(
-                      "absolute -left-[1.78rem] top-1.5 size-3.5 rounded-full border-2 border-background ring-2 transition-all",
-                      item.type === "allergy"
-                        ? "bg-destructive ring-destructive/30"
-                        : item.type === "consultation"
-                          ? "bg-teal-500 ring-teal-500/30"
-                          : item.type === "medication"
-                            ? "bg-primary dark:bg-teal-300 ring-primary/30"
-                            : item.type === "lab"
-                              ? "bg-blue-500 ring-blue-500/30"
-                              : "bg-amber-500 ring-amber-500/30",
-                    )}
-                  />
+              filteredTimeline.map((item) => {
+                const isAllergy = item.type === "allergy";
+                const isConsultation = item.type === "consultation";
+                const isLab = item.type === "lab";
+                const isMed = item.type === "medication";
 
-                  {/* Timeline Card */}
-                  <div className="rounded-xl border border-border bg-card p-4 transition-all hover:border-accent/40 hover:shadow-xs">
-                    <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-foreground">
-                          {item.title}
+                return (
+                  <div key={item.id} className="relative group">
+                    {/* Node Dot / Icon Badge */}
+                    <div
+                      className={cn(
+                        "absolute -left-[1.85rem] sm:-left-[2.1rem] top-3.5 size-4 rounded-full border-2 border-background ring-4 transition-all duration-300 group-hover:scale-125",
+                        isAllergy
+                          ? "bg-destructive ring-destructive/25 shadow-sm"
+                          : isConsultation
+                            ? "bg-teal-500 ring-teal-500/25"
+                            : isMed
+                              ? "bg-primary dark:bg-teal-300 ring-primary/25"
+                              : isLab
+                                ? "bg-blue-500 ring-blue-500/25"
+                                : "bg-amber-500 ring-amber-500/25",
+                      )}
+                    />
+
+                    {/* Timeline Event Card */}
+                    <div
+                      className={cn(
+                        "rounded-3xl border bg-card p-5 sm:p-6 transition-all duration-300 hover:shadow-md",
+                        isAllergy
+                          ? "border-destructive/40 bg-destructive/5 hover:border-destructive/60"
+                          : "border-border/90 hover:border-accent/40",
+                      )}
+                    >
+                      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-display text-base sm:text-lg font-semibold text-foreground">
+                            {item.title}
+                          </h4>
+                          <Badge
+                            variant={isAllergy ? "danger" : (item.badgeVariant as any)}
+                            size="sm"
+                            dot={isAllergy}
+                          >
+                            {item.type.toUpperCase()}
+                          </Badge>
+                          {isAllergy && (
+                            <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-bold text-destructive">
+                              SAFEGUARD HARD STOP
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-mono text-xs text-muted-foreground shrink-0">
+                          {item.date}
                         </span>
-                        <Badge variant={item.badgeVariant as any} size="sm">
-                          {item.type.toUpperCase()}
-                        </Badge>
                       </div>
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {item.date}
-                      </span>
-                    </div>
 
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                      {item.description}
-                    </p>
+                      <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-foreground/85">
+                        {item.description}
+                      </p>
 
-                    <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-[11px] text-muted-foreground">
-                      <span className="font-medium text-accent">Source: {item.source}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80">Verified Entry</span>
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+                        <span className="font-medium text-accent flex items-center gap-1.5">
+                          <span>Provenance:</span>
+                          <span className="font-semibold text-foreground/80">{item.source}</span>
+                        </span>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/75">
+                          ID: #{item.id} • Verified Record
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
