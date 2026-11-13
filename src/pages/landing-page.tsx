@@ -11,7 +11,20 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent">
+    <div className="relative min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent">
+      {/* Cinematic Clinical Architecture Atmospheric Background */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1050px] overflow-hidden -z-10">
+        <img
+          src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2400&q=85"
+          alt=""
+          aria-hidden="true"
+          className="size-full object-cover object-top opacity-35 dark:opacity-15 filter brightness-105 contrast-95 dark:brightness-75"
+        />
+        {/* Gradients to blend smoothly with Porcelain (#F5F5EF) / Deep Atlantic (#102B3F) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 via-55% to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-background/40 to-background" />
+      </div>
+
       {/* 1. Navigation */}
       <LandingNavbar />
 
