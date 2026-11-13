@@ -110,44 +110,44 @@ export function LandingNavbar() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden animate-in fade-in duration-200">
           <div
-            className="fixed inset-0 bg-primary/30 backdrop-blur-sm"
+            className="fixed inset-0 bg-primary/40 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed top-20 left-4 right-4 rounded-3xl border border-border bg-card/95 p-6 shadow-2xl backdrop-blur-2xl">
-            <nav className="flex flex-col gap-3 text-sm font-medium">
+          <div className="fixed top-20 left-4 right-4 rounded-3xl border border-border/80 liquid-glass p-6 shadow-2xl backdrop-blur-2xl">
+            <nav className="flex flex-col gap-2 text-sm font-medium">
               {navLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={(e) => handleScrollTo(e, link.href)}
-                  className="rounded-xl px-3 py-2 text-foreground/80 hover:bg-muted/60 hover:text-accent transition-colors"
+                  className="rounded-2xl px-4 py-3 text-base font-medium text-foreground/85 hover:bg-muted/60 hover:text-accent transition-colors"
                 >
                   {link.label}
                 </a>
               ))}
-              <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2.5">
+              <div className="mt-3 pt-4 border-t border-border/80 flex flex-col gap-3">
                 <Button
                   variant="outline"
-                  size="md"
+                  size="lg"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     navigate("/login");
                   }}
-                  className="w-full rounded-full text-xs font-semibold"
+                  className="w-full rounded-full text-xs font-semibold py-3"
                 >
                   Doctor Login
                 </Button>
                 <Button
                   variant="teal"
-                  size="md"
+                  size="lg"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     navigate("/app");
                   }}
                   rightIcon={<ArrowRight className="size-4" />}
-                  className="w-full rounded-full text-xs font-semibold"
+                  className="w-full rounded-full text-xs font-semibold py-3"
                 >
-                  Open Workspace
+                  Enter OPD Workspace
                 </Button>
               </div>
             </nav>

@@ -114,12 +114,67 @@
 }
 
 @layer utilities {
-  .text-display-hero { @apply font-display text-5xl font-semibold leading-[0.98] tracking-[-0.045em] sm:text-6xl lg:text-7xl xl:text-[5rem]; }
-  .text-display-1 { @apply font-display text-4xl font-semibold leading-[1.0] tracking-[-0.04em] sm:text-5xl lg:text-6xl; }
-  .text-display-2 { @apply font-display text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-4xl; }
-  .text-display-3 { @apply font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-3xl; }
+  /* Fluid Display Typography with CSS clamp() */
+  .text-display-hero {
+    font-family: var(--font-display);
+    font-size: clamp(2.35rem, 1.6rem + 3.8vw, 5.25rem);
+    font-weight: 600;
+    line-height: clamp(1.05, 0.96 + 0.1vw, 1.15);
+    letter-spacing: -0.04em;
+  }
+  .text-display-1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.95rem, 1.4rem + 2.8vw, 3.85rem);
+    font-weight: 600;
+    line-height: clamp(1.08, 1.02 + 0.1vw, 1.18);
+    letter-spacing: -0.035em;
+  }
+  .text-display-2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.65rem, 1.25rem + 2vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .text-display-3 {
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 1.1rem + 1.2vw, 2rem);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.025em;
+  }
   .text-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground; }
+
+  /* Responsive Liquid Glass Surfaces */
+  .liquid-glass {
+    background: hsl(var(--card) / 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.75);
+  }
+  .liquid-glass-dark {
+    background: rgba(10, 25, 38, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .liquid-glass-card {
+    background: linear-gradient(135deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.85));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.85);
+    box-shadow: 0 8px 32px 0 rgba(16, 42, 67, 0.06);
+  }
   
+  @media (max-width: 640px) {
+    .liquid-glass,
+    .liquid-glass-dark,
+    .liquid-glass-card {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  }
+
   .surface-dots {
     background-image: radial-gradient(hsl(var(--foreground) / 0.12) 0.8px, transparent 0.8px);
     background-size: 16px 16px;

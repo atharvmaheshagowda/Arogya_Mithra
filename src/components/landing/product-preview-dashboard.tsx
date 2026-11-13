@@ -30,53 +30,53 @@ export function ProductPreviewDashboard() {
   const [selectedLanguage, setSelectedLanguage] = useState<"kannada" | "hindi">("kannada");
 
   return (
-    <div className="relative mx-auto w-full overflow-hidden rounded-3xl border border-border/80 bg-card shadow-2xl backdrop-blur-xl">
+    <div className="relative mx-auto w-full overflow-hidden rounded-3xl border border-border/80 bg-card/90 shadow-2xl backdrop-blur-xl transition-all">
       {/* OS-Style Window Bar & Tab Navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/40 px-4 py-3 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 bg-muted/40 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <span className="size-3 rounded-full bg-destructive/60" />
-            <span className="size-3 rounded-full bg-warning/60" />
-            <span className="size-3 rounded-full bg-success/60" />
+          <div className="flex gap-1.5 shrink-0">
+            <span className="size-2.5 sm:size-3 rounded-full bg-destructive/60" />
+            <span className="size-2.5 sm:size-3 rounded-full bg-warning/60" />
+            <span className="size-2.5 sm:size-3 rounded-full bg-success/60" />
           </div>
-          <span className="ml-2 font-mono text-xs font-semibold text-muted-foreground">
+          <span className="ml-1 sm:ml-2 font-mono text-[11px] sm:text-xs font-semibold text-muted-foreground truncate">
             AAROGYA MITHRA • OPD Workspace (Room 04)
           </span>
         </div>
 
-        {/* Live Interactive Tab Switcher */}
-        <div className="flex items-center gap-1 rounded-xl bg-muted/80 p-1">
+        {/* Live Interactive Tab Switcher with Horizontal Scroll on Mobile */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 rounded-xl bg-muted/80 p-1 clinical-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("scribe")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all",
+              "flex items-center gap-1.5 shrink-0 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition-all",
               activeTab === "scribe"
                 ? "bg-card text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Mic className="size-3.5 text-accent" />
+            <Mic className="size-3.5 text-accent shrink-0" />
             <span>1. Scribe (LISTEN)</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("reports")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all",
+              "flex items-center gap-1.5 shrink-0 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition-all",
               activeTab === "reports"
                 ? "bg-card text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <FileText className="size-3.5 text-primary dark:text-teal-400" />
+            <FileText className="size-3.5 text-primary dark:text-teal-400 shrink-0" />
             <span>2. Reports (READ)</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("safety")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all",
+              "flex items-center gap-1.5 shrink-0 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition-all",
               activeTab === "safety"
                 ? "bg-card text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground",
@@ -89,38 +89,38 @@ export function ProductPreviewDashboard() {
       </div>
 
       {/* Patient Vital Context Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/70 bg-card px-4 py-3 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 border-b border-border/70 bg-card px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm">
+          <span className="grid size-9 sm:size-10 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-xs sm:text-sm shrink-0">
             RK
           </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground text-sm">Rajesh Kumar</span>
-              <span className="text-xs text-muted-foreground font-mono">54y • M • #AM-94021</span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="font-semibold text-foreground text-xs sm:text-sm">Rajesh Kumar</span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">54y • M • #AM-94021</span>
               <Badge variant="teal" size="sm">OPD General</Badge>
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-muted-foreground mt-0.5">
               <span>Known: Type 2 Diabetes, HTN</span>
-              <span>•</span>
+              <span className="hidden xs:inline">•</span>
               <span className="text-destructive font-medium">Allergy: Penicillin</span>
             </div>
           </div>
         </div>
 
-        {/* Live Vitals Chips */}
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-          <span className="rounded-lg border border-border bg-muted/40 px-2.5 py-1">
-            BP: <strong className="text-foreground">138/88</strong> mmHg
+        {/* Live Vitals Chips - Fluid Wrapping */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium">
+          <span className="rounded-lg border border-border bg-muted/40 px-2 sm:px-2.5 py-1">
+            BP: <strong className="text-foreground">138/88</strong>
           </span>
-          <span className="rounded-lg border border-border bg-muted/40 px-2.5 py-1">
-            Pulse: <strong className="text-foreground">76</strong> bpm
+          <span className="rounded-lg border border-border bg-muted/40 px-2 sm:px-2.5 py-1">
+            Pulse: <strong className="text-foreground">76</strong>
           </span>
-          <span className="rounded-lg border border-border bg-muted/40 px-2.5 py-1">
-            Glucose: <strong className="text-warning">178</strong> mg/dL
+          <span className="rounded-lg border border-border bg-muted/40 px-2 sm:px-2.5 py-1">
+            Glucose: <strong className="text-warning">178</strong>
           </span>
-          <span className="rounded-lg border border-border bg-muted/40 px-2.5 py-1">
-            eGFR: <strong className="text-success">&gt;85</strong> mL/min
+          <span className="rounded-lg border border-border bg-muted/40 px-2 sm:px-2.5 py-1">
+            eGFR: <strong className="text-success">&gt;85</strong>
           </span>
         </div>
       </div>
