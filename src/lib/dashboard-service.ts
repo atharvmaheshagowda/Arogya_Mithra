@@ -51,6 +51,7 @@ export interface DashboardSafetyAlert {
 export interface RecentActivityItem {
   id: string;
   patientName: string;
+  avatar?: string;
   mrn: string;
   initials: string;
   dateTime: string;
@@ -63,6 +64,7 @@ export interface RecentActivityItem {
 export interface RecentPatientProfile {
   id: string;
   name: string;
+  avatar?: string;
   mrn: string;
   age: number;
   gender: "Male" | "Female";
@@ -219,6 +221,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-1",
       patientName: "Rajesh Kumar",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-94021",
       initials: "RK",
       dateTime: "Today, 11:15 AM",
@@ -230,6 +233,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-2",
       patientName: "Lakshmi Gowda",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-93112",
       initials: "LG",
       dateTime: "Today, 10:45 AM",
@@ -241,6 +245,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-3",
       patientName: "Mohammad Farooq",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-91048",
       initials: "MF",
       dateTime: "Today, 10:10 AM",
@@ -252,6 +257,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-4",
       patientName: "Ananya Sharma",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-89412",
       initials: "AS",
       dateTime: "Today, 09:30 AM",
@@ -263,6 +269,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-5",
       patientName: "Venkat Rao",
+      avatar: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-87220",
       initials: "VR",
       dateTime: "Today, 09:00 AM",
@@ -274,6 +281,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "act-6",
       patientName: "Sunita Patil",
+      avatar: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-85119",
       initials: "SP",
       dateTime: "Today, 08:35 AM",
@@ -288,6 +296,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "pat-1",
       name: "Rajesh Kumar",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-94021",
       age: 54,
       gender: "Male",
@@ -301,6 +310,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "pat-2",
       name: "Lakshmi Gowda",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-93112",
       age: 48,
       gender: "Female",
@@ -313,6 +323,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "pat-3",
       name: "Mohammad Farooq",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-91048",
       age: 62,
       gender: "Male",
@@ -326,6 +337,7 @@ export const mockDashboardData: DashboardData = {
     {
       id: "pat-4",
       name: "Ananya Sharma",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
       mrn: "AM-89412",
       age: 29,
       gender: "Female",

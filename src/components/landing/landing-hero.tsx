@@ -52,7 +52,11 @@ export function LandingHero() {
             Your Clinical Workflow.
             <br />
             <span className="text-teal-600 dark:text-teal-400 font-serif italic font-normal">
-              Reimagined with Intelligence.
+              Reimagined with
+            </span>
+            <br />
+            <span className="text-teal-600 dark:text-teal-400 font-serif italic font-normal">
+              Intelligence.
             </span>
           </motion.h1>
 

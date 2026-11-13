@@ -37,6 +37,8 @@ import {
   Trash2,
   User,
   Users,
+  LayoutGrid,
+  List,
   X,
 } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -54,6 +56,7 @@ import {
 import { Input, SearchInput } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
+import { TeamLanyardRail, type LanyardMember } from "@/components/ui/team-lanyard-rail";
 import {
   getPatients,
   getPatientById,
@@ -97,6 +100,37 @@ export function PatientsPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // View Mode: Interactive Lanyard Badges vs Table Registry
+  const [viewMode, setViewMode] = useState<"badges" | "table">("badges");
+
+  // Transform patient profiles into interactive Lanyard Badges
+  const lanyardMembers: LanyardMember[] = useMemo(() => {
+    return patients.map((p, idx) => {
+      const topConditions = p.diagnoses.map((d) => d.condition).slice(0, 2).join(", ") || "General OPD Triage";
+      const critical = p.allergies.some((a) => a.critical);
+      return {
+        id: p.id,
+        name: p.name,
+        role: `${p.gender}, ${p.age}y • ${p.preferredLanguage.split(" ")[0]}`,
+        team: p.status,
+        image: p.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+        bio: `${topConditions}. Blood: ${p.bloodGroup || "O+"}. Vitals: ${p.vitals || "Normal range"}. Last consultation: ${p.lastConsultation}.`,
+        tags: [
+          p.bloodGroup || "B+",
+          critical ? "⚠️ Alert" : "NKDA",
+          p.preferredLanguage.split(" ")[0],
+          p.status.split(" ")[0],
+        ],
+        links: [
+          { label: "View Profile", href: `/app/patients/${p.id}` },
+          { label: "Consultation", href: "/app/consultations" },
+        ],
+        tone: (((idx % 5) + 1) as 1 | 2 | 3 | 4 | 5),
+        drop: (idx % 3) * 6,
+      };
+    });
+  }, [patients]);
 
   // Add Patient Modal State
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
@@ -295,6 +329,65 @@ export function PatientsPage() {
       </div>
 
       {/* ====================================================================
+          INTERACTIVE PATIENT LANYARD RAIL
+          ==================================================================== */}
+      <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/70">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-[11px] font-semibold text-teal-600 dark:text-teal-400">
+              <Sparkles className="size-3.5" />
+              <span>Active OPD Patient Roster • 3D Lanyard Cards</span>
+            </div>
+            <h2 className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground font-display">
+              Patient Profile Badges
+            </h2>
+            <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+              Click or drag any patient badge to swing, flip 360°, inspect clinical vitals, QR code, and launch immediate consultations.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "badges" ? "teal" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("badges")}
+              leftIcon={<LayoutGrid className="size-3.5" />}
+            >
+              Lanyard View
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "teal" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+              leftIcon={<List className="size-3.5" />}
+            >
+              Table View
+            </Button>
+          </div>
+        </div>
+
+        {viewMode === "badges" && (
+          <div className="pt-2">
+            <TeamLanyardRail
+              items={lanyardMembers}
+              caption="Interactive patient cards. Click any badge to flip between front photo and rear clinical notes."
+              action={
+                <Button
+                  variant="teal"
+                  size="sm"
+                  onClick={() => navigate(`/app/patients/${patients[0]?.id || "AM-94021"}`)}
+                  rightIcon={<ArrowRight className="size-3.5" />}
+                  className="rounded-full px-5 shadow-xs font-semibold"
+                >
+                  Open First Patient File ({patients[0]?.id || "AM-94021"})
+                </Button>
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ====================================================================
           PATIENT MANAGEMENT TABLE
           ==================================================================== */}
       <Card>
@@ -428,8 +521,20 @@ export function PatientsPage() {
                         {/* Patient Name */}
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="grid size-9 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent">
-                              {initials}
+                            <div className="relative size-10 shrink-0 overflow-hidden rounded-full border border-border/80 shadow-xs bg-muted">
+                              {patient.avatar ? (
+                                <img
+                                  src={patient.avatar}
+                                  alt={patient.name}
+                                  className="size-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              ) : null}
+                              <div className="absolute inset-0 grid place-items-center bg-accent/15 text-xs font-bold text-accent -z-10">
+                                {initials}
+                              </div>
                             </div>
                             <div className="min-w-0">
                               <Link
@@ -917,8 +1022,20 @@ export function PatientProfilePage() {
         {/* Patient Identity & Primary Details */}
         <div className="mt-5 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
           <div className="flex items-start gap-4">
-            <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-accent/15 font-display text-2xl font-bold text-accent ring-1 ring-accent/30">
-              {initials}
+            <div className="relative size-18 sm:size-20 shrink-0 overflow-hidden rounded-2xl border-2 border-accent/40 shadow-md bg-muted">
+              {patient.avatar ? (
+                <img
+                  src={patient.avatar}
+                  alt={patient.name}
+                  className="size-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
+              ) : null}
+              <div className="absolute inset-0 grid place-items-center bg-accent/15 font-display text-2xl font-bold text-accent -z-10">
+                {initials}
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -1516,6 +1633,30 @@ export function PatientProfilePage() {
                     </div>
                   </div>
                 </CardHeader>
+
+                <div className="px-6 py-3 bg-muted/20 border-b border-border/70 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative size-12 shrink-0 rounded-lg overflow-hidden border border-border shadow-xs bg-card">
+                      <img
+                        src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=200&q=80"
+                        alt="Pathology report slip"
+                        className="size-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                        <FileText className="size-3.5 text-accent" />
+                        <span>Digitized Diagnostic Document • READ Engine</span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Extracted {lab.parameters.length} parameters with zero manual data entry.
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" size="sm" className="hidden sm:inline-flex text-[10px]">
+                    200 DPI Scan
+                  </Badge>
+                </div>
 
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
