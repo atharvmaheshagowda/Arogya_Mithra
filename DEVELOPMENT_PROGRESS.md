@@ -207,6 +207,41 @@
 
 ---
 
+## Phase 6: Patient Management Interface & Detailed Patient Profiles
+**Status:** Complete  
+**Date:** 2026-11-13
+
+### Implemented Routes & Features
+1. **Patient Management Directory (`/app/patients`):**
+   - **Header & Metric Cards:** Total Registered Patients (`1,284`), Active In OPD Today (`8`), Allergy-Flagged Records (`6`), and Diagnostic Reports (`14`).
+   - **Patient Management Table:**
+     - Columns: Patient ID (MRN), Patient Name (with avatar initials and contact), Age & Gender (with blood group), Preferred Language (badge with language icon), Last Consultation (time and status), Medical History (condition pills and allergy tags), and Contextual Actions (`Profile`, `Scribe`).
+     - **Search:** Real-time search across patient name, MRN, condition tags, and language.
+     - **Filters:** Multi-criteria filtering by Preferred Language (Kannada, Hindi, English, Code-mixed) and Allergy Status (All, Documented Allergies, NKDA).
+     - **Sorting:** Interactive sort by Most Recent, Name (A to Z / Z to A), and Age (Youngest / Oldest).
+     - **Pagination:** Clean 5-item pagination with Previous/Next buttons, active page indicators, and range summary (`Showing 1 to 5 of 8 patients`).
+     - **Empty States:** Friendly empty state with reset filter button when no query matches.
+2. **Add Patient Modal & Dynamic Enrollment:**
+   - Accessible modal with fields: Full Name, Age, Date of Birth, Gender (Male, Female, Other), Blood Group, Preferred Language (Kannada, Hindi, English, Code-mixed), Contact Phone, Email Address, Address/Locality, Known Allergies (with SAFEGUARD parsing note), and Existing Medical Conditions.
+   - Enrolls new patient into the synthetic patient service, generates a unique `#AM-XXXXX` MRN, triggers a success toast notification, and immediately updates the directory table.
+3. **Comprehensive Patient Profile (`/app/patients/:patientId`):**
+   - **Header Banner:** Patient MRN, Name, Age/Gender, Blood group, Contact, Preferred language, Status badge, Quick Actions (`Upload Lab`, `Start Ambient Scribe`), and high-visibility SAFEGUARD Critical Allergy Alert banner with hard-stop notice.
+   - **6 Dedicated Clinical Tabs:**
+     - **1. Overview:** Demographics & vitals summary card (BP, HR, Blood Glucose, SpO2), Active medications preview, Recent consultation summary with doctor signature, Documented allergies with immunological reaction details, and Active ICD-10 diagnoses.
+     - **2. Medical History:** Chronic conditions with onset & notes, Past surgical history, Family history (pedigree), Lifestyle & risk factors (diet, tobacco, alcohol, exercise).
+     - **3. Medications:** SAFEGUARD interaction check callout, Active prescription regimen table (name, dosage, frequency, indication, prescriber, date), Historical / discontinued prescriptions with discontinuation reasons.
+     - **4. Laboratory Reports:** Structured diagnostic reports (Thyrocare, Lal PathLabs) with test parameters, measured values, biological reference intervals, and high/low/normal diagnostic flags.
+     - **5. Consultations:** Clinical encounter history cards with formatted SOAP notes (Subjective, Objective, Assessment, Plan), attending physician, audio dialogue language tag, and electronic signature verification.
+     - **6. Timeline:** Chronological medical events with category filters (`All`, `Consultations`, `Medications`, `Labs`, `Allergies`, `Diagnoses`) and preserved source provenance.
+4. **Decoupled Patient Service Layer (`src/lib/patient-service.ts`):**
+   - 8 rich, varied Indian OPD patient personas with code-mixing language preferences, severe allergy markers (Penicillin, Aspirin, Sulfa, Allopurinol), lab values, and historical timelines.
+
+### Verification & Build Status
+- `npm run typecheck` (`tsc -b`) passed with 0 errors.
+- `npm run build` (`vite build`) successfully bundled 1715 modules in 11.38s.
+
+---
+
 ## Next Steps
-- Implement detailed patient chart view (`/app/patients`) with longitudinal encounter timeline.
-- Enhance ambient scribe simulation (`/app/consultations`) with live speech recognition and audio playback.
+- Implement advanced multilingual consultation scribe interface (`/app/consultations`) with Kannada/Hindi/English speech simulation and SOAP note generator.
+- Implement Medical Report Intelligence (`/app/reports`) with diagnostic OCR entity extraction visualizer.

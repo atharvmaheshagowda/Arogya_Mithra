@@ -980,7 +980,7 @@ export function DashboardPage() {
                             } else if (item.status === "Lab Review Needed") {
                               navigate("/app/reports");
                             } else {
-                              navigate("/app/patients");
+                              navigate(`/app/patients/${item.mrn}`);
                             }
                           }}
                           rightIcon={<ArrowRight className="size-3" />}
@@ -989,7 +989,7 @@ export function DashboardPage() {
                             ? "Sign Note"
                             : item.status === "Lab Review Needed"
                               ? "Review Lab"
-                              : "View Summary"}
+                              : "View Profile"}
                         </Button>
                       </td>
                     </tr>
@@ -1077,7 +1077,7 @@ export function DashboardPage() {
                 <Button
                   variant="subtle"
                   size="xs"
-                  onClick={() => navigate("/app/patients")}
+                  onClick={() => navigate(`/app/patients/${pat.mrn}`)}
                   rightIcon={<ArrowRight className="size-3" />}
                 >
                   Open Chart
@@ -1318,158 +1318,10 @@ export function DashboardPage() {
 }
 
 /* ==========================================================================
-   2. PATIENTS PAGE (CONNECT Module)
+   2. PATIENTS PAGE (CONNECT Module) — Re-exported from dedicated patient-pages
    ========================================================================== */
 
-export function PatientsPage() {
-  const [search, setSearch] = useState("");
-  const navigate = useNavigate();
-
-  const patients = [
-    {
-      mrn: "AM-94021",
-      name: "Rajesh Kumar",
-      age: 54,
-      gender: "Male",
-      conditions: ["Type 2 Diabetes", "Hypertension"],
-      allergy: "Penicillin (Severe)",
-      lastVisit: "Today (Room 04)",
-      vitals: "BP: 138/88 • Glucose: 178 mg/dL",
-      language: "Kannada / English",
-      status: "In Consultation",
-      statusVariant: "teal" as const,
-    },
-    {
-      mrn: "AM-93112",
-      name: "Lakshmi Gowda",
-      age: 48,
-      gender: "Female",
-      conditions: ["Hypothyroidism", "Dyslipidemia"],
-      allergy: "None documented",
-      lastVisit: "10-Nov-2026",
-      vitals: "BP: 122/80 • TSH: 4.8 mIU/L",
-      language: "Kannada",
-      status: "Waiting (Token #11)",
-      statusVariant: "warning" as const,
-    },
-    {
-      mrn: "AM-91048",
-      name: "Mohammad Farooq",
-      age: 62,
-      gender: "Male",
-      conditions: ["Coronary Artery Disease", "Stage 2 CKD"],
-      allergy: "Aspirin (Bronchospasm)",
-      lastVisit: "02-Nov-2026",
-      vitals: "BP: 144/92 • Creatinine: 1.4 mg/dL",
-      language: "Hindi / Urdu",
-      status: "Waiting (Token #12)",
-      statusVariant: "warning" as const,
-    },
-    {
-      mrn: "AM-89412",
-      name: "Ananya Sharma",
-      age: 29,
-      gender: "Female",
-      conditions: ["Migraine with Aura", "Allergic Rhinitis"],
-      allergy: "Sulfa drugs",
-      lastVisit: "28-Oct-2026",
-      vitals: "BP: 116/74 • SpO2: 99%",
-      language: "Hindi / English",
-      status: "Completed",
-      statusVariant: "success" as const,
-    },
-  ].filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.mrn.toLowerCase().includes(search.toLowerCase()) ||
-      p.conditions.some((c) => c.toLowerCase().includes(search.toLowerCase())),
-  );
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="font-display text-2xl font-bold text-foreground">Patient Context Panel</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            28 registered OPD patients today • Cross-encounter history &amp; allergy records
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-64">
-            <SearchInput
-              placeholder="Filter by name, MRN, condition..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onClear={() => setSearch("")}
-            />
-          </div>
-          <Button variant="teal" size="sm" leftIcon={<Plus className="size-4" />}>
-            Add Patient
-          </Button>
-        </div>
-      </div>
-
-      {/* Patient Table */}
-      <Card className="overflow-hidden">
-        <div className="divide-y divide-border">
-          {patients.map((patient) => (
-            <div
-              key={patient.mrn}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 gap-4 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-start gap-3.5">
-                <span className="grid size-11 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm shrink-0">
-                  {patient.name.split(" ").map((n) => n[0]).join("")}
-                </span>
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-sm text-foreground">{patient.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">#{patient.mrn}</span>
-                    <span className="text-xs text-muted-foreground">• {patient.age}y, {patient.gender}</span>
-                    <Badge variant={patient.statusVariant} size="sm">
-                      {patient.status}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>Conditions: {patient.conditions.join(", ")}</span>
-                    <span>•</span>
-                    <span className={cn(patient.allergy !== "None documented" && "text-destructive font-medium")}>
-                      Allergy: {patient.allergy}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground flex items-center gap-3 pt-0.5">
-                    <span>Vitals: {patient.vitals}</span>
-                    <span>•</span>
-                    <span>Language: {patient.language}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate("/app/consultations")}
-                >
-                  Open Chart
-                </Button>
-                <Button
-                  variant="teal"
-                  size="sm"
-                  onClick={() => navigate("/app/consultations")}
-                  rightIcon={<ArrowRight className="size-3.5" />}
-                >
-                  Consult Scribe
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
+export { PatientsPage, PatientProfilePage } from "./patient-pages";
 
 /* ==========================================================================
    3. CONSULTATIONS PAGE (LISTEN Module)

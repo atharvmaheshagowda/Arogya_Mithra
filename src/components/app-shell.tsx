@@ -133,10 +133,12 @@ export function ApplicationShell() {
   const { doctor, signInAs, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  const currentMeta = titleByPath[location.pathname] ?? {
-    title: "AAROGYA MITHRA",
-    subtitle: "Clinical Copilot",
-  };
+  const currentMeta = location.pathname.startsWith("/app/patients/")
+    ? { title: "Patient Longitudinal Profile", subtitle: "Comprehensive clinical record & history (CONNECT)" }
+    : (titleByPath[location.pathname] ?? {
+        title: "AAROGYA MITHRA",
+        subtitle: "Clinical Copilot",
+      });
 
   // Keyboard shortcut Cmd+K / Ctrl+K for Global Search
   useEffect(() => {
@@ -157,11 +159,13 @@ export function ApplicationShell() {
   };
 
   const filteredSearchResults = [
-    { type: "Patient", title: "Rajesh Kumar (54y M)", detail: "MRN: #AM-94021 • Type 2 Diabetes, HTN", path: "/app/patients" },
-    { type: "Patient", title: "Lakshmi Gowda (48y F)", detail: "MRN: #AM-93112 • Hypothyroidism", path: "/app/patients" },
+    { type: "Patient", title: "Rajesh Kumar (54y M)", detail: "MRN: #AM-94021 • Type 2 Diabetes, HTN", path: "/app/patients/AM-94021" },
+    { type: "Patient", title: "Lakshmi Gowda (48y F)", detail: "MRN: #AM-93112 • Hypothyroidism", path: "/app/patients/AM-93112" },
+    { type: "Patient", title: "Mohammad Farooq (62y M)", detail: "MRN: #AM-91048 • CAD, Stage 2 CKD", path: "/app/patients/AM-91048" },
+    { type: "Patient", title: "Ananya Sharma (29y F)", detail: "MRN: #AM-89412 • Migraine with Aura", path: "/app/patients/AM-89412" },
     { type: "Consultation", title: "Kannada Ambient Scribe (Room 04)", detail: "Acute Epigastric Pain x 3 Days", path: "/app/consultations" },
-    { type: "Report", title: "Thyrocare Metabolic Profile (HbA1c 9.2%)", detail: "Scanned PDF • Ingested today", path: "/app/reports" },
-    { type: "Safety", title: "Drug Interaction Audit (Metformin + Contrast)", detail: "SAFEGUARD Matrix • 1 Warning", path: "/app/medication-safety" },
+    { type: "Report", title: "Thyrocare Metabolic Profile (HbA1c 7.4%)", detail: "Scanned PDF • Ingested today", path: "/app/reports" },
+    { type: "Safety", title: "Drug Interaction Audit (Penicillin Allergy)", detail: "SAFEGUARD Matrix • Hard Stop Active", path: "/app/medication-safety" },
   ].filter(
     (item) =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

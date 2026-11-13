@@ -345,3 +345,4 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Simulating sub-second local retrieval
   return Promise.resolve(mockDashboardData);
 }
+

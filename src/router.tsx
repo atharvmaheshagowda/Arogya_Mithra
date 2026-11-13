@@ -4,13 +4,13 @@ import { LandingPage } from "@/pages/landing-page";
 import { LoginPage, RegisterPage } from "@/pages/auth-pages";
 import {
   DashboardPage,
-  PatientsPage,
   ConsultationsPage,
   ReportsPage,
   MedicationSafetyPage,
   WorkflowPage,
   SettingsPage,
 } from "@/pages/app-pages";
+import { PatientsPage, PatientProfilePage } from "@/pages/patient-pages";
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage /> },
@@ -23,6 +23,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/app/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "patients", element: <PatientsPage /> },
+      { path: "patients/:patientId", element: <PatientProfilePage /> },
       { path: "consultations", element: <ConsultationsPage /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "medication-safety", element: <MedicationSafetyPage /> },
