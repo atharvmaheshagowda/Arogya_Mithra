@@ -242,6 +242,50 @@
 
 ---
 
+## Phase 7: Complete Clinical Consultation Workspace (LISTEN Centrepiece)
+**Status:** Complete  
+**Date:** 2026-11-13
+
+### Implemented Route & Workspace Architecture
+1. **Dedicated Consultation Route (`/app/consultations/:consultationId` & `/app/consultations`):**
+   - Configured dynamic route `/app/consultations/:consultationId` in `src/router.tsx` with fallback session handling in `src/lib/consultation-service.ts`.
+   - Updated top header title to `"Consultation Scribe Workspace"` and subtitle `"Multilingual ambient clinical capture (LISTEN)"`.
+2. **Interactive 6-Stage Workflow Progression:**
+   - Visual progress stepper: `Consultation Started` → `Recording` → `Transcription Completed` → `Draft Generated` → `Awaiting Doctor Review` → `Approved`.
+   - Dynamic stage transitions tied to recording, note generation, and doctor electronic signature sign-off.
+3. **Left Panel — Patient Clinical Context:**
+   - Patient switcher allowing seamless switching between active OPD queue patients (`Rajesh Kumar`, `Lakshmi Gowda`, `Mohammad Farooq`, etc.).
+   - Patient demographics (MRN, Age, Gender, Blood group, Preferred language, Contact phone).
+   - Documented Allergies: High-visibility safety warning card highlighting critical Penicillin anaphylactoid allergy with CDSCO hard-stop alert.
+   - Active Medications: Dosage, frequency, and indication pills for Metformin, Telmisartan, and Pantoprazole.
+   - Previous Diagnoses: ICD-10 coded history (Type 2 Diabetes, Essential Hypertension, Acute Dyspepsia).
+   - Recent Laboratory Results: Parameter inspection (HbA1c 7.4% High, Fasting Glucose 142 mg/dL High, Creatinine 0.95 mg/dL Normal, eGFR 88 mL/min Normal).
+4. **Centre Panel — LISTEN (Ambient Multilingual Scribe):**
+   - **Audio Consultation Visualizer:** Real-time animated acoustic spectrum bars with dual-channel 44.1 kHz PCM sampling simulation.
+   - **Live Recording Controls:** Start Recording, Pause Recording, Resume Recording, Stop & Process, and Reset buffer with live ticking timer (`00:04:18`).
+   - **Language Selector:** Tabs for Kannada (ಕನ್ನಡ), Hindi (हिंदी), Indian English, and Code-Mixed dialogue.
+   - **Three Scribe Input Modes:**
+     - *Live Speech Stream:* Multi-turn dialogue bubbles (Dr. Anika Rao vs. Rajesh Kumar) with timestamps, original vernacular, and real-time clinical English translation.
+     - *Manual Note / Dictation:* Free-form text input with instant "Append to Dialogue" action.
+     - *Audio Upload:* Drag-and-drop audio file simulator (.wav, .mp3, .m4a) with automated ingestion.
+   - **Simulation Disclaimer:** Explicit transparency banner indicating demonstration simulation without pretending live external hardware audio.
+   - **Extracted Clinical Concepts:** Real-time badge stream for symptoms, ICD codes, and preserved negations (`Vomiting [NEGATED]`, `Melena [NEGATED]`).
+5. **Right Panel — Clinical Notes & SAFEGUARD Audit:**
+   - **SAFEGUARD Consultation Audit Panel:** Real-time alerts for allergy hard-stops, medication conflicts, clinical information gaps, and patient history inconsistencies (e.g., self-reported normal glucose vs. 7.4% HbA1c).
+   - **Structured Clinical Note Document:**
+     - Official Apollo Hospitals clinical documentation layout with confidence score.
+     - 8 Structured Clinical Fields: Chief Complaint, Symptoms, Duration & Onset, Relevant Medical History, Observations (Physical Exam & Vitals), Clinician Assessment, Treatment Plan & Prescriptions, Uncertainties & Explicit Negations.
+     - Interactive Actions: Generate Clinical Note (with NLP spinner animation), Edit Note toggle, Save Draft, and Approve & Sign.
+     - Doctor Electronic Signature Stamp: Locks note upon approval, records attending physician credentials, and transitions workflow to `Approved`.
+6. **Decoupled Service Layer (`src/lib/consultation-service.ts`):**
+   - Full TypeScript data contracts (`ConsultationSession`, `SpeechTurn`, `StructuredClinicalNote`, `ConsultationSafetyAudit`).
+
+### Verification & Build Status
+- `npm run typecheck` (`tsc -b`) passed with 0 errors.
+- `npm run build` (`vite build`) successfully bundled 1717 modules in 12.31s.
+
+---
+
 ## Next Steps
-- Implement advanced multilingual consultation scribe interface (`/app/consultations`) with Kannada/Hindi/English speech simulation and SOAP note generator.
-- Implement Medical Report Intelligence (`/app/reports`) with diagnostic OCR entity extraction visualizer.
+- Implement Medical Report Intelligence (`/app/reports`) with diagnostic OCR entity extraction visualizer and PDF preview.
+- Implement Medication Safety Engine (`/app/medication-safety`) with interactive drug-drug interaction matrix and CDSCO/BNF rule lookup.

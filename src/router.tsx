@@ -5,6 +5,7 @@ import { LoginPage, RegisterPage } from "@/pages/auth-pages";
 import {
   DashboardPage,
   ConsultationsPage,
+  ConsultationWorkspacePage,
   ReportsPage,
   MedicationSafetyPage,
   WorkflowPage,
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: "patients", element: <PatientsPage /> },
       { path: "patients/:patientId", element: <PatientProfilePage /> },
       { path: "consultations", element: <ConsultationsPage /> },
+      { path: "consultations/:consultationId", element: <ConsultationWorkspacePage /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "medication-safety", element: <MedicationSafetyPage /> },
       { path: "workflow", element: <WorkflowPage /> },

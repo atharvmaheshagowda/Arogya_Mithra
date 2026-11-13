@@ -135,7 +135,9 @@ export function ApplicationShell() {
 
   const currentMeta = location.pathname.startsWith("/app/patients/")
     ? { title: "Patient Longitudinal Profile", subtitle: "Comprehensive clinical record & history (CONNECT)" }
-    : (titleByPath[location.pathname] ?? {
+    : location.pathname.startsWith("/app/consultations")
+      ? { title: "Consultation Scribe Workspace", subtitle: "Multilingual ambient clinical capture (LISTEN)" }
+      : (titleByPath[location.pathname] ?? {
         title: "AAROGYA MITHRA",
         subtitle: "Clinical Copilot",
       });

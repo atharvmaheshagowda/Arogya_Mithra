@@ -1373,3 +1373,4 @@ export function subscribePatients(callback: () => void): () => void {
     if (idx !== -1) listeners.splice(idx, 1);
   };
 }
+

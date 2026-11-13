@@ -1748,3 +1748,4 @@ export function PatientProfilePage() {
     </div>
   );
 }
+
