@@ -20,7 +20,8 @@ export const router = createBrowserRouter([
     path: "/app",
     element: <ApplicationShell />,
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <Navigate to="/app/dashboard" replace /> },
+      { path: "dashboard", element: <DashboardPage /> },
       { path: "patients", element: <PatientsPage /> },
       { path: "consultations", element: <ConsultationsPage /> },
       { path: "reports", element: <ReportsPage /> },

@@ -52,7 +52,7 @@ interface NavGroup {
 const navGroups: NavGroup[] = [
   {
     label: "OVERVIEW",
-    items: [{ to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true }],
+    items: [{ to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
     label: "CLINICAL",
@@ -74,7 +74,8 @@ const navGroups: NavGroup[] = [
 ];
 
 const titleByPath: Record<string, { title: string; subtitle: string }> = {
-  "/app": { title: "Clinical Overview", subtitle: "OPD queue & daily consultation triage" },
+  "/app": { title: "Doctor Dashboard", subtitle: "OPD queue & daily clinical activity overview" },
+  "/app/dashboard": { title: "Doctor Dashboard", subtitle: "OPD queue & daily clinical activity overview" },
   "/app/patients": { title: "Patient Context Panel", subtitle: "Unified longitudinal records & history" },
   "/app/consultations": { title: "Consultation Scribe", subtitle: "Multilingual ambient clinical capture (LISTEN)" },
   "/app/reports": { title: "Medical Reports", subtitle: "Diagnostic report OCR & entity intelligence (READ)" },
