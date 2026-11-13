@@ -846,10 +846,10 @@ export function DashboardPage() {
                             {approval.mrn}
                           </span>
                         </div>
-                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{approval.type}</span>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="whitespace-nowrap font-medium text-foreground/80">{approval.type}</span>
                           <span>•</span>
-                          <span>{approval.time}</span>
+                          <span className="whitespace-nowrap">{approval.time}</span>
                         </div>
                       </div>
 
