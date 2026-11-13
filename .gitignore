@@ -62,3 +62,11 @@ test_*.png
 # Local backups (user requested exclude)
 Aarogya_Mithra_Complete/
 
+# Test & audit artifacts
+audit_screenshots/
+test_audit_screenshots/
+reference_video_frames/
+*.html
+*.txt
+*.csv
+
