@@ -122,6 +122,31 @@ CURATED_BRAND_ALIASES: dict[str, dict] = {
         "normalized_identifier": "amoxicillin_clavulanate",
         "active_ingredients": ["amoxicillin", "clavulanic_acid"],
     },
+    "amoxicillin and clavulanate": {
+        "normalized_name": "Amoxicillin and Potassium Clavulanate",
+        "normalized_identifier": "amoxicillin_clavulanate",
+        "active_ingredients": ["amoxicillin", "clavulanic_acid"],
+    },
+    "amoxicillin and clavulanic acid": {
+        "normalized_name": "Amoxicillin and Potassium Clavulanate",
+        "normalized_identifier": "amoxicillin_clavulanate",
+        "active_ingredients": ["amoxicillin", "clavulanic_acid"],
+    },
+    "amoxicillin and potassium clavulanate": {
+        "normalized_name": "Amoxicillin and Potassium Clavulanate",
+        "normalized_identifier": "amoxicillin_clavulanate",
+        "active_ingredients": ["amoxicillin", "clavulanic_acid"],
+    },
+    "amoxicillin-clavulanate": {
+        "normalized_name": "Amoxicillin and Potassium Clavulanate",
+        "normalized_identifier": "amoxicillin_clavulanate",
+        "active_ingredients": ["amoxicillin", "clavulanic_acid"],
+    },
+    "amoxicillin + clavulanate": {
+        "normalized_name": "Amoxicillin and Potassium Clavulanate",
+        "normalized_identifier": "amoxicillin_clavulanate",
+        "active_ingredients": ["amoxicillin", "clavulanic_acid"],
+    },
     # Ciprofloxacin
     "ciprofloxacin": {
         "normalized_name": "Ciprofloxacin",
@@ -132,6 +157,17 @@ CURATED_BRAND_ALIASES: dict[str, dict] = {
         "normalized_name": "Ciprofloxacin",
         "normalized_identifier": "ciprofloxacin",
         "active_ingredients": ["ciprofloxacin"],
+    },
+    # Azithromycin
+    "azithromycin": {
+        "normalized_name": "Azithromycin",
+        "normalized_identifier": "azithromycin",
+        "active_ingredients": ["azithromycin"],
+    },
+    "azithral": {
+        "normalized_name": "Azithromycin",
+        "normalized_identifier": "azithromycin",
+        "active_ingredients": ["azithromycin"],
     },
     # Warfarin
     "warfarin": {
@@ -230,7 +266,7 @@ def normalize_medication(
                 Medication.medication_id == (explicit_identifier or name).strip(),
             )
         )
-        med = db.execute(query).scalar_one_or_none()
+        med = db.execute(query.limit(1)).scalars().first()
         if med:
             status = (
                 MatchStatus.EXACT_MATCH

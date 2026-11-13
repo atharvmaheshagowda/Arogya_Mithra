@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.allergy import AllergyResponse
@@ -101,6 +102,10 @@ class ReferenceEncounterContext(BaseModel):
     notice: str = (
         "Reference encounter represents the consultation context selected for this evaluation. "
         "Historical encounters are not automatically assumed to be the active consultation."
+    )
+    vital_signs: Optional[LatestVitalsContext] = Field(
+        default=None,
+        description="Vital measurements recorded strictly during this reference encounter.",
     )
 
 
