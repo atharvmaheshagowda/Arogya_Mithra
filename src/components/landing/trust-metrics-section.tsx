@@ -1,4 +1,5 @@
 import { Clock, FileWarning, Globe2, ShieldAlert, Sparkles, Building2, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
@@ -87,33 +88,40 @@ export function TrustMetricsSection() {
 
         {/* 4 Problem / Solution Grid with Rounded-3xl Cards */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {challenges.map((item) => (
-            <Card
+          {challenges.map((item, idx) => (
+            <motion.div
               key={item.title}
-              className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="space-y-4">
-                <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
-                  <item.icon className="size-6" />
-                </span>
-                <div className="space-y-1">
-                  <h3 className="font-display text-xl font-semibold text-foreground">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs font-semibold text-accent uppercase tracking-wider">
-                    {item.subtitle}
+              <Card
+                className="h-full flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
+              >
+                <div className="space-y-4">
+                  <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
+                    <item.icon className="size-6" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="font-display text-xl font-semibold text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs font-semibold text-accent uppercase tracking-wider">
+                      {item.subtitle}
+                    </p>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {item.description}
                   </p>
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {item.description}
-                </p>
-              </div>
 
-              <div className="pt-4 mt-4 border-t border-border/70 text-[11px] font-semibold text-foreground/85 flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-accent" />
-                <span>{item.impact}</span>
-              </div>
-            </Card>
+                <div className="pt-4 mt-4 border-t border-border/70 text-[11px] font-semibold text-foreground/85 flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-accent" />
+                  <span>{item.impact}</span>
+                </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
@@ -121,8 +129,12 @@ export function TrustMetricsSection() {
         <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 lg:p-10 shadow-xs">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-border/80">
             {metrics.map((metric, idx) => (
-              <div
+              <motion.div
                 key={metric.label}
+                initial={{ opacity: 0, scale: 0.94 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
                 className={idx === 0 ? "space-y-1" : "pt-6 sm:pt-0 lg:pl-8 space-y-1"}
               >
                 <p className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
@@ -134,7 +146,7 @@ export function TrustMetricsSection() {
                 <p className="text-xs text-muted-foreground">
                   {metric.detail}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

@@ -1,3 +1,7 @@
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import Lenis from "@studio-freight/lenis";
+import { ArrowUp } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { TrustMetricsSection } from "@/components/landing/trust-metrics-section";
@@ -10,53 +14,157 @@ import { CtaSection } from "@/components/landing/cta-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
 export function LandingPage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Buttery Smooth Inertia Scrolling via Lenis
+  useEffect(() => {
+    let lenis: Lenis | null = null;
+    let rafId: number;
+
+    try {
+      lenis = new Lenis({
+        duration: 1.25,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+      });
+
+      function raf(time: number) {
+        lenis?.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+      rafId = requestAnimationFrame(raf);
+
+      const handleScroll = () => {
+        setShowScrollTop(window.scrollY > 450);
+      };
+      window.addEventListener("scroll", handleScroll, { passive: true });
+
+      return () => {
+        cancelAnimationFrame(rafId);
+        window.removeEventListener("scroll", handleScroll);
+        lenis?.destroy();
+      };
+    } catch (e) {
+      console.warn("Smooth inertia scroll fallback", e);
+    }
+  }, []);
+
+  // Framer Motion Scroll Progress & Parallax Transforms
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  // Background Parallax: Gently drifts vertically across the scroll duration
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "-14%"]);
+  const backgroundScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const sectionReveal = {
+    initial: { opacity: 0, y: 36 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.12 },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  };
+
   return (
-    <div className="relative min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent">
-      {/* Cinematic Clinical Architecture Atmospheric Background */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1050px] overflow-hidden -z-10">
-        <img
-          src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2400&q=85"
-          alt=""
-          aria-hidden="true"
-          className="size-full object-cover object-top opacity-35 dark:opacity-15 filter brightness-105 contrast-95 dark:brightness-75"
-        />
-        {/* Gradients to blend smoothly with Porcelain (#F5F5EF) / Deep Atlantic (#102B3F) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 via-55% to-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-background/40 to-background" />
+    <div
+      ref={containerRef}
+      className="relative min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent overflow-x-clip"
+    >
+      {/* 1. Global Reading Scroll Progress Indicator Line */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[3px] z-[60] bg-gradient-to-r from-[#00A889] via-[#20C997] to-[#102B3F] origin-left shadow-xs"
+        style={{ scaleX }}
+      />
+
+      {/* 2. Fixed Cinematic Parallax Clinical Sanctuary Background Image */}
+      <div className="fixed inset-0 pointer-events-none -z-20 overflow-hidden">
+        <motion.div
+          style={{ y: backgroundY, scale: backgroundScale }}
+          className="relative w-full h-[125vh] -top-[12vh]"
+        >
+          {/* Authentic High-Resolution Hospital Architecture Sanctuary */}
+          <img
+            src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2600&q=85"
+            alt="Aarogya Mithra Modern Clinical Sanctuary"
+            className="size-full object-cover object-center filter brightness-[1.02] contrast-[0.98] dark:brightness-[0.38] dark:contrast-[1.12]"
+          />
+
+          {/* Luxury Adaptive Overlays: Warm Porcelain in light mode, Deep Atlantic in dark mode */}
+          <div className="absolute inset-0 bg-[#F5F5EF]/72 dark:bg-[#102B3F]/82 backdrop-blur-[1px] transition-colors duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/45 to-background" />
+          <div className="absolute inset-0 surface-dots opacity-25 dark:opacity-15" />
+        </motion.div>
       </div>
 
-      {/* 1. Navigation */}
+      {/* 3. Floating Navigation Pill */}
       <LandingNavbar />
 
-      {/* 2. Hero & Product Preview */}
-      <main>
+      {/* 4. Main Scroll Sections with Viewport Triggers */}
+      <main className="relative z-10">
+        {/* Hero Section with 3D Preview Elevation */}
         <LandingHero />
 
-        {/* 3. Trust & OPD Reality */}
-        <TrustMetricsSection />
+        {/* Section 2: Trust & OPD Reality */}
+        <motion.div {...sectionReveal}>
+          <TrustMetricsSection />
+        </motion.div>
 
-        {/* 4. Four Core Capabilities (LISTEN, READ, CONNECT, SAFEGUARD) */}
-        <CoreCapabilitiesSection />
+        {/* Section 3: Four Core Capabilities (LISTEN, READ, CONNECT, SAFEGUARD) */}
+        <motion.div {...sectionReveal}>
+          <CoreCapabilitiesSection />
+        </motion.div>
 
-        {/* 6. How It Works: Interactive Workflow Blueprint */}
-        <InteractiveWorkflowSection />
+        {/* Section 4: Interactive Workflow Blueprint */}
+        <motion.div {...sectionReveal}>
+          <InteractiveWorkflowSection />
+        </motion.div>
 
-        {/* 7. Patient Context Engine Deep Dive */}
-        <ContextEngineSection />
+        {/* Section 5: Patient Context Engine Deep Dive */}
+        <motion.div {...sectionReveal}>
+          <ContextEngineSection />
+        </motion.div>
 
-        {/* 8. Clinical Safety Architecture & Human Oversight */}
-        <ClinicalSafetySection />
+        {/* Section 6: Clinical Safety & Human Oversight */}
+        <motion.div {...sectionReveal}>
+          <ClinicalSafetySection />
+        </motion.div>
 
-        {/* 9. FAQ Accordion */}
-        <FaqSection />
+        {/* Section 7: FAQ Accordion */}
+        <motion.div {...sectionReveal}>
+          <FaqSection />
+        </motion.div>
 
-        {/* 10. Final CTA */}
-        <CtaSection />
+        {/* Section 8: Final Call to Action */}
+        <motion.div {...sectionReveal}>
+          <CtaSection />
+        </motion.div>
       </main>
 
-      {/* 11. Footer with Legal & Medical Disclaimer */}
+      {/* 5. Footer with Medical Disclaimer & Standards */}
       <LandingFooter />
+
+      {/* 6. Floating Back to Top Button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Scroll back to top"
+          className="fixed bottom-6 right-6 z-40 grid size-10 place-items-center rounded-full border border-border/80 bg-card/90 text-foreground shadow-lg backdrop-blur-md hover:border-accent hover:text-accent transition-all duration-300 animate-in fade-in zoom-in-90"
+        >
+          <ArrowUp className="size-4" />
+        </button>
+      )}
     </div>
   );
 }
-
+export default LandingPage;

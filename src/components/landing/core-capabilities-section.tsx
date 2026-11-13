@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Activity,
   AlertCircle,
@@ -44,7 +45,13 @@ export function CoreCapabilitiesSection() {
         {/* ====================================================================
             MODULE 1: LISTEN — Multilingual Clinical Scribe
            ==================================================================== */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-12 lg:grid-cols-12 lg:items-center"
+        >
           <div className="space-y-6 lg:col-span-5">
             <div className="flex items-center gap-3">
               <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 shrink-0">
@@ -187,12 +194,18 @@ export function CoreCapabilitiesSection() {
               </div>
             </Card>
           </div>
-        </div>
+        </motion.div>
 
         {/* ====================================================================
             MODULE 2: READ — Medical Report Intelligence
            ==================================================================== */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-12 lg:grid-cols-12 lg:items-center"
+        >
           {/* Interactive OCR & Report Visualizer */}
           <div className="order-2 lg:order-1 lg:col-span-7">
             <Card className="overflow-hidden border-border/80 bg-card shadow-xl">
@@ -315,12 +328,18 @@ export function CoreCapabilitiesSection() {
               </li>
             </ul>
           </div>
-        </div>
+        </motion.div>
 
         {/* ====================================================================
             MODULE 3: CONNECT — Patient Context Engine
            ==================================================================== */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-12 lg:grid-cols-12 lg:items-center"
+        >
           <div className="space-y-6 lg:col-span-5">
             <div className="flex items-center gap-3">
               <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 shrink-0">
@@ -428,12 +447,18 @@ export function CoreCapabilitiesSection() {
               </div>
             </Card>
           </div>
-        </div>
+        </motion.div>
 
         {/* ====================================================================
             MODULE 4: SAFEGUARD — Medication Safety Engine
            ==================================================================== */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-12 lg:grid-cols-12 lg:items-center"
+        >
           {/* Interactive Safeguard Preview */}
           <div className="order-2 lg:order-1 lg:col-span-7">
             <Card className="overflow-hidden border-border/80 bg-card shadow-xl p-6 space-y-4">
@@ -540,7 +565,7 @@ export function CoreCapabilitiesSection() {
               </li>
             </ul>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
