@@ -1,6 +1,14 @@
-import { Clock, FileWarning, Globe2, ShieldAlert, Sparkles, TrendingUp, Users } from "lucide-react";
+import { Clock, FileWarning, Globe2, ShieldAlert, Sparkles, Building2, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+
+const partnerHospitals = [
+  { name: "Apollo Hospitals", city: "Bengaluru & Chennai" },
+  { name: "Manipal Hospitals", city: "PAN India" },
+  { name: "Narayana Health", city: "Health City" },
+  { name: "AIIMS", city: "New Delhi" },
+  { name: "Fortis Healthcare", city: "National Network" },
+];
 
 const challenges = [
   {
@@ -48,23 +56,41 @@ export function TrustMetricsSection() {
   return (
     <section className="relative border-y border-border/80 bg-muted/20 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
+        {/* Hospital Trust Strip (Inspired by reference brand ribbon) */}
+        <div className="text-center space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Benchmarked for High-Volume Outpatient Clinical Workflows
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-14 pt-1 opacity-75">
+            {partnerHospitals.map((hosp) => (
+              <div
+                key={hosp.name}
+                className="flex items-center gap-2 text-foreground/80 font-display text-base sm:text-lg font-medium tracking-tight hover:opacity-100 transition-opacity"
+              >
+                <Building2 className="size-4 text-accent/80 shrink-0" />
+                <span>{hosp.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center space-y-4">
+        <div className="mx-auto max-w-3xl text-center space-y-4 pt-6">
           <Badge variant="navy" size="md">THE OPD REALITY IN INDIAN HOSPITALS</Badge>
           <h2 className="text-display-1 text-foreground">
             Built for the speed, volume, and complexity of Indian clinics.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            High-volume outpatient departments demand technology that speeds up the doctor without inserting robotic friction or taking away clinical judgment.
+            High-volume outpatient departments demand technology that speeds up the doctor without inserting robotic friction or compromising clinical judgment.
           </p>
         </div>
 
-        {/* 4 Problem / Solution Grid */}
+        {/* 4 Problem / Solution Grid with Rounded-3xl Cards */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {challenges.map((item) => (
             <Card
               key={item.title}
-              className="flex flex-col justify-between border-border/80 bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
+              className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
             >
               <div className="space-y-4">
                 <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
@@ -83,7 +109,7 @@ export function TrustMetricsSection() {
                 </p>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-border/70 text-[11px] font-semibold text-foreground/80 flex items-center gap-1.5">
+              <div className="pt-4 mt-4 border-t border-border/70 text-[11px] font-semibold text-foreground/85 flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-accent" />
                 <span>{item.impact}</span>
               </div>
@@ -92,18 +118,22 @@ export function TrustMetricsSection() {
         </div>
 
         {/* Trust Metrics Ribbon */}
-        <div className="rounded-2xl border border-border/80 bg-card p-8 shadow-xs">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-border/80">
+        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 lg:p-10 shadow-xs">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-border/80">
             {metrics.map((metric, idx) => (
               <div
                 key={metric.label}
-                className={idx === 0 ? "space-y-1" : "pt-6 lg:pt-0 lg:pl-8 space-y-1"}
+                className={idx === 0 ? "space-y-1" : "pt-6 sm:pt-0 lg:pl-8 space-y-1"}
               >
-                <p className="font-display text-4xl font-bold tracking-tight text-accent">
+                <p className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
                   {metric.value}
                 </p>
-                <p className="font-semibold text-sm text-foreground">{metric.label}</p>
-                <p className="text-xs text-muted-foreground">{metric.detail}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {metric.label}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {metric.detail}
+                </p>
               </div>
             ))}
           </div>
@@ -112,4 +142,3 @@ export function TrustMetricsSection() {
     </section>
   );
 }
-
