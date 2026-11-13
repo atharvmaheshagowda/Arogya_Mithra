@@ -1197,7 +1197,7 @@ export function DashboardPage() {
       {/* ====================================================================
           5. RECENT ACTIVITY TABLE
           ==================================================================== */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
