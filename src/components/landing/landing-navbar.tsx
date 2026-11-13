@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { AarogyaMithraBrand } from "@/components/brand";
 import { ThemeSwitcher } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "#capabilities", label: "Capabilities" },
-  { href: "#workflow", label: "Workflow Blueprint" },
-  { href: "#context-engine", label: "Context Engine" },
+  { href: "#workflow", label: "Workflow" },
+  { href: "#context-engine", label: "Patient Context" },
   { href: "#safety", label: "Clinical Safety" },
   { href: "#faq", label: "FAQ" },
 ];
@@ -22,7 +21,7 @@ export function LandingNavbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 25);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -38,110 +37,123 @@ export function LandingNavbar() {
   };
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        scrolled
-          ? "border-b border-border/80 bg-background/85 py-3 backdrop-blur-md shadow-xs"
-          : "bg-transparent py-5",
-      )}
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-2" aria-label="AAROGYA MITHRA Home">
-          <AarogyaMithraBrand showSubtitle />
-        </a>
-
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              onClick={(e) => handleScrollTo(e, link.href)}
-              className="transition-colors hover:text-foreground"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Right CTA Area */}
-        <div className="hidden sm:flex items-center gap-3">
-          <ThemeSwitcher />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/login")}
-            className="text-muted-foreground hover:text-foreground"
+    <>
+      {/* Floating Centered Pill Navbar */}
+      <header
+        className={cn(
+          "fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-5xl rounded-full transition-all duration-300",
+          "border border-border/70 bg-card/85 dark:bg-card/90 backdrop-blur-xl shadow-md",
+          scrolled ? "py-2 sm:py-2.5 shadow-lg border-border" : "py-2.5 sm:py-3",
+        )}
+      >
+        <div className="flex items-center justify-between px-3 sm:px-5">
+          {/* Brand Logo & Symbol */}
+          <a
+            href="#"
+            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full py-0.5 px-1"
+            aria-label="AAROGYA MITHRA Home"
           >
-            Doctor Login
-          </Button>
-          <Button
-            variant="teal"
-            size="sm"
-            onClick={() => navigate("/app")}
-            rightIcon={<ArrowRight className="size-3.5" />}
-          >
-            Open Workspace
-          </Button>
-        </div>
+            <AarogyaMithraBrand compact showSubtitle={false} />
+          </a>
 
-        {/* Mobile Menu Button */}
-        <div className="flex sm:hidden items-center gap-2">
-          <ThemeSwitcher />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Toggle navigation menu"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden border-b border-border bg-background/95 px-5 py-6 backdrop-blur-xl animate-in fade-in slide-in-from-top-4">
-          <nav className="flex flex-col gap-4 text-base font-medium">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-xs lg:text-sm font-medium text-muted-foreground">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleScrollTo(e, link.href)}
-                className="text-foreground/80 hover:text-accent py-1"
+                className="relative py-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
               >
                 {link.label}
               </a>
             ))}
-            <div className="pt-4 mt-2 border-t border-border flex flex-col gap-2.5">
-              <Button
-                variant="outline"
-                className="w-full justify-center"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate("/login");
-                }}
-              >
-                Doctor Sign In
-              </Button>
-              <Button
-                variant="teal"
-                className="w-full justify-center"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate("/app");
-                }}
-                rightIcon={<ArrowRight className="size-4" />}
-              >
-                Launch OPD Workspace
-              </Button>
-            </div>
           </nav>
+
+          {/* Right Action Controls */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <ThemeSwitcher className="size-8 sm:size-9" />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/login")}
+              className="hidden sm:inline-flex text-xs font-semibold text-muted-foreground hover:text-foreground h-8 px-3 rounded-full"
+            >
+              Doctor Login
+            </Button>
+
+            <Button
+              variant="teal"
+              size="sm"
+              onClick={() => navigate("/app")}
+              rightIcon={<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
+              className="group h-8 sm:h-9 rounded-full px-3.5 sm:px-4 text-xs font-semibold shadow-xs"
+            >
+              <span className="hidden xs:inline">Open </span>Workspace
+            </Button>
+
+            {/* Mobile Hamburger Trigger */}
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden grid size-8 place-items-center rounded-full text-foreground/80 hover:bg-muted/80 transition-colors"
+            >
+              {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 md:hidden animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-primary/30 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed top-20 left-4 right-4 rounded-3xl border border-border bg-card/95 p-6 shadow-2xl backdrop-blur-2xl">
+            <nav className="flex flex-col gap-3 text-sm font-medium">
+              {navLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={(e) => handleScrollTo(e, link.href)}
+                  className="rounded-xl px-3 py-2 text-foreground/80 hover:bg-muted/60 hover:text-accent transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2.5">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/login");
+                  }}
+                  className="w-full rounded-full text-xs font-semibold"
+                >
+                  Doctor Login
+                </Button>
+                <Button
+                  variant="teal"
+                  size="md"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/app");
+                  }}
+                  rightIcon={<ArrowRight className="size-4" />}
+                  className="w-full rounded-full text-xs font-semibold"
+                >
+                  Open Workspace
+                </Button>
+              </div>
+            </nav>
+          </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
-
