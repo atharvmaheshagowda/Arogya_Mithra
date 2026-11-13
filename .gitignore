@@ -58,3 +58,7 @@ Thumbs.db
 *.local
 current_*.png
 test_*.png
+
+# Local backups (user requested exclude)
+Aarogya_Mithra_Complete/
+

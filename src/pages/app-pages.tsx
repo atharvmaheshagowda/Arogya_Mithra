@@ -569,7 +569,7 @@ export function DashboardPage() {
              Left: Consultation Activity Chart + Weekly Patient Statistics
              Right: Pending Approvals + Safety Alert Summary
           ==================================================================== */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* LEFT COLUMN: CHARTS & ANALYTICS */}
         <div className="space-y-6 lg:col-span-7 xl:col-span-8">
           {/* Card A: Consultation Activity Chart (Hourly) */}
@@ -831,7 +831,7 @@ export function DashboardPage() {
                   </p>
                 </div>
               ) : (
-                pendingApprovals.map((approval) => (
+                pendingApprovals.slice(0, 3).map((approval) => (
                   <div
                     key={approval.id}
                     className="group rounded-xl border border-border bg-card p-3.5 transition-all duration-150 hover:border-accent/40 hover:shadow-xs"
@@ -885,6 +885,20 @@ export function DashboardPage() {
                     </div>
                   </div>
                 ))
+              )}
+
+              {pendingApprovals.length > 3 && (
+                <div className="pt-1 text-center">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => navigate("/app/consultations")}
+                    rightIcon={<ArrowRight className="size-3" />}
+                    className="text-xs text-accent font-semibold"
+                  >
+                    View All {pendingApprovals.length} Pending Notes
+                  </Button>
+                </div>
               )}
 
               <p className="text-[11px] leading-relaxed text-muted-foreground text-center pt-1">

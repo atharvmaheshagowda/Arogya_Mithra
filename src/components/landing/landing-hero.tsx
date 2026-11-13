@@ -132,10 +132,10 @@ export function LandingHero() {
             shouldReduceMotion
               ? {}
               : {
-                  rotateX: previewRotateX,
-                  scale: previewScale,
-                  y: previewY,
-                }
+                rotateX: previewRotateX,
+                scale: previewScale,
+                y: previewY,
+              }
           }
           initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
