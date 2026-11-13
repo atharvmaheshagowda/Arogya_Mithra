@@ -46,8 +46,17 @@ export function CoreCapabilitiesSection() {
            ==================================================================== */}
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
           <div className="space-y-6 lg:col-span-5">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
-              <Mic className="size-7" />
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 shrink-0">
+                <Mic className="size-7" />
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-border/80 shadow-xs size-14 shrink-0">
+                <img
+                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=240&q=80"
+                  alt="Doctor patient outpatient consultation"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -261,8 +270,17 @@ export function CoreCapabilitiesSection() {
           </div>
 
           <div className="order-1 lg:order-2 space-y-6 lg:col-span-5">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-teal-400">
-              <FileSearch className="size-7" />
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-teal-400 shrink-0">
+                <FileSearch className="size-7" />
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-border/80 shadow-xs size-14 shrink-0">
+                <img
+                  src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=240&q=80"
+                  alt="Medical laboratory reports and pathology diagnostics"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -304,8 +322,17 @@ export function CoreCapabilitiesSection() {
            ==================================================================== */}
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
           <div className="space-y-6 lg:col-span-5">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
-              <Network className="size-7" />
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 shrink-0">
+                <Network className="size-7" />
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-border/80 shadow-xs size-14 shrink-0">
+                <img
+                  src="https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=240&q=80"
+                  alt="Doctor reviewing connected digital patient health records"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -468,8 +495,17 @@ export function CoreCapabilitiesSection() {
           </div>
 
           <div className="order-1 lg:order-2 space-y-6 lg:col-span-5">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive dark:bg-destructive/20">
-              <ShieldAlert className="size-7" />
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive dark:bg-destructive/20 shrink-0">
+                <ShieldAlert className="size-7" />
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-border/80 shadow-xs size-14 shrink-0">
+                <img
+                  src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=240&q=80"
+                  alt="Pharmacological medication safety verification"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

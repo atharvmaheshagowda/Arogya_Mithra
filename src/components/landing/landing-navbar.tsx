@@ -50,10 +50,10 @@ export function LandingNavbar() {
           {/* Brand Logo & Symbol */}
           <a
             href="#"
-            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full py-0.5 px-1"
+            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full py-0.5 px-1 sm:px-1.5"
             aria-label="AAROGYA MITHRA Home"
           >
-            <AarogyaMithraBrand compact showSubtitle={false} />
+            <AarogyaMithraBrand compact={false} showSubtitle={false} className="gap-2 sm:gap-2.5" />
           </a>
 
           {/* Desktop Navigation Links */}

@@ -34,10 +34,18 @@ function AuthFrame({
     <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
       {/* Editorial Left Hero Panel */}
       <section className="relative hidden overflow-hidden bg-[#102A43] p-12 text-white lg:flex lg:flex-col justify-between">
-        <div className="pointer-events-none absolute inset-0 surface-dots opacity-20" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 size-[480px] rounded-full bg-teal-500/15 blur-[120px]" />
+        {/* Real Clinical Context Background Photography with Deep Tint */}
+        <div className="pointer-events-none absolute inset-0 z-0 select-none">
+          <img
+            src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1400&q=80"
+            alt="Modern Outpatient Clinical Care"
+            className="w-full h-full object-cover opacity-15 filter saturate-50"
+          />
+        </div>
+        <div className="pointer-events-none absolute inset-0 surface-dots opacity-20 z-0" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 size-[480px] rounded-full bg-teal-500/15 blur-[120px] z-0" />
 
-        <div className="relative">
+        <div className="relative z-10">
           <Link to="/" className="inline-block" aria-label="Go to Home">
             <AarogyaMithraBrand className="!text-white" showSubtitle />
           </Link>
@@ -81,17 +89,29 @@ function AuthFrame({
       </section>
 
       {/* Auth Interaction Panel */}
-      <section className="relative flex items-center justify-center bg-background p-6 sm:p-10">
-        <div className="absolute right-6 top-6 flex items-center gap-3">
-          <ThemeSwitcher />
-          <Link
-            to="/"
-            className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Back to Public Site
-          </Link>
+      <section className="relative flex flex-col items-center justify-center bg-background px-4 py-8 sm:p-10 min-h-screen">
+        {/* Top Navigation Bar: Mobile/Tablet Brand on Left, Actions on Right */}
+        <div className="w-full max-w-md lg:max-w-none lg:absolute lg:top-6 lg:left-8 lg:right-8 flex items-center justify-between mb-8 lg:mb-0">
+          <div className="lg:hidden">
+            <Link to="/" className="inline-flex items-center" aria-label="Go to Home">
+              <AarogyaMithraBrand showSubtitle={false} />
+            </Link>
+          </div>
+          <div className="hidden lg:block">
+            {/* Empty placeholder on desktop to keep justify-between layout clean */}
+          </div>
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <ThemeSwitcher />
+            <Link
+              to="/"
+              className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent/40 hover:text-foreground transition-all shadow-2xs"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
-        <div className="w-full max-w-md">{children}</div>
+
+        <div className="w-full max-w-md my-auto">{children}</div>
       </section>
     </main>
   );
@@ -146,11 +166,7 @@ export function LoginPage() {
 
   return (
     <AuthFrame badgeText="PHYSICIAN SIGN IN • OPD WORKSPACE">
-      <div className="mb-8 lg:hidden">
-        <AarogyaMithraBrand showSubtitle />
-      </div>
-
-      <Card className="border-0 bg-transparent shadow-none sm:border sm:bg-card sm:shadow-lg">
+      <Card className="border-0 bg-transparent shadow-none sm:border sm:border-border/80 sm:bg-card sm:p-2 sm:shadow-xl rounded-3xl">
         <CardHeader className="px-0 sm:px-6">
           <div className="mb-2 grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
             <LockKeyhole className="size-5" />
@@ -282,11 +298,7 @@ export function RegisterPage() {
 
   return (
     <AuthFrame badgeText="CLINICIAN PROFILE CREATION • PROTOTYPE">
-      <div className="mb-8 lg:hidden">
-        <AarogyaMithraBrand showSubtitle />
-      </div>
-
-      <Card className="border-0 bg-transparent shadow-none sm:border sm:bg-card sm:shadow-lg">
+      <Card className="border-0 bg-transparent shadow-none sm:border sm:border-border/80 sm:bg-card sm:p-2 sm:shadow-xl rounded-3xl">
         <CardHeader className="px-0 sm:px-6">
           <div className="mb-2 grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
             <Stethoscope className="size-5" />
