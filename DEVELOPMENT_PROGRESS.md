@@ -286,6 +286,45 @@
 
 ---
 
+## Phase 8: Medical Report Intelligence (READ Module)
+**Status:** Complete  
+**Date:** 2026-11-13
+
+### Implemented Route & Feature Architecture
+1. **Dedicated Route (`/app/reports`):**
+   - Configured route `/app/reports` in `src/router.tsx` connected to `ReportsPage` in `src/pages/report-intelligence-page.tsx`.
+   - Updated top header to `"Medical Report Intelligence"` and subtitle `"Diagnostic report OCR & entity intelligence (READ)"`.
+2. **Document Upload & Ingestion Engine:**
+   - Drag-and-drop zone with multi-format validation (PDF, JPG, JPEG, PNG up to 25 MB).
+   - Animated multi-stage upload progress indicator: `Uploading Document` → `Running Multilingual OCR Engine` → `Extracting Biomarkers & Reference Ranges` → `Extraction Complete`.
+   - Ingested Document Queue supporting sample report selection (Thyrocare Metabolic Profile, Dr. Lal PathLabs Thyroid Screen, Jayadeva Cardiology Rx Scan, Apollo Allergy IgE Profile).
+3. **High-Fidelity Split-Screen Document Preview (Left Panel):**
+   - Simulated medical document viewer with zoom controls (70% to 140%).
+   - Authentic lab layout: Hospital and laboratory letterhead, NABL/CAP accreditation notes, barcode stamps, sample collection/reporting timestamps, patient demographic boxes, and watermarks.
+   - Dual-mode visual layout: Formatted diagnostic biomarker tables for laboratory reports and clinical prescription letterheads for Rx scans.
+4. **Structured Information Extraction (Right Panel):**
+   - **Laboratory Reports:** Test Name, Observed Result, Unit, Biological Reference Interval, Confidence Score, Source Document citation (e.g., `Page 1, Table 1, Row 1`), and Diagnostic Flag (`HIGH`, `LOW`, `NORMAL`).
+   - **Prescriptions:** Medication Name, Dosage, Frequency, Duration, Prescription Date, Prescriber & Facility, Source Document citation, and SAFEGUARD contraindication alerts.
+   - Clean data export action: One-click "Copy Clean Data" for standardized clinical transfer.
+5. **Transparent Extraction Confidence Scoring:**
+   - 4-Tier Extraction Confidence Breakdown:
+     - **Extracted:** High-confidence character recognition (98% - 99.5%).
+     - **Verify:** Parameters flagged for clinician review (e.g., borderline smudges, 70% - 85%).
+     - **Unreadable:** Explicitly flags obscured stamps or digits without fabricating missing data.
+     - **Missing:** Explicitly tags unrecorded fields (e.g., omitted prescription duration).
+6. **Patient Record Integration & Review-Before-Save Workflow:**
+   - Demographic auto-matching linking extracted documents to active patient profiles (`Rajesh Kumar #AM-94021`, `Lakshmi Gowda #AM-93112`, etc.).
+   - Interactive review modal with verification checklist.
+   - One-click **"Commit to Patient Record (EHR)"** action integrating extracted biomarkers into the patient's longitudinal timeline and triggering toast confirmation.
+7. **Decoupled Service Layer (`src/lib/report-service.ts`):**
+   - Full TypeScript data contracts (`ReportDocument`, `ExtractedLabBiomarker`, `ExtractedPrescriptionItem`).
+
+### Verification & Build Status
+- `npm run typecheck` (`tsc -b`) passed with 0 errors.
+- `npm run build` (`vite build`) successfully bundled 1719 modules in 6.05s.
+
+---
+
 ## Next Steps
-- Implement Medical Report Intelligence (`/app/reports`) with diagnostic OCR entity extraction visualizer and PDF preview.
 - Implement Medication Safety Engine (`/app/medication-safety`) with interactive drug-drug interaction matrix and CDSCO/BNF rule lookup.
+- Finalize Interactive Workflow Orchestrator (`/app/workflow`) with stage triggers.
