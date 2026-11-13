@@ -1,4 +1,5 @@
 from app.models.allergy import Allergy
+from app.models.clinical_note import ClinicalSOAPNote
 from app.models.encounter import Encounter
 from app.models.medical_history import MedicalHistory
 from app.models.medication import Medication
@@ -14,4 +15,5 @@ __all__ = [
     "VitalSign",
     "Medication",
     "PatientMedication",
+    "ClinicalSOAPNote",
 ]
