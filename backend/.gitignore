@@ -1,0 +1,12 @@
+# Backend-specific ignore rules
+.env
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+uploads/*
+!uploads/.gitkeep
+

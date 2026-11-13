@@ -1,0 +1,95 @@
+{
+  "catalogue_metadata": {
+    "version": "1.0.0",
+    "updated_at": "2026-11-12",
+    "description": "Curated deterministic medication safety and drug-drug interaction rule catalogue with explicit clinical provenance.",
+    "disclaimer": "This rule catalogue supports deterministic safety screening for OPD assistance. It does not replace clinical pharmacology reference tools or comprehensive physician judgment."
+  },
+  "allergy_ingredient_mappings": [
+    {
+      "allergen_keyword": "amoxicillin",
+      "conflicting_ingredients": ["amoxicillin"],
+      "evidence_source": "Standard Pharmacopeia / British National Formulary (BNF) Beta-Lactam Hypersensitivity Section",
+      "is_demo_rule": false
+    },
+    {
+      "allergen_keyword": "penicillin",
+      "conflicting_ingredients": ["amoxicillin"],
+      "evidence_source": "CDC / AAAAI Penicillin Allergy Clinical Guidance (Beta-lactam core cross-reactivity)",
+      "is_demo_rule": false
+    },
+    {
+      "allergen_keyword": "aspirin",
+      "conflicting_ingredients": ["aspirin"],
+      "evidence_source": "FDA Prescribing Information: Aspirin / NSAID Hypersensitivity Warnings",
+      "is_demo_rule": false
+    },
+    {
+      "allergen_keyword": "ciprofloxacin",
+      "conflicting_ingredients": ["ciprofloxacin"],
+      "evidence_source": "FDA Prescribing Information: Fluoroquinolone Hypersensitivity Warnings",
+      "is_demo_rule": false
+    },
+    {
+      "allergen_keyword": "sulfa",
+      "conflicting_ingredients": ["sulfamethoxazole", "sulfa antibiotics"],
+      "evidence_source": "Standard Pharmacopeia Sulfonamide Antibacterial Hypersensitivity Guidelines",
+      "is_demo_rule": false
+    }
+  ],
+  "drug_drug_interactions": [
+    {
+      "rule_id": "DDI-001",
+      "ingredient_1": "warfarin",
+      "ingredient_2": "aspirin",
+      "severity": "high",
+      "category": "drug_drug_interaction",
+      "explanation": "Concurrent administration of warfarin (vitamin K antagonist anticoagulant) and aspirin (antiplatelet) significantly increases the risk of severe gastrointestinal and major systemic hemorrhage due to additive antithrombotic pharmacodynamics.",
+      "source": "FDA Prescribing Information for Warfarin Sodium; CHEST 9th Ed. Antithrombotic Therapy Guidelines",
+      "source_id": "FDA-NDA-009218 / CHEST-2012-ANTITHROMBOTIC",
+      "review_date": "2026-01-15",
+      "is_demo_rule": false,
+      "clinically_verified": true
+    },
+    {
+      "rule_id": "DDI-002",
+      "ingredient_1": "warfarin",
+      "ingredient_2": "ibuprofen",
+      "severity": "high",
+      "category": "drug_drug_interaction",
+      "explanation": "NSAIDs such as ibuprofen inhibit platelet COX-1 and cause gastric mucosal ulceration, markedly increasing bleeding complications when combined with systemic anticoagulants like warfarin.",
+      "source": "FDA Drug Safety Communication: Prescription and OTC NSAIDs and Warfarin Bleeding Risks",
+      "source_id": "FDA-DRUG-SAFETY-NSAID-WARFARIN",
+      "review_date": "2026-01-15",
+      "is_demo_rule": false,
+      "clinically_verified": true
+    },
+    {
+      "rule_id": "DDI-003",
+      "ingredient_1": "lisinopril",
+      "ingredient_2": "potassium",
+      "severity": "moderate",
+      "category": "drug_drug_interaction",
+      "explanation": "ACE inhibitors reduce aldosterone secretion, causing renal potassium retention. Concomitant administration of potassium supplements increases the risk of clinically significant hyperkalemia.",
+      "source": "AHA/ACC Heart Failure Guidelines; DailyMed Lisinopril Drug Interaction Section 7",
+      "source_id": "DAILYMED-LISINOPRIL-SEC-7",
+      "review_date": "2026-01-15",
+      "is_demo_rule": false,
+      "clinically_verified": true
+    },
+    {
+      "rule_id": "DDI-DEMO-001",
+      "ingredient_1": "metformin",
+      "ingredient_2": "ciprofloxacin",
+      "severity": "moderate",
+      "category": "drug_drug_interaction",
+      "explanation": "Demonstration Test Rule: Fluoroquinolones may alter glycemic control, producing hypoglycemia or hyperglycemia in patients on oral biguanides. Monitor blood glucose closely.",
+      "source": "Demo Fixture: OPD Hackathon Prototype Test Rule (Explicitly Marked Demo Only)",
+      "source_id": "DEMO-FIXTURE-DYSGLYCEMIA-01",
+      "review_date": "2026-11-12",
+      "is_demo_rule": true,
+      "clinically_verified": false
+    }
+  ]
+}
+

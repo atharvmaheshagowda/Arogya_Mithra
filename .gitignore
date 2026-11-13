@@ -1,14 +1,59 @@
+# =============================================================================
+# AAROGYA MITHRA Monorepo Root .gitignore
+# =============================================================================
+
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Production build outputs & caches
 dist/
+build/
+.next/
 .vite/
 *.tsbuildinfo
-.env
-.env.*
-!.env.example
 
-# OS and Editor
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python Bytecode & Test Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment Configuration & Secret Credentials
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+!.env.example
+!backend/.env.example
+
+# Local SQLite Databases & Persistent Storage
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads & Temporary File Ingestion
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE, Editor & Operating System files
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
 *.local
 current_*.png
-
