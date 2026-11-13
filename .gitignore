@@ -1,8 +1,50 @@
+# =============================================================================
+# Arogya Mithra Monorepo Root .gitignore
+# =============================================================================
+
+# Virtual environments
 .venv/
+venv/
+ENV/
+env/
+
+# Python bytecode & cache
 __pycache__/
 *.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment files & secrets
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# SQLite Databases & local persistent storage
 *.db
+*.sqlite
+*.sqlite3
+
+# Uploads & temporary artifacts
 uploads/*
 !uploads/.gitkeep
-.pytest_cache/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE & Operating System files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Monorepo future frontend / mobile packages
+node_modules/
+dist/
+.next/
+build/
