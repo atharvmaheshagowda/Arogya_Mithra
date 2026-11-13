@@ -117,4 +117,22 @@
   .surface-grid { background-image: linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px); background-size: 32px 32px; }
   .glow-teal { box-shadow: 0 0 25px -4px rgb(13 148 136 / 0.35); }
   .glow-teal-sm { box-shadow: 0 0 14px -2px rgb(13 148 136 / 0.25); }
+  .glow-danger-sm { box-shadow: 0 0 14px -2px rgb(220 38 38 / 0.25); }
+  .glow-warning-sm { box-shadow: 0 0 14px -2px rgb(245 158 11 / 0.25); }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  .clinical-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .clinical-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .clinical-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .clinical-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 9999px;
+  }
 }

@@ -328,7 +328,7 @@ export function DashboardPage() {
 
         <button
           type="button"
-          onClick={() => navigate("/app/medication-safety")}
+          onClick={() => navigate("/app/safety")}
           className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xs"
         >
           <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white transition-colors">
@@ -792,7 +792,7 @@ export function DashboardPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => navigate("/app/medication-safety")}
+                      onClick={() => navigate("/app/safety")}
                       className="font-semibold text-accent hover:underline flex items-center gap-1"
                     >
                       Audit Rule <ArrowUpRight className="size-3" />
@@ -805,7 +805,7 @@ export function DashboardPage() {
                 variant="outline"
                 size="sm"
                 className="w-full mt-2"
-                onClick={() => navigate("/app/medication-safety")}
+                onClick={() => navigate("/app/safety")}
                 rightIcon={<ArrowRight className="size-3.5" />}
               >
                 Open SAFEGUARD Safety Engine
@@ -1339,107 +1339,7 @@ export { ReportsPage } from "./report-intelligence-page";
    5. MEDICATION SAFETY PAGE (SAFEGUARD Module)
    ========================================================================== */
 
-export function MedicationSafetyPage() {
-  const [testDrug, setTestDrug] = useState("");
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="font-display text-2xl font-bold text-foreground">Medication Safeguard Engine (SAFEGUARD)</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Deterministic drug-drug interaction matrix, allergy conflict gating, and CDSCO/BNF evidence verification
-          </p>
-        </div>
-
-        <Badge variant="success" size="md">
-          Active Safety Rules: 14,280 molecules
-        </Badge>
-      </div>
-
-      {/* Safety Interceptor Cards */}
-      <div className="grid gap-6 lg:grid-cols-12 items-start">
-        <Card className="lg:col-span-7 p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Current Patient Regimen Audit (Rajesh Kumar)
-            </span>
-            <Badge variant="teal" size="sm">Real-time Gated</Badge>
-          </div>
-
-          <div className="space-y-3">
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-destructive flex items-center gap-1.5">
-                  <AlertCircle className="size-4" />
-                  Allergy Conflict Intercepted: Beta-Lactam Class
-                </span>
-                <Badge variant="danger" size="sm">Hard Stop Warning</Badge>
-              </div>
-              <p className="text-xs text-foreground/90 leading-relaxed">
-                Patient has a recorded severe anaphylactoid/cutaneous rash allergy to <strong>Penicillin &amp; Amoxicillin</strong> (Jan 2025). Attempted prescription of Amoxicillin-Clavulanate was blocked.
-              </p>
-              <div className="rounded-lg bg-card p-2 text-[11px] font-mono text-muted-foreground border border-border">
-                Approved Alternative: Azithromycin 500mg OD x 3 days (Macrolide group).
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-warning flex items-center gap-1.5">
-                  <AlertTriangle className="size-4" />
-                  Drug-Drug Interaction Advisory: Chelation Spacing
-                </span>
-                <Badge variant="warning" size="sm">Moderate Advisory</Badge>
-              </div>
-              <p className="text-xs text-foreground/90 leading-relaxed">
-                Simultaneous dosing of Fluoroquinolones with oral antacids (Pantoprazole / Magnesium) reduces absorption by ~50%. Space administration by at least 2 hours.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-success/30 bg-success/5 p-4 space-y-1">
-              <div className="flex items-center gap-2 text-success text-xs font-bold">
-                <CheckCircle2 className="size-4" />
-                <span>Therapeutic Duplication Screen: Passed</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                No redundant PPI, ACE inhibitor, or antidiabetic duplicate regimens detected across all active clinic files.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Right: Quick Molecule Verifier */}
-        <Card className="lg:col-span-5 p-6 space-y-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-            Ad-hoc Pharmacopeia Molecule Lookup
-          </span>
-
-          <div className="space-y-3">
-            <Input
-              placeholder="Type drug name (e.g. Ciprofloxacin, Metformin)..."
-              value={testDrug}
-              onChange={(e) => setTestDrug(e.target.value)}
-            />
-            <Button variant="outline" size="sm" className="w-full">
-              Run Deterministic Safety Check
-            </Button>
-          </div>
-
-          <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1.5">
-            <span className="font-semibold text-foreground flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5 text-accent" />
-              Evidence Standards
-            </span>
-            <p className="text-[11px] leading-relaxed">
-              Rules grounded in Central Drugs Standard Control Organisation (CDSCO), British National Formulary (BNF), and National Formulary of India (NFI).
-            </p>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
+export { MedicationSafetyPage } from "./medication-safety-page";
 
 /* ==========================================================================
    6. WORKFLOW PAGE (Blueprint Component)

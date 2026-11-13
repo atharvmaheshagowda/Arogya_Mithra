@@ -60,7 +60,7 @@ const navGroups: NavGroup[] = [
       { to: "/app/patients", label: "Patients", icon: Users, badge: "28" },
       { to: "/app/consultations", label: "Consultations", icon: HeartPulse, badge: "Active" },
       { to: "/app/reports", label: "Medical Reports", icon: FileText, badge: "6 New" },
-      { to: "/app/medication-safety", label: "Medication Safety", icon: ShieldCheck },
+      { to: "/app/safety", label: "Medication Safety", icon: ShieldCheck, badge: "SAFEGUARD" },
     ],
   },
   {
@@ -79,6 +79,7 @@ const titleByPath: Record<string, { title: string; subtitle: string }> = {
   "/app/patients": { title: "Patient Context Panel", subtitle: "Unified longitudinal records & history" },
   "/app/consultations": { title: "Consultation Scribe", subtitle: "Multilingual ambient clinical capture (LISTEN)" },
   "/app/reports": { title: "Medical Reports", subtitle: "Diagnostic report OCR & entity intelligence (READ)" },
+  "/app/safety": { title: "Medication Safety Engine", subtitle: "Deterministic drug interaction gating (SAFEGUARD)" },
   "/app/medication-safety": { title: "Medication Safety Engine", subtitle: "Deterministic drug interaction gating (SAFEGUARD)" },
   "/app/workflow": { title: "Workflow Orchestrator", subtitle: "Interactive 8-stage clinical blueprint" },
   "/app/settings": { title: "Workspace Settings", subtitle: "OPD profile, language models & alert preferences" },
@@ -167,7 +168,7 @@ export function ApplicationShell() {
     { type: "Patient", title: "Ananya Sharma (29y F)", detail: "MRN: #AM-89412 • Migraine with Aura", path: "/app/patients/AM-89412" },
     { type: "Consultation", title: "Kannada Ambient Scribe (Room 04)", detail: "Acute Epigastric Pain x 3 Days", path: "/app/consultations" },
     { type: "Report", title: "Thyrocare Metabolic Profile (HbA1c 7.4%)", detail: "Scanned PDF • Ingested today", path: "/app/reports" },
-    { type: "Safety", title: "Drug Interaction Audit (Penicillin Allergy)", detail: "SAFEGUARD Matrix • Hard Stop Active", path: "/app/medication-safety" },
+    { type: "Safety", title: "Drug Interaction Audit (Penicillin Allergy)", detail: "SAFEGUARD Matrix • Hard Stop Active", path: "/app/safety" },
   ].filter(
     (item) =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
