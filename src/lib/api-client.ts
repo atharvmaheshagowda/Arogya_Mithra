@@ -22,6 +22,21 @@ export const apiClient = axios.create({
   },
 });
 
+// Attach authenticated physician Bearer JWT token to every request
+apiClient.interceptors.request.use((config) => {
+  try {
+    const token =
+      localStorage.getItem("aarogya_auth_token") ||
+      sessionStorage.getItem("aarogya_auth_token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (e) {
+    // Graceful fallback in non-browser environments
+  }
+  return config;
+});
+
 export interface ExtractedItem {
   text: string;
   source_evidence?: string | null;
