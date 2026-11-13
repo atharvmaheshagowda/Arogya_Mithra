@@ -1342,26 +1342,10 @@ export { ReportsPage } from "./report-intelligence-page";
 export { MedicationSafetyPage } from "./medication-safety-page";
 
 /* ==========================================================================
-   6. WORKFLOW PAGE (Blueprint Component)
+   6. WORKFLOW PAGE (Interactive Visualizer & Blueprint)
    ========================================================================== */
 
-export function WorkflowPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-bold text-foreground">Interactive Clinical Workflow Blueprint</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            End-to-end 8-stage architecture connecting ambient scribing, report ingestion, context timeline, and doctor review
-          </p>
-        </div>
-        <Badge variant="teal">Living Blueprint</Badge>
-      </div>
-
-      <InteractiveWorkflowSection />
-    </div>
-  );
-}
+export { WorkflowVisualizerPage as WorkflowPage } from "./workflow-visualizer-page";
 
 /* ==========================================================================
    7. SETTINGS PAGE

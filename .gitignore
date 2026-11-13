@@ -10,4 +10,5 @@ dist/
 .DS_Store
 Thumbs.db
 *.local
+current_*.png
 

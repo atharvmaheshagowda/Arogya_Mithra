@@ -374,6 +374,53 @@
 
 ---
 
+## Phase 10: Interactive Clinical Workflow Visualizer (@xyflow/react)
+**Status:** Complete  
+**Date:** 2026-11-13
+
+### Implemented Route & Feature Architecture
+1. **Interactive Route (`/app/workflow`):**
+   - Configured route `/app/workflow` mapped to `WorkflowVisualizerPage` in `src/pages/workflow-visualizer-page.tsx`.
+   - Integrated `@xyflow/react` v12 with custom node rendering, dot background grid, interactive mini-map, controls, and smoothstep connection paths.
+2. **Canonical 8-Stage Clinical Nodes:**
+   - **Node 1 (Trigger): Patient Check-in** — OPD Triage, Baseline vitals intake, and session queue initialization.
+   - **Node 2 (AI Processing): Consultation Capture** — Ambient dual-channel microphone stream, beamforming, and speaker diarization.
+   - **Node 3 (AI Processing): Multilingual Speech Transcription** — Kannada, Hindi, and Indian English speech-to-clinical terminology (LISTEN).
+   - **Node 4 (AI Processing): Medical Document Extraction** — Pathology PDF and prescription slip OCR with discrete biomarker parsing (READ).
+   - **Node 5 (AI Processing): Patient Context Engine** — Longitudinal health graph synthesis and clinical conflict detection (CONNECT).
+   - **Node 6 (Safety Gate): Medication Safety Engine** — Deterministic CDSCO/BNF interaction gating and allergy cross-reactivity screening (SAFEGUARD).
+   - **Node 7 (Review Gate): Doctor Review** — Mandatory human-in-the-loop clinical oversight and SOAP draft authentication (REVIEW).
+   - **Node 8 (Delivery): Approved Clinical Note** — Final cryptographic EMR commit, pharmacy dispensing order, and ABDM FHIR export (APPROVE).
+3. **Comprehensive Node Categories & Visual Language:**
+   - **Trigger:** Deep Navy (`#102A43`) with Zap icon and amber pills.
+   - **AI Processing:** Clinical Teal (`#0D9488`) with Sparkles icon and teal glowing borders.
+   - **Safety:** Warning Amber (`#F59E0B`) with ShieldAlert icon and hard-stop gating badges.
+   - **Review:** Royal Navy with Stethoscope icon and human oversight indicators.
+   - **Delivery:** Soft Green (`#16A34A`) with CheckCircle2 icon and locked delivery status.
+4. **Rich Interactive Canvas Capabilities:**
+   - **Drag & Reposition:** Move nodes across the infinite canvas with automatic edge recalculation.
+   - **Connect Nodes:** Interactive handles (Left, Right, Top, Bottom) allowing users to draw new connection lines with arrow markers.
+   - **Select Nodes:** Click selection triggers glowing ring elevation and populates the deep inspector panel.
+   - **Edit Node Parameters:** `WorkflowEditModal` allowing real-time edits to title, category, stage, status, processing engine, inputs, outputs, and safety rules.
+   - **Add Custom Steps:** Quick template menu to inject custom nodes (e.g. Telehealth Video Relay, External Lab Dispatch, ABDM Health Locker Sync).
+   - **Delete Nodes:** Remove custom or standard nodes with cascade edge cleanup.
+   - **Undo & Redo:** 25-level stack tracking every node movement, edge connection, edit, or deletion with keyboard shortcuts and toolbar buttons.
+   - **Zoom & Fit View:** Smooth animated `fitView()` with customizable padding, plus zoom in, zoom out, and lock controls.
+   - **Export Workflow JSON:** One-click download of `aarogya-mithra-clinical-workflow-[timestamp].json` and instant clipboard copy.
+   - **Sequential Pipeline Simulation:** Interactive "Simulate Pipeline Flow" mode walking step-by-step through stages 1 to 8 with real-time toast telemetry and active stage highlight.
+5. **Additional Information Panel (Right Inspector):**
+   - Displays: Node Name, Category, Stage, Actor, Processing Engine Type, Full Input Payloads, Output Artifacts, Automated Copilot Stream, Clinical Safety Gate, and direct "Open Associated Clinical Module" deep-links.
+6. **Integrated Blueprint Guide Mode:**
+   - Top-bar switcher enabling clinicians to toggle between the **Interactive Node Canvas (@xyflow/react)** and the **Sequential Linear Blueprint Guide** without rewriting the underlying data.
+7. **Explicit Transparency Notice:**
+   - Prominent banner clearly distinguishing target system topology from simulated hackathon sandbox environment.
+
+### Verification & Build Status
+- `npm run typecheck` (`tsc -b`) passed with 0 errors.
+- `npm run build` (`vite build`) successfully bundled 1751 modules in 10.51s.
+
+---
+
 ## Next Steps
-- Implement Workflow Orchestrator (`/app/workflow`) connecting all modules into an interactive living blueprint.
-- Implement Application Settings & Clinical Preferences (`/app/settings`).
+- Final polish of Workspace Settings & Physician Preferences (`/app/settings`).
+- Complete system smoke testing across all 7 routes (`/`, `/login`, `/register`, `/app/dashboard`, `/app/patients`, `/app/consultations`, `/app/reports`, `/app/safety`, `/app/workflow`).

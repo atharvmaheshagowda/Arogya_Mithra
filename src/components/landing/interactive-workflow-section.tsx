@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface WorkflowStep {
+export interface WorkflowStep {
   id: number;
   code: string;
   title: string;
@@ -36,7 +36,7 @@ interface WorkflowStep {
   outputArtifact: string;
 }
 
-const workflowSteps: WorkflowStep[] = [
+export const workflowSteps: WorkflowStep[] = [
   {
     id: 1,
     code: "CHECKIN",
