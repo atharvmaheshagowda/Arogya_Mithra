@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "@studio-freight/lenis";
 import { Sparkles } from "lucide-react";
 
 export interface ParallaxComponentProps {
@@ -25,7 +24,6 @@ export function ParallaxComponent({
     ) as HTMLElement | null;
 
     let tl: gsap.core.Timeline | null = null;
-    let lenis: Lenis | null = null;
 
     if (triggerElement) {
       tl = gsap.timeline({
@@ -58,25 +56,12 @@ export function ParallaxComponent({
       });
     }
 
-    try {
-      lenis = new Lenis();
-      lenis.on("scroll", ScrollTrigger.update);
-      const rafCallback = (time: number) => {
-        lenis?.raf(time * 1000);
-      };
-      gsap.ticker.add(rafCallback);
-      gsap.ticker.lagSmoothing(0);
-    } catch (e) {
-      console.warn("Lenis initialization skipped or unsupported in environment", e);
-    }
-
     return () => {
       ScrollTrigger.getAll().forEach((st) => st.kill());
       if (triggerElement) {
         gsap.killTweensOf(triggerElement);
       }
       tl?.kill();
-      lenis?.destroy();
     };
   }, []);
 

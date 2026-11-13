@@ -314,7 +314,7 @@ export function DashboardPage() {
       {/* ====================================================================
           1. TOP SECTION — GREETING & START CONSULTATION
           ==================================================================== */}
-      <div className="flex flex-col justify-between gap-5 rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-6 rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm xl:flex-row xl:items-center">
         <div className="flex items-start sm:items-center gap-4">
           <div className="relative size-16 sm:size-20 shrink-0 overflow-hidden rounded-2xl border-2 border-accent/30 shadow-md bg-muted">
             <img
@@ -346,7 +346,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             size="lg"
@@ -793,6 +793,207 @@ export function DashboardPage() {
                     Auto-detects code-mixing between regional vernacular and clinical English.
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card E: OPD Queue & Real-Time Patient Triage */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">OPD Queue & Active Triage</CardTitle>
+                    <Badge variant="teal" size="sm" dot>Room 04 • Live</Badge>
+                  </div>
+                  <CardDescription className="mt-1">
+                    Real-time outpatient queue, active consultation status & intake triage.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" size="sm">
+                    18 Done • 3 Waiting
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {/* Active In-Consultation Patient Banner */}
+              <div className="rounded-xl border border-teal-500/30 bg-teal-500/5 p-3.5 transition-all">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative size-10 shrink-0 overflow-hidden rounded-full border border-teal-500/40 bg-teal-500/10 grid place-items-center">
+                      <Mic className="size-5 text-teal-600 dark:text-teal-400 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground">
+                          Rajesh Kumar
+                        </span>
+                        <Badge variant="teal" size="sm">Token #18</Badge>
+                        <span className="text-xs text-muted-foreground font-mono">AM-94021</span>
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        <span>54y Male</span>
+                        <span>•</span>
+                        <span className="text-teal-700 dark:text-teal-300 font-medium">In Consultation (7m 14s)</span>
+                        <span>•</span>
+                        <span className="text-xs">LISTEN Ambient Scribe (Kannada/English)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => navigate("/app/patients/AM-94021")}
+                      leftIcon={<Eye className="size-3" />}
+                    >
+                      EHR
+                    </Button>
+                    <Button
+                      variant="teal"
+                      size="xs"
+                      onClick={() => navigate("/app/consultations")}
+                      leftIcon={<Mic className="size-3" />}
+                    >
+                      Resume Scribe
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Waiting Room Triage Queue */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-semibold text-foreground px-1">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="size-3.5 text-muted-foreground" />
+                    Next in Waiting Room (3 Patients)
+                  </span>
+                  <span className="text-muted-foreground font-normal">Est. avg wait: ~11 min</span>
+                </div>
+
+                <div className="divide-y divide-border/50 rounded-xl border border-border bg-card">
+                  {/* Queue Item 1 */}
+                  <div className="flex items-center justify-between p-3 transition-colors hover:bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-xs font-bold text-foreground">
+                        #19
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-semibold text-foreground">Lakshmi Gowda</h5>
+                          <span className="text-[11px] text-muted-foreground font-mono">AM-93112</span>
+                          <Badge variant="navy" size="sm">Routine</Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          48y F • Hypothyroidism & HTN Review • Waiting 14m
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => {
+                        toast({
+                          title: "Patient Called to Room 04",
+                          description: "Calling Token #19 (Lakshmi Gowda) into consultation.",
+                        });
+                        navigate("/app/consultations");
+                      }}
+                      rightIcon={<ArrowRight className="size-3" />}
+                      className="text-xs text-accent font-semibold"
+                    >
+                      Call Next
+                    </Button>
+                  </div>
+
+                  {/* Queue Item 2 */}
+                  <div className="flex items-center justify-between p-3 transition-colors hover:bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-destructive/10 text-xs font-bold text-destructive">
+                        #20
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-semibold text-foreground">Mohammad Farooq</h5>
+                          <span className="text-[11px] text-muted-foreground font-mono">AM-91048</span>
+                          <Badge variant="danger" size="sm">Priority</Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          62y M • CAD / Exertional Dyspnea • Waiting 9m
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => {
+                        toast({
+                          title: "Priority Patient Called",
+                          description: "Calling Token #20 (Mohammad Farooq) into consultation.",
+                        });
+                        navigate("/app/consultations");
+                      }}
+                      rightIcon={<ArrowRight className="size-3" />}
+                      className="text-xs text-accent font-semibold"
+                    >
+                      Call Next
+                    </Button>
+                  </div>
+
+                  {/* Queue Item 3 */}
+                  <div className="flex items-center justify-between p-3 transition-colors hover:bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-xs font-bold text-foreground">
+                        #21
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-semibold text-foreground">Ananya Sharma</h5>
+                          <span className="text-[11px] text-muted-foreground font-mono">AM-89412</span>
+                          <Badge variant="outline" size="sm">Scheduled</Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          29y F • Migraine with Aura Follow-up • Waiting 4m
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => {
+                        toast({
+                          title: "Patient Called to Room 04",
+                          description: "Calling Token #21 (Ananya Sharma) into consultation.",
+                        });
+                        navigate("/app/consultations");
+                      }}
+                      rightIcon={<ArrowRight className="size-3" />}
+                      className="text-xs text-accent font-semibold"
+                    >
+                      Call Next
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Quick Actions & Link */}
+              <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs">
+                <span className="text-muted-foreground text-[11px]">
+                  OPD Intake active until 02:00 PM
+                </span>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => navigate("/app/patients")}
+                  rightIcon={<ArrowRight className="size-3" />}
+                  className="text-xs font-semibold text-accent"
+                >
+                  Manage OPD Queue & Registry
+                </Button>
               </div>
             </CardContent>
           </Card>

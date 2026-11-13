@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   ChevronRight,
@@ -88,30 +89,45 @@ function AuthFrame({
         </div>
       </section>
 
-      {/* Auth Interaction Panel */}
-      <section className="relative flex flex-col items-center justify-center bg-background px-4 py-8 sm:p-10 min-h-screen">
-        {/* Top Navigation Bar: Mobile/Tablet Brand on Left, Actions on Right */}
-        <div className="w-full max-w-md lg:max-w-none lg:absolute lg:top-6 lg:left-8 lg:right-8 flex items-center justify-between mb-8 lg:mb-0">
-          <div className="lg:hidden">
-            <Link to="/" className="inline-flex items-center" aria-label="Go to Home">
-              <AarogyaMithraBrand showSubtitle={false} />
-            </Link>
-          </div>
-          <div className="hidden lg:block">
-            {/* Empty placeholder on desktop to keep justify-between layout clean */}
-          </div>
-          <div className="flex items-center gap-2.5 sm:gap-3.5">
-            <ThemeSwitcher />
+      {/* Auth Interaction Panel: Clean Top Header, Centered Content, and No Overflow Clashing */}
+      <section className="relative flex flex-col justify-between bg-background min-h-screen overflow-y-auto">
+        {/* Top Navigation Bar: Symmetrically aligned on both mobile & desktop */}
+        <header className="w-full px-4 sm:px-8 lg:px-10 py-4 sm:py-6 flex items-center justify-between border-b border-border/40 lg:border-none shrink-0 z-20">
+          {/* Top Left: Back Navigation Link + Compact Brand on Mobile */}
+          <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-foreground transition-all shadow-xs"
+              className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-foreground transition-all shadow-xs group"
+              aria-label="Back to Aarogya Mithra Home"
             >
-              Back to Home
+              <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5 text-accent" />
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="sm:hidden font-medium">Home</span>
             </Link>
+            <div className="lg:hidden pl-1">
+              <AarogyaMithraBrand compact />
+            </div>
           </div>
+
+          {/* Top Right: Status Badge & Theme Switcher */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <span className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent">
+              <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+              NMC Secure Node
+            </span>
+            <ThemeSwitcher />
+          </div>
+        </header>
+
+        {/* Center Card Content: Perfectly centered with natural padding and smooth scrolling */}
+        <div className="w-full flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-10">
+          <div className="w-full max-w-md">{children}</div>
         </div>
 
-        <div className="w-full max-w-md my-auto">{children}</div>
+        {/* Minimal Clinical Footer */}
+        <footer className="w-full px-4 sm:px-8 py-3.5 text-center text-[11px] text-muted-foreground/60 shrink-0">
+          Aarogya Mithra • Licensed OPD Provider Network • 256-Bit TLS Audit Log
+        </footer>
       </section>
     </main>
   );
@@ -200,18 +216,25 @@ export function LoginPage() {
 
   return (
     <AuthFrame badgeText="PHYSICIAN SIGN IN • OPD WORKSPACE">
-      <Card className="border-0 bg-transparent shadow-none sm:border sm:border-border/80 sm:bg-card sm:p-2 sm:shadow-xl rounded-3xl">
-        <CardHeader className="px-0 sm:px-6">
-          <div className="mb-2 grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
-            <LockKeyhole className="size-5" />
+      <Card className="rounded-3xl border border-border/80 bg-card/95 backdrop-blur-md p-6 sm:p-8 shadow-xl shadow-black/5 space-y-6">
+        <CardHeader className="p-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
+              <LockKeyhole className="size-5" />
+            </div>
+            <Badge variant="teal" size="sm" className="text-[10px] font-semibold tracking-wider uppercase">
+              Physician Access
+            </Badge>
           </div>
-          <CardTitle className="text-3xl">Sign in to Workspace</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl sm:text-3xl font-display font-semibold tracking-tight">
+            Sign in to Workspace
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
             Enter your certified clinician email and password to access the OPD copilot.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-0 sm:px-6 space-y-6">
+        <CardContent className="p-0 space-y-5">
           {/* Real Authentication Error Alert */}
           {authError && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
@@ -410,18 +433,23 @@ export function RegisterPage() {
 
   return (
     <AuthFrame badgeText="CLINICIAN ENROLLMENT • HOSPITAL NETWORK">
-      <Card className="border-0 bg-transparent shadow-none sm:border sm:border-border/80 sm:bg-card sm:p-2 sm:shadow-xl rounded-3xl">
-        <CardHeader className="px-0 sm:px-6">
-          <div className="mb-2 grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
-            <Stethoscope className="size-5" />
+      <Card className="rounded-3xl border border-border/80 bg-card/95 backdrop-blur-md p-6 sm:p-8 shadow-xl shadow-black/5 space-y-6">
+        <CardHeader className="p-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
+              <Stethoscope className="size-5" />
+            </div>
+            <Badge variant="teal" size="sm" className="text-[10px] font-semibold tracking-wider uppercase">
+              New Enrollment
+            </Badge>
           </div>
-          <CardTitle className="text-3xl">Create Doctor Workspace</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Create Doctor Workspace</CardTitle>
+          <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
             Register your clinical profile with hospital institution and medical council license credentials.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-0 sm:px-6">
+        <CardContent className="p-0">
           {regError && (
             <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400 flex items-start gap-2.5">
               <AlertTriangle className="size-4 shrink-0 mt-0.5" />

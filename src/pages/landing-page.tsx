@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import Lenis from "@studio-freight/lenis";
 import { ArrowUp } from "lucide-react";
+import { useLenis } from "@/components/smooth-scroll-provider";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { TrustMetricsSection } from "@/components/landing/trust-metrics-section";
@@ -16,40 +16,25 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { scrollTo } = useLenis();
 
-  // Buttery Smooth Inertia Scrolling via Lenis
-  useEffect(() => {
-    let lenis: Lenis | null = null;
-    let rafId: number;
-
-    try {
-      lenis = new Lenis({
-        duration: 1.25,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        orientation: "vertical",
-        gestureOrientation: "vertical",
-        smoothWheel: true,
-      });
-
-      function raf(time: number) {
-        lenis?.raf(time);
-        rafId = requestAnimationFrame(raf);
-      }
-      rafId = requestAnimationFrame(raf);
-
-      const handleScroll = () => {
-        setShowScrollTop(window.scrollY > 450);
-      };
-      window.addEventListener("scroll", handleScroll, { passive: true });
-
-      return () => {
-        cancelAnimationFrame(rafId);
-        window.removeEventListener("scroll", handleScroll);
-        lenis?.destroy();
-      };
-    } catch (e) {
-      console.warn("Smooth inertia scroll fallback", e);
+  const scrollToTop = () => {
+    if (scrollTo) {
+      scrollTo(0);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  // Scroll to top visibility tracker
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 450);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   // Framer Motion Scroll Progress & Parallax Transforms
@@ -63,10 +48,6 @@ export function LandingPage() {
   // Background Parallax: Gently drifts vertically across the scroll duration
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "-14%"]);
   const backgroundScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const sectionReveal = {
     initial: { opacity: 0, y: 36 },

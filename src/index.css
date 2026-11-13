@@ -94,8 +94,25 @@
     --shadow-xl: 0 28px 72px rgb(0 0 0 / 0.6);
   }
 
-  html {
-    scroll-behavior: smooth;
+  html.lenis,
+  html.lenis-smooth {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
   }
 
   * {
