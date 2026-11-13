@@ -375,11 +375,10 @@ export function ConsultationWorkspacePage() {
         duration: soap.subjective.history_of_present_illness,
         relevantHistory: soap.patient_context?.chronic_conditions?.join(", ") || patient.diagnoses.map((d) => d.condition).join(", ") || "Comorbidities on file",
         observations: soap.objective.vital_signs_summary || soap.objective.physical_examination.join("; ") || patient.vitals,
-        clinicianAssessment: `${soap.assessment.primary_impression}${
-          soap.assessment.differential_diagnoses.length > 0
+        clinicianAssessment: `${soap.assessment.primary_impression}${soap.assessment.differential_diagnoses.length > 0
             ? "\nDifferentials: " + soap.assessment.differential_diagnoses.join(", ")
             : ""
-        }`,
+          }`,
         treatmentPlan: formattedPlan || "Symptomatic supportive therapy.",
         uncertaintiesAndNegations: formattedUncertainties,
         evidenceConfidence: res.confidence_notes || "Evidence Grounded",
@@ -754,18 +753,33 @@ export function ConsultationWorkspacePage() {
           {/* Patient Identity & Demographics */}
           <Card>
             <CardHeader className="pb-3 border-b border-border/70">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-base">{patient.name}</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-border/80 shadow-xs bg-muted">
+                  {patient.avatar ? (
+                    <img
+                      src={patient.avatar}
+                      alt={patient.name}
+                      className="size-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 grid place-items-center bg-accent/15 font-bold text-xs text-accent -z-10">
+                    {patient.name.slice(0, 2).toUpperCase()}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <CardTitle className="text-base truncate">{patient.name}</CardTitle>
+                    <Badge variant="outline" size="sm" className="shrink-0 text-[10px]">
+                      {patient.age}y • {patient.gender}
+                    </Badge>
                   </div>
                   <CardDescription className="text-xs mt-0.5">
                     MRN: <span className="font-mono font-bold text-accent">#{patient.id}</span>
                   </CardDescription>
                 </div>
-                <Badge variant="outline" size="sm">
-                  {patient.age}y • {patient.gender}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 pt-3 text-xs">

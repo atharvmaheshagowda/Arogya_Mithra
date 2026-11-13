@@ -469,15 +469,21 @@ export function ReportsPage() {
                     : "border-border bg-muted/20 hover:border-accent/40 hover:bg-card",
                 )}
               >
-                <div
-                  className={cn(
-                    "grid size-9 shrink-0 place-items-center rounded-lg font-bold text-xs",
-                    rep.fileType === "pdf"
-                      ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                      : "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-                  )}
-                >
-                  {rep.fileType.toUpperCase()}
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-border shadow-xs bg-muted">
+                  <img
+                    src={
+                      rep.documentCategory === "Prescription"
+                        ? "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=200&q=80"
+                        : rep.fileName.toLowerCase().includes("lipid")
+                          ? "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=200&q=80"
+                          : "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=200&q=80"
+                    }
+                    alt={rep.fileName}
+                    className="size-full object-cover"
+                  />
+                  <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] font-mono text-white text-center font-bold uppercase tracking-wider">
+                    {rep.fileType}
+                  </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">

@@ -315,23 +315,35 @@ export function DashboardPage() {
           1. TOP SECTION — GREETING & START CONSULTATION
           ==================================================================== */}
       <div className="flex flex-col justify-between gap-5 rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm sm:flex-row sm:items-center">
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <span className="text-eyebrow">Clinical Copilot Active</span>
-            <Badge variant="teal" size="sm" dot pulse>
-              Live OPD Session • Room 04
-            </Badge>
-            <span className="hidden text-xs text-muted-foreground sm:inline">•</span>
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-              {doctor?.clinic || "Apollo Hospitals, Bengaluru"} • General Medicine
-            </span>
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="relative size-16 sm:size-20 shrink-0 overflow-hidden rounded-2xl border-2 border-accent/30 shadow-md bg-muted">
+            <img
+              src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80"
+              alt="Dr. Maya Shah"
+              className="size-full object-cover"
+            />
+            <div className="absolute bottom-0 inset-x-0 bg-accent text-[8.5px] font-bold text-white text-center py-0.5 tracking-wider uppercase">
+              MD
+            </div>
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-            Good morning, Doctor.
-          </h1>
-          <p className="text-sm sm:text-base leading-relaxed text-muted-foreground max-w-2xl">
-            Here is your clinical activity overview. 28 consultations scheduled across Kannada, Hindi, and English.
-          </p>
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <span className="text-eyebrow">Clinical Copilot Active</span>
+              <Badge variant="teal" size="sm" dot pulse>
+                Live OPD Session • Room 04
+              </Badge>
+              <span className="hidden text-xs text-muted-foreground sm:inline">•</span>
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                {doctor?.clinic || "Apollo Hospitals, Bengaluru"} • General Medicine
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-4xl font-semibold tracking-tight text-foreground">
+              Good morning, {doctor?.name || "Dr. Maya Shah"}.
+            </h1>
+            <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground max-w-2xl">
+              Here is your clinical activity overview. 28 consultations scheduled across Kannada, Hindi, and English.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
@@ -1061,8 +1073,20 @@ export function DashboardPage() {
                       {/* Patient */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-xs font-bold text-accent">
-                            {item.initials}
+                          <div className="relative size-9 shrink-0 overflow-hidden rounded-xl border border-border/80 shadow-xs bg-muted">
+                            {item.avatar ? (
+                              <img
+                                src={item.avatar}
+                                alt={item.patientName}
+                                className="size-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : null}
+                            <div className="absolute inset-0 grid place-items-center bg-accent/15 text-xs font-bold text-accent -z-10">
+                              {item.initials}
+                            </div>
                           </div>
                           <div>
                             <span className="font-semibold text-foreground text-sm block">
@@ -1185,9 +1209,21 @@ export function DashboardPage() {
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="grid size-9 place-items-center rounded-full bg-accent/10 font-bold text-xs text-accent">
-                      {pat.initials}
+                  <div className="flex items-center gap-3">
+                    <div className="relative size-10 shrink-0 overflow-hidden rounded-full border border-border/80 shadow-xs bg-muted">
+                      {pat.avatar ? (
+                        <img
+                          src={pat.avatar}
+                          alt={pat.name}
+                          className="size-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                      <div className="absolute inset-0 grid place-items-center bg-accent/15 font-bold text-xs text-accent -z-10">
+                        {pat.initials}
+                      </div>
                     </div>
                     <div>
                       <h4 className="font-semibold text-sm text-foreground group-hover:text-accent transition-colors">

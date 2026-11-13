@@ -96,6 +96,7 @@ export interface TimelineEvent {
 export interface PatientProfile {
   id: string; // MRN e.g. "AM-94021"
   name: string;
+  avatar?: string;
   age: number;
   dob: string;
   gender: "Male" | "Female" | "Other";
@@ -396,6 +397,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-94021",
     name: "Rajesh Kumar",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
     age: 54,
     dob: "1972-04-12",
     gender: "Male",
@@ -650,6 +652,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-93112",
     name: "Lakshmi Gowda",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
     age: 48,
     dob: "1978-08-24",
     gender: "Female",
@@ -790,6 +793,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-91048",
     name: "Mohammad Farooq",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
     age: 62,
     dob: "1964-11-03",
     gender: "Male",
@@ -955,6 +959,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-89412",
     name: "Ananya Sharma",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
     age: 29,
     dob: "1997-02-18",
     gender: "Female",
@@ -1094,6 +1099,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-87220",
     name: "Venkat Rao",
+    avatar: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?auto=format&fit=crop&w=400&q=80",
     age: 68,
     dob: "1958-09-15",
     gender: "Male",
@@ -1212,6 +1218,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-85119",
     name: "Sunita Patil",
+    avatar: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=400&q=80",
     age: 41,
     dob: "1985-05-19",
     gender: "Female",
@@ -1319,6 +1326,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-84092",
     name: "Kavitha Murthy",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
     age: 36,
     dob: "1990-11-29",
     gender: "Female",
@@ -1417,6 +1425,7 @@ export const initialPatients: PatientProfile[] = [
   {
     id: "AM-82910",
     name: "Arjun Nair",
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80",
     age: 51,
     dob: "1975-01-08",
     gender: "Male",
@@ -1616,6 +1625,9 @@ export function addPatientRecord(record: {
   const newPatient: PatientProfile = {
     id: newId,
     name: record.name,
+    avatar: record.gender === "Female"
+      ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80"
+      : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
     age: record.age,
     dob: record.dob || "1985-01-01",
     gender: record.gender,
