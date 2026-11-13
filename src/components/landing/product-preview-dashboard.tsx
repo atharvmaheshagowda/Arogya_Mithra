@@ -30,7 +30,7 @@ export function ProductPreviewDashboard() {
   const [selectedLanguage, setSelectedLanguage] = useState<"kannada" | "hindi">("kannada");
 
   return (
-    <div className="relative mx-auto w-full overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-2xl backdrop-blur-xl">
+    <div className="relative mx-auto w-full overflow-hidden rounded-3xl border border-border/80 bg-card shadow-2xl backdrop-blur-xl">
       {/* OS-Style Window Bar & Tab Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/40 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
