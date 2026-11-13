@@ -446,6 +446,7 @@ function WorkflowCanvasInner() {
               type="button"
               onClick={handleUndo}
               disabled={!canUndo}
+              aria-label="Undo workflow action"
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition-colors"
               title="Undo (Ctrl+Z)"
             >
@@ -455,6 +456,7 @@ function WorkflowCanvasInner() {
               type="button"
               onClick={handleRedo}
               disabled={!canRedo}
+              aria-label="Redo workflow action"
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition-colors"
               title="Redo (Ctrl+Y)"
             >
@@ -469,6 +471,7 @@ function WorkflowCanvasInner() {
             onClick={() => fitView({ padding: 0.2, duration: 600 })}
             leftIcon={<Maximize2 className="size-3.5" />}
             title="Fit to Screen"
+            aria-label="Fit workflow to screen"
           >
             Fit View
           </Button>
@@ -480,6 +483,7 @@ function WorkflowCanvasInner() {
             onClick={handleSimulatePipelineFlow}
             disabled={isFlowSimulating}
             leftIcon={<Play className={cn("size-3.5", isFlowSimulating && "animate-spin text-amber-500")} />}
+            aria-label="Simulate end-to-end clinical data flow"
           >
             {isFlowSimulating
               ? `Simulating Stage 0${activeSimulationStep}...`
@@ -493,6 +497,7 @@ function WorkflowCanvasInner() {
               size="sm"
               onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
               leftIcon={<Plus className="size-3.5" />}
+              aria-label="Add custom workflow node"
             >
               Add Node
             </Button>
@@ -538,6 +543,7 @@ function WorkflowCanvasInner() {
           <button
             type="button"
             onClick={handleResetWorkflow}
+            aria-label="Reset workflow to canonical defaults"
             className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Reset Workflow"
           >

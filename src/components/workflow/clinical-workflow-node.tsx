@@ -228,3 +228,4 @@ export const ClinicalWorkflowNode = memo(function ClinicalWorkflowNode({
     </div>
   );
 });
+

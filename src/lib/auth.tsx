@@ -45,6 +45,7 @@ interface AuthContextValue {
   signIn: (email?: string, password?: string) => void;
   signInAs: (presetId: string) => void;
   register: (profile: Omit<Doctor, "id" | "initials">) => void;
+  updateDoctor: (updates: Partial<Doctor>) => void;
   signOut: () => void;
 }
 
@@ -111,13 +112,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     save(newDoctor);
   };
 
+  const updateDoctor = (updates: Partial<Doctor>) => {
+    if (!doctor) return;
+    const updated = { ...doctor, ...updates };
+    save(updated);
+  };
+
   const signOut = () => {
     save(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ doctor, signIn, signInAs, register, signOut }}
+      value={{ doctor, signIn, signInAs, register, updateDoctor, signOut }}
     >
       {children}
     </AuthContext.Provider>
