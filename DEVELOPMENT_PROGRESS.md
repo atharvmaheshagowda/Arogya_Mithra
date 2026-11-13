@@ -116,10 +116,48 @@
 ### Verification & Git Tracking
 - `npm run typecheck` passes with zero errors.
 - `npm run build` bundles 1713 modules in 6.41s.
+- Clean conventional commit `cb7e123` on `main`.
+
+---
+
+## Phase 4: Doctor-Facing Clinical Application Foundation
+**Status:** Complete  
+**Date:** 2026-11-13
+
+### Implemented Routes & Core Architecture
+1. **Login Page (`/login`):**
+   - Premium AAROGYA MITHRA clinical portal styling with split editorial hero.
+   - Form fields: Email, password, "Remember this terminal" checkbox, forgot password modal.
+   - One-click instant doctor demo presets: `Dr. Anika Rao` (General Medicine), `Dr. Vikram Deshmukh` (Cardiology), `Dr. Maya Shah` (Endocrinology).
+   - Clear prototype privacy disclaimer.
+2. **Registration Page (`/register`):**
+   - Clinician registration form: Doctor name, email, password, hospital/clinic name, professional role, and OPD department.
+   - Instant local mock profile creation and workspace initialization.
+3. **Application Shell & Layout (`/app`):**
+   - Persistent collapsible sidebar with expand/collapse toggle (`<ChevronLeft />`), active route highlighting, and hover tooltips in collapsed mode.
+   - Navigation groups:
+     - **OVERVIEW:** Dashboard (`/app`)
+     - **CLINICAL:** Patients (`/app/patients`), Consultations (`/app/consultations`), Medical Reports (`/app/reports`), Medication Safety (`/app/medication-safety`)
+     - **INTELLIGENCE:** Workflow (`/app/workflow`)
+     - **SYSTEM:** Settings (`/app/settings`)
+   - Top navigation bar: Route title and contextual subtitle, global search (`Cmd+K` / `Ctrl+K` modal), unread clinical notification drawer, theme switcher, and treating clinician profile dropdown.
+   - Mobile responsive navigation drawer with backdrop blur.
+4. **Interactive Clinical Workspaces:**
+   - **Dashboard (`/app`):** Live OPD queue metrics (28 patients today), quick action buttons, live consultation status, core module launchpad.
+   - **Patients (`/app/patients`):** Searchable patient context list with MRN, age/gender, known chronic conditions, allergy tags, vitals, and one-click chart opening.
+   - **Consultations (`/app/consultations`):** Real-time ambient dialogue scribe with audio waveform, Kannada/Hindi/English speech switchers, clinical translation, and structured draft SOAP note with doctor approval sign-off.
+   - **Medical Reports (`/app/reports`):** Scanned pathology report list (Thyrocare, Lal PathLabs) with OCR entity extraction, biological reference intervals, and 98.4% confidence score.
+   - **Medication Safety (`/app/medication-safety`):** Live drug interaction audit for active patient regimen, beta-lactam allergy interceptor, and CDSCO/BNF evidence search.
+   - **Workflow (`/app/workflow`):** Full 8-stage interactive workflow blueprint.
+   - **Settings (`/app/settings`):** Physician profile editor, hospital department settings, and multilingual speech translation toggles.
+
+### Verification & Git Tracking
+- `npm run typecheck` passes with zero errors.
+- `npm run build` bundles 1712 modules in 5.80s.
 - Ready for local commit on `main`.
 
 ---
 
 ## Next Steps
-- Implement interactive doctor workspaces (`/app/patients`, `/app/consultations`, `/app/reports`, `/app/medication-safety`, `/app/workflow`).
-- Connect synthetic Indian clinical dataset (diabetic, hypertensive, and acute OPD scenarios).
+- Implement advanced synthetic OPD patient scenarios (diabetic nephropathy, hypertensive urgency, acute dyspepsia).
+- Deepen speech-to-clinical entity mapping and FHIR JSON export.

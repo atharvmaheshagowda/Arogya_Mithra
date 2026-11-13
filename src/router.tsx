@@ -2,7 +2,15 @@ import { Navigate, createBrowserRouter } from "react-router-dom";
 import { ApplicationShell } from "@/components/app-shell";
 import { LandingPage } from "@/pages/landing-page";
 import { LoginPage, RegisterPage } from "@/pages/auth-pages";
-import { DashboardPage, ModulePage } from "@/pages/app-pages";
+import {
+  DashboardPage,
+  PatientsPage,
+  ConsultationsPage,
+  ReportsPage,
+  MedicationSafetyPage,
+  WorkflowPage,
+  SettingsPage,
+} from "@/pages/app-pages";
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage /> },
@@ -13,12 +21,12 @@ export const router = createBrowserRouter([
     element: <ApplicationShell />,
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: "patients", element: <ModulePage /> },
-      { path: "consultations", element: <ModulePage /> },
-      { path: "reports", element: <ModulePage /> },
-      { path: "medication-safety", element: <ModulePage /> },
-      { path: "workflow", element: <ModulePage /> },
-      { path: "settings", element: <ModulePage /> },
+      { path: "patients", element: <PatientsPage /> },
+      { path: "consultations", element: <ConsultationsPage /> },
+      { path: "reports", element: <ReportsPage /> },
+      { path: "medication-safety", element: <MedicationSafetyPage /> },
+      { path: "workflow", element: <WorkflowPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
   {
