@@ -1,8 +1,11 @@
+
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.clinical_context import router as clinical_context_router
+from app.api.v1.clinical_notes import router as clinical_notes_router
 from app.api.v1.encounters import router as encounters_router
 from app.api.v1.health import router as health_router
 from app.api.v1.medications import router as medications_router
@@ -47,6 +50,7 @@ app.include_router(patients_router, prefix=settings.API_V1_STR)
 app.include_router(encounters_router, prefix=settings.API_V1_STR)
 app.include_router(medications_router, prefix=settings.API_V1_STR)
 app.include_router(clinical_context_router, prefix=settings.API_V1_STR)
+app.include_router(clinical_notes_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")
