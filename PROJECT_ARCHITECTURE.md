@@ -91,15 +91,17 @@ d:/MedSync AI/
 │   │   ├── brand.tsx               # AAROGYA MITHRA brand symbol and wordmarks
 │   │   ├── theme-provider.tsx      # Dark/light theme context & switcher
 │   │   └── ui/                     # shadcn/ui-compatible primitives
-│   │       ├── badge.tsx           # Status, severity & tag badges
-│   │       ├── button.tsx          # Teal, navy, ghost & outline actions
-│   │       ├── card.tsx            # Clinical data cards & headers
-│   │       ├── dropdown.tsx        # Profile & action menus
-│   │       ├── input.tsx           # Accessible inputs & textfields
-│   │       ├── modal.tsx           # Review modals & dialogs
-│   │       ├── skeleton.tsx        # Loading state placeholders
-│   │       ├── states.tsx          # EmptyState & ErrorState primitives
-│   │       └── toast.tsx           # Clinical notification system
+│   │       ├── badge.tsx           # Status, severity & tag badges (dot & pulse support)
+│   │       ├── button.tsx          # Teal, navy, ghost, outline, subtle & link actions
+│   │       ├── card.tsx            # Card primitives, MetricCard, ClinicalCalloutCard
+│   │       ├── dropdown.tsx        # Profile, actions & header/separator menus
+│   │       ├── input.tsx           # Input, SearchInput, Textarea, Select, Checkbox, Switch
+│   │       ├── modal.tsx           # Modal, ConfirmDialog & SlideOver drawer
+│   │       ├── navigation.tsx      # Tabs, Breadcrumbs, Clinical Stepper & Pagination
+│   │       ├── sidebar.tsx         # Modular collapsible Sidebar components
+│   │       ├── skeleton.tsx        # Loading state placeholders (Table, Card, Note, Header)
+│   │       ├── states.tsx          # EmptyState, ErrorState & AlertBanner primitives
+│   │       └── toast.tsx           # Clinical notification system (toast.success/error/warning/info)
 │   ├── lib/
 │   │   ├── auth.tsx                # Clinician authentication & profile state
 │   │   └── utils.ts                # Class-name merger (clsx + tailwind-merge)
