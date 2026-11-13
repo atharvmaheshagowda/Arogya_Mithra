@@ -1,6 +1,7 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.schemas.clinical_context import BMIMeasurement, VitalMeasurement
 from app.schemas.clinical_note import (
     AssessmentSection,
     ExtractedItem,
@@ -8,6 +9,7 @@ from app.schemas.clinical_note import (
     PlanSection,
     SOAPGenerateRequest,
     SOAPPayload,
+    SOAPPatientContext,
     SubjectiveSection,
 )
 from app.services.adapters.base import ClinicalNoteAdapter
@@ -84,12 +86,14 @@ class DeterministicMockSOAPAdapter(ClinicalNoteAdapter):
         objective = self._extract_objective(doctor_lines, unassigned_lines, text, context)
         assessment = self._extract_assessment(doctor_lines, unassigned_lines, text, context)
         plan = self._extract_plan(doctor_lines, unassigned_lines, text)
+        patient_context = self._build_patient_context(context)
 
         return SOAPPayload(
             subjective=subjective,
             objective=objective,
             assessment=assessment,
             plan=plan,
+            patient_context=patient_context,
         )
 
     def _partition_dialogue(
@@ -308,8 +312,14 @@ class DeterministicMockSOAPAdapter(ClinicalNoteAdapter):
             if v.get("height_cm") is not None:
                 parts.append(f"Height: {v['height_cm']} cm")
 
+            if context and context.get("bmi"):
+                bmi_data = context["bmi"]
+                bmi_val = bmi_data.get("value")
+                if bmi_val is not None and bmi_data.get("is_concurrent") is True:
+                    parts.append(f"BMI: {bmi_val:.2f} kg/m²")
+
             if parts:
-                enc_id = context.get("encounter_identifier", "encounter")
+                enc_id = context.get("encounter_identifier") or "encounter"
                 vital_summary = f"{', '.join(parts)} (verified from {enc_id})"
 
         # Physical exam keywords
@@ -414,12 +424,20 @@ class DeterministicMockSOAPAdapter(ClinicalNoteAdapter):
                 if chronic in line_lower and chronic not in [c.lower() for c in chronic_conditions]:
                     chronic_conditions.append(line)
 
-        # Contextual chronic conditions from patient history if not mentioned
-        if context and context.get("medical_history"):
-            for cond in context["medical_history"]:
-                cond_text = f"{cond.get('condition')} ({cond.get('status', 'active')} comorbidity from patient history)"
-                if not any(cond.get("condition", "").lower() in c.lower() for c in chronic_conditions):
+        # Contextual active chronic conditions from patient history if not mentioned
+        if context and context.get("medical_history_active"):
+            for cond_name in context["medical_history_active"]:
+                cond_text = f"{cond_name} (active comorbidity from patient history)"
+                if not any(cond_name.lower() in c.lower() for c in chronic_conditions):
                     chronic_conditions.append(cond_text)
+        elif context and context.get("medical_history"):
+            for cond in context["medical_history"]:
+                if isinstance(cond, dict) and (cond.get("status") or "active").lower() == "active":
+                    cond_name = cond.get("condition")
+                    if cond_name:
+                        cond_text = f"{cond_name} (active comorbidity from patient history)"
+                        if not any(cond_name.lower() in c.lower() for c in chronic_conditions):
+                            chronic_conditions.append(cond_text)
 
         return AssessmentSection(
             primary_impression=primary_impression,
@@ -453,10 +471,25 @@ class DeterministicMockSOAPAdapter(ClinicalNoteAdapter):
                     evidence.append(ExtractedItem(text=line, source_evidence=line))
 
             # Medications documented
-            if any(k in line_lower for k in ["prescribe", "tablet", "tab", "capsule", "cap", "mg", "syrup", "once daily", "twice daily", "od", "bd", "tds", "sos"]):
-                if any(verb in line_lower for verb in ["prescribe", "take", "give", "start", "tablets", "capsule"]):
-                    proposed_medications.append(line)
-                    evidence.append(ExtractedItem(text=line, source_evidence=line))
+            if any(k in line_lower for k in ["prescribe", "tablet", "tab", "capsule", "cap", "mg", "syrup", "once daily", "twice daily", "od", "bd", "tds", "sos", "continue", "consider"]):
+                if any(verb in line_lower for verb in ["prescribe", "take", "give", "start", "tablets", "capsule", "continue", "consider"]):
+                    # Distinguish clinical prescription intent
+                    is_negated = bool(re.search(r"\b(?:do not|don't|no|never|avoid|not to|should not)\s+(?:take|use|start|prescribe|consume)?\b", line_lower))
+                    is_discontinued = bool(re.search(r"\b(?:stop|discontinue|withhold|hold|taper off|cease)\s+(?:taking|using)?\b", line_lower))
+                    is_historical = bool(re.search(r"\b(?:previously|prior to|history of|in the past|earlier|already tried|past use)\b", line_lower))
+                    is_patient_reported = bool(re.search(r"\b(?:patient (?:took|takes|is taking|reported|states)|i (?:took|take|am taking|have been taking))\b", line_lower))
+
+                    if is_negated or is_discontinued:
+                        # Negated instructions or discontinuations belong in patient instructions, not proposed prescriptions
+                        if line not in patient_instructions:
+                            patient_instructions.append(line)
+                            evidence.append(ExtractedItem(text=line, source_evidence=line, is_negated=True))
+                    elif is_historical or is_patient_reported:
+                        # Historical mentions and patient-reported intake are not new prescriptions
+                        pass
+                    else:
+                        proposed_medications.append(line)
+                        evidence.append(ExtractedItem(text=line, source_evidence=line))
 
             # Patient instructions
             if any(k in line_lower for k in ["steam", "inhalation", "warm water", "rest", "diet", "avoid", "hydration", "exercise", "walk"]):
@@ -482,4 +515,154 @@ class DeterministicMockSOAPAdapter(ClinicalNoteAdapter):
             red_flag_warnings=red_flag_warnings,
             follow_up=follow_up or "[Follow-up schedule not documented]",
             evidence=evidence,
+        )
+
+    def _build_patient_context(self, context: Optional[Dict[str, Any]]) -> Optional[SOAPPatientContext]:
+        if not context:
+            return None
+
+        has_patient_data = any(
+            context.get(k)
+            for k in [
+                "patient_id",
+                "demographics",
+                "allergies",
+                "medications",
+                "medical_history",
+                "alerts",
+                "is_synthetic",
+            ]
+        )
+        if not has_patient_data:
+            return None
+
+        # Demographics summary
+        demo_str = None
+        if context.get("demographics"):
+            d = context["demographics"]
+            demo_parts = []
+            if d.get("calculated_age") is not None:
+                demo_parts.append(f"{d['calculated_age']}y")
+            if d.get("gender"):
+                demo_parts.append(d["gender"])
+            if d.get("preferred_language"):
+                demo_parts.append(f"Lang: {d['preferred_language']}")
+            if demo_parts:
+                demo_str = ", ".join(demo_parts)
+
+        # Allergies
+        allergy_status = None
+        documented_allergies: List[str] = []
+        patient_reported_allergies: List[str] = []
+        unverified_allergies: List[str] = []
+
+        if context.get("allergies"):
+            al = context["allergies"]
+            allergy_status = al.get("allergy_status")
+            for item in al.get("documented", []):
+                name = item.get("substance") or item.get("allergen") or "Unknown substance"
+                sev = item.get("severity")
+                documented_allergies.append(f"{name} ({sev})" if sev else name)
+            for item in al.get("patient_reported", []):
+                name = item.get("substance") or item.get("allergen") or "Unknown substance"
+                patient_reported_allergies.append(f"{name} (patient-reported)")
+            for item in al.get("unverified", []):
+                name = item.get("substance") or item.get("allergen") or "Unknown substance"
+                unverified_allergies.append(f"{name} (unverified)")
+
+        # Medications
+        active_meds: List[str] = []
+        historical_meds: List[str] = []
+        if context.get("medications"):
+            meds = context["medications"]
+            for m in meds.get("active", []):
+                med_obj = m.get("medication")
+                name = med_obj.get("generic_name") if med_obj else "Unknown medication"
+                strength = med_obj.get("strength") if med_obj else None
+                med_str = f"{name} {strength}" if strength else name
+                active_meds.append(med_str)
+
+            for m in meds.get("historical", []):
+                med_obj = m.get("medication")
+                name = med_obj.get("generic_name") if med_obj else "Unknown medication"
+                strength = med_obj.get("strength") if med_obj else None
+                med_str = f"{name} {strength}" if strength else name
+                historical_meds.append(f"{med_str} [historical]")
+
+            for m in meds.get("discontinued", []):
+                med_obj = m.get("medication")
+                name = med_obj.get("generic_name") if med_obj else "Unknown medication"
+                strength = med_obj.get("strength") if med_obj else None
+                med_str = f"{name} {strength}" if strength else name
+                historical_meds.append(f"{med_str} [discontinued]")
+
+            for m in meds.get("uncertain", []):
+                med_obj = m.get("medication")
+                name = med_obj.get("generic_name") if med_obj else "Unknown medication"
+                strength = med_obj.get("strength") if med_obj else None
+                med_str = f"{name} {strength}" if strength else name
+                historical_meds.append(f"{med_str} [uncertain status]")
+
+        # Chronic conditions (active only) vs past medical history (resolved/historical/unknown)
+        chronic_conditions: List[str] = []
+        past_medical_history: List[str] = []
+
+        if context.get("medical_history_active") is not None or context.get("medical_history_past") is not None:
+            if context.get("medical_history_active"):
+                for c_name in context["medical_history_active"]:
+                    chronic_conditions.append(f"{c_name} (active)")
+            if context.get("medical_history_past"):
+                for c_str in context["medical_history_past"]:
+                    past_medical_history.append(c_str)
+        elif context.get("medical_history"):
+            for cond in context["medical_history"]:
+                c_name = cond.get("condition")
+                c_status = (cond.get("status") or "active").lower()
+                if c_name:
+                    if c_status == "active":
+                        chronic_conditions.append(f"{c_name} (active)")
+                    else:
+                        past_medical_history.append(f"{c_name} ({c_status})")
+
+        # Historical vitals & summary
+        hist_vitals_models: List[VitalMeasurement] = []
+        hist_vitals_raw = context.get("historical_vitals", [])
+        for hv in hist_vitals_raw:
+            if isinstance(hv, VitalMeasurement):
+                hist_vitals_models.append(hv)
+            elif isinstance(hv, dict):
+                hist_vitals_models.append(VitalMeasurement.model_validate(hv))
+
+        hist_vitals_summary = context.get("historical_vitals_summary")
+
+        # BMI in patient context (historical or concurrent)
+        bmi_model: Optional[BMIMeasurement] = None
+        bmi_raw = context.get("historical_bmi") or context.get("bmi")
+        if bmi_raw:
+            if isinstance(bmi_raw, BMIMeasurement):
+                bmi_model = bmi_raw
+            elif isinstance(bmi_raw, dict):
+                bmi_model = BMIMeasurement.model_validate(bmi_raw)
+
+        # Alerts
+        alert_codes: List[str] = []
+        if context.get("alerts"):
+            for a in context["alerts"]:
+                alert_codes.append(a.get("code") if isinstance(a, dict) else getattr(a, "code", str(a)))
+
+        return SOAPPatientContext(
+            demographics_summary=demo_str,
+            allergy_status=allergy_status,
+            documented_allergies=documented_allergies,
+            patient_reported_allergies=patient_reported_allergies,
+            unverified_allergies=unverified_allergies,
+            active_medications=active_meds,
+            historical_or_discontinued_medications=historical_meds,
+            chronic_conditions=chronic_conditions,
+            past_medical_history=past_medical_history,
+            historical_vitals_summary=hist_vitals_summary,
+            historical_vitals=hist_vitals_models,
+            bmi=bmi_model,
+            clinical_alerts=alert_codes,
+            is_synthetic=bool(context.get("is_synthetic", False)),
         )

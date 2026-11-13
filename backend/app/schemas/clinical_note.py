@@ -3,6 +3,9 @@ from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.clinical_context import BMIMeasurement, VitalMeasurement
+from app.schemas.medication_safety import SOAPMedicationSafetyReport
+
 
 class ClinicalNoteStatus(str, Enum):
     DRAFT = "draft"
@@ -116,11 +119,83 @@ class PlanSection(BaseModel):
     )
 
 
+class SOAPPatientContext(BaseModel):
+    """Structured background patient clinical context and safety alerts.
+
+    Clearly separated from current consultation findings to prevent conflating
+    historical records with real-time consultation observations.
+    """
+    demographics_summary: Optional[str] = Field(
+        default=None,
+        description="Patient demographic summary (age, gender, preferred language)",
+    )
+    allergy_status: Optional[str] = Field(
+        default=None,
+        description="Allergy recording status ('recorded' or 'not_recorded')",
+    )
+    documented_allergies: List[str] = Field(
+        default_factory=list,
+        description="Verified documented drug/substance allergies from patient profile",
+    )
+    patient_reported_allergies: List[str] = Field(
+        default_factory=list,
+        description="Patient-reported allergies pending clinical verification",
+    )
+    unverified_allergies: List[str] = Field(
+        default_factory=list,
+        description="Unverified or historical allergy records",
+    )
+    active_medications: List[str] = Field(
+        default_factory=list,
+        description="Active outpatient medications from patient profile",
+    )
+    historical_or_discontinued_medications: List[str] = Field(
+        default_factory=list,
+        description="Past or discontinued medications (never treated as active)",
+    )
+    chronic_conditions: List[str] = Field(
+        default_factory=list,
+        description="Active chronic comorbidities from medical history",
+    )
+    past_medical_history: List[str] = Field(
+        default_factory=list,
+        description="Resolved, historical, or inactive conditions clearly separated from active comorbidities",
+    )
+    historical_vitals_summary: Optional[str] = Field(
+        default=None,
+        description="Summary of historical longitudinal vital measurements from previous encounters",
+    )
+    historical_vitals: List[VitalMeasurement] = Field(
+        default_factory=list,
+        description="Structured historical vital measurements with timestamps and source encounter IDs",
+    )
+    bmi: Optional[BMIMeasurement] = Field(
+        default=None,
+        description="Body Mass Index with source timestamps, concurrency, and temporal discrepancy metadata",
+    )
+    clinical_alerts: List[str] = Field(
+        default_factory=list,
+        description="System safety and completeness alerts from context aggregator",
+    )
+    is_synthetic: bool = Field(
+        default=False,
+        description="True if record is a synthetic demonstration record",
+    )
+
+
 class SOAPPayload(BaseModel):
     subjective: SubjectiveSection
     objective: ObjectiveSection
     assessment: AssessmentSection
     plan: PlanSection
+    patient_context: Optional[SOAPPatientContext] = Field(
+        default=None,
+        description="Background patient clinical context and safety alerts clearly separated from consultation findings",
+    )
+    medication_safety: Optional[SOAPMedicationSafetyReport] = Field(
+        default=None,
+        description="Deterministic medication safety evaluation of proposed therapies in SOAP plan",
+    )
 
 
 class SOAPGenerateRequest(BaseModel):
@@ -187,6 +262,11 @@ class ClinicalSOAPNoteResponse(BaseModel):
     reviewing_doctor: Optional[str]
     doctor_comments: Optional[str]
     edited_soap: Optional[SOAPPayload] = None
+    patient_context: Optional[SOAPPatientContext] = None
+    medication_safety: Optional[SOAPMedicationSafetyReport] = Field(
+        default=None,
+        description="Deterministic medication safety evaluation of proposed therapies in SOAP plan",
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

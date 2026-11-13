@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.medication import Medication
@@ -21,11 +22,12 @@ from app.services.medication_normalizer import (
 logger = logging.getLogger("arogya_mithra.medication_safety")
 
 
-class SafetyStatus(str, Enum):
-    SAFE = "SAFE"
-    WARNING = "WARNING"
-    REVIEW_REQUIRED = "REVIEW_REQUIRED"
-    UNABLE_TO_VERIFY = "UNABLE_TO_VERIFY"
+from app.schemas.medication_safety import (
+    SafetyStatus,
+    SOAPMedicationSafetyReport,
+    SafetyCheckResponse,
+    SafetyFindingSchema,
+)
 
 
 @dataclass
@@ -216,6 +218,9 @@ def evaluate_medication_safety(
     db: Session | None = None,
     explicit_identifier: str | None = None,
     rule_path_override: str | None = None,
+    is_continuation: bool = False,
+    is_conditional: bool = False,
+    source_clause: str | None = None,
 ) -> SafetyCheckResult:
     """Executes deterministic, traceable medication safety checks for an outpatient prescription.
 
@@ -468,6 +473,10 @@ def evaluate_medication_safety(
         # Check A: Duplicate Active Ingredients
         for p_ing in proposed_ingredients:
             if p_ing in active_med_ingredients:
+                if is_continuation:
+                    # Clinical Continuation Intent: Patient is continuing documented active therapy,
+                    # not receiving an accidental duplicate prescription. Do not flag DUP-ING-001.
+                    continue
                 findings.append(
                     SafetyFinding(
                         rule_id="DUP-ING-001",
@@ -507,6 +516,24 @@ def evaluate_medication_safety(
                     )
                 )
 
+    # Check C: Conditional Suggestion Intent Verification
+    if is_conditional:
+        findings.append(
+            SafetyFinding(
+                rule_id="MED-CONDITIONAL-001",
+                category="conditional_intent_review",
+                severity="moderate",
+                affected_medication=norm.normalized_name or proposed_medication_name,
+                explanation=(
+                    f"Conditional suggestion detected ('{source_clause or proposed_medication_name}'). "
+                    "Medication was mentioned conditionally (e.g. 'if symptoms persist, consider...'). "
+                    "Requires explicit physician confirmation before clinical order or dispensing."
+                ),
+                evidence="Deterministic clinical intent classification: Conditional suggestion cue.",
+                review_required=True,
+            )
+        )
+
     # Step 4: Determine Overall Status (Priority based)
     has_warning_category = any(
         f.rule_id in ("ALLERGY-CONF-001", "DUP-ING-001")
@@ -541,3 +568,362 @@ def evaluate_medication_safety(
         checks_performed=checks_performed,
         unresolved_information=unresolved_info,
     )
+
+
+class MedicationCandidate(str):
+    """String subclass preserving clinical extraction intent, source span, and flags."""
+    source_text: str
+    intent: str
+    is_continuation: bool
+    is_conditional: bool
+
+    def __new__(
+        cls,
+        name: str,
+        source_text: str = "",
+        intent: str = "new_prescription",
+        is_continuation: bool = False,
+        is_conditional: bool = False,
+    ):
+        instance = super().__new__(cls, name)
+        instance.source_text = source_text
+        instance.intent = intent
+        instance.is_continuation = is_continuation or (intent == "continuation")
+        instance.is_conditional = is_conditional or (intent == "conditional")
+        return instance
+
+
+def extract_proposed_medications(
+    proposed_medication_lines: list[str],
+    db: Session | None = None,
+) -> list[str]:
+    """Deterministically extracts candidate medication names from SOAP plan lines.
+
+    Preserves both known catalogue items and unrecognized proposed medications
+    so that unknown drugs can be surfaced to the normalizer and flagged as UNABLE_TO_VERIFY.
+    Distinguishes actual new prescription intent from negated, discontinued, historical,
+    and continuation mentions.
+    Protects known combination medication names from erroneous coordinate conjunction splitting.
+    """
+    from app.services.medication_normalizer import AMBIGUOUS_NAMES, CURATED_BRAND_ALIASES
+
+    # Build known keys list (longer keys first for greedy matching, e.g. 'amoxicillin and clavulanate' before 'amoxicillin')
+    known_keys_set = set(CURATED_BRAND_ALIASES.keys()) | set(AMBIGUOUS_NAMES.keys())
+    if db is not None:
+        try:
+            db_meds = db.execute(
+                select(Medication.generic_name, Medication.brand_name, Medication.normalized_identifier)
+            ).all()
+            for row in db_meds:
+                for val in row:
+                    if val:
+                        cleaned_val = clean_text(str(val))
+                        if len(cleaned_val) >= 2:
+                            known_keys_set.add(cleaned_val)
+        except Exception:
+            pass
+
+    known_keys = sorted(list(known_keys_set), key=len, reverse=True)
+    extracted: list[str] = []
+
+    for raw_line in proposed_medication_lines:
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        line_lower = line.lower()
+        # Line-level intent flags: inherit conditional/continuation context across clauses within the line
+        line_is_conditional = bool(
+            re.search(
+                r"\b(?:if\s+.*?\b(?:consider|start|take|prescribe)\b|consider\s+(?:starting|taking|prescribing|using)?|may\s+consider|in\s+case\s+of\s+no\s+improvement\s+consider)\b",
+                line_lower,
+            )
+        )
+        line_is_continuation = bool(
+            re.search(
+                r"\b(?:continue|maintain|ongoing)\s+(?:your|current|regular|existing|daily)?\b",
+                line_lower,
+            )
+        )
+
+        # 1. Protect known multi-word combination keys containing " and " or " + " before coordinate splitting
+        protected_line = line
+        for k in known_keys:
+            if " and " in k or " + " in k:
+                pattern = r"\b" + re.escape(k) + r"\b"
+                for m in list(re.finditer(pattern, protected_line, flags=re.IGNORECASE)):
+                    matched_text = m.group(0)
+                    replacement = re.sub(r"\s+\band\b\s+", "__COORD_AND__", matched_text, flags=re.IGNORECASE)
+                    protected_line = protected_line[:m.start()] + replacement + protected_line[m.end():]
+
+        # 2. Split line on coordinate conjunctions and sentence delimiters
+        clauses = re.split(r"[,;]|\s+\band\b\s+", protected_line, flags=re.IGNORECASE)
+        for raw_clause in clauses:
+            clause = raw_clause.replace("__COORD_AND__", " and ").strip()
+            if not clause:
+                continue
+
+            clause_lower = clause.lower()
+
+            # Intent classification
+            is_negated = bool(
+                re.search(
+                    r"\b(?:do not|don't|no|never|avoid|not to|should not)\s+(?:take|use|start|prescribe|consume|administer)?\b",
+                    clause_lower,
+                )
+                or re.search(r"^(?:no|not)\s+(?:aspirin|brufen|nsaid|antibiotic|medication)", clause_lower)
+            )
+            is_discontinued = bool(
+                re.search(
+                    r"\b(?:stop|discontinue|withhold|hold|taper off|cease)\s+(?:taking|using)?\b",
+                    clause_lower,
+                )
+            )
+            is_historical = bool(
+                re.search(
+                    r"\b(?:previously|prior to|history of|in the past|earlier|already tried|past use of|past history)\b",
+                    clause_lower,
+                )
+            )
+            is_patient_reported = bool(
+                re.search(
+                    r"\b(?:patient (?:took|takes|is taking|reported|states)|i (?:took|take|am taking|have been taking))\b",
+                    clause_lower,
+                )
+            )
+            is_continuation = line_is_continuation or bool(
+                re.search(
+                    r"\b(?:continue|maintain|ongoing)\s+(?:your|current|regular|existing|daily)?\b",
+                    clause_lower,
+                )
+            )
+            is_conditional = line_is_conditional or bool(
+                re.search(
+                    r"\b(?:if\s+.*?\b(?:consider|start|take|prescribe)\b|consider\s+(?:starting|taking|prescribing)?|may\s+consider|in\s+case\s+of\s+no\s+improvement\s+consider)\b",
+                    clause_lower,
+                )
+            )
+
+            # Non-prescription intents are excluded from proposed therapy evaluation
+            if is_negated or is_discontinued or is_historical or is_patient_reported:
+                continue
+
+            intent = "continuation" if is_continuation else ("conditional" if is_conditional else "new_prescription")
+
+            # Check known catalogue medications in clause
+            found_known: list[str] = []
+            for k in known_keys:
+                if len(k) < 2:
+                    continue
+                pattern = r"\b" + re.escape(k) + r"\b"
+                if re.search(pattern, clause_lower):
+                    if not any(k in f.lower() for f in found_known):
+                        found_known.append(k)
+
+            if found_known:
+                for k in found_known:
+                    cand = MedicationCandidate(
+                        k,
+                        source_text=clause,
+                        intent=intent,
+                        is_continuation=is_continuation,
+                        is_conditional=is_conditional,
+                    )
+                    if not any(str(cand) == str(e) for e in extracted):
+                        extracted.append(cand)
+            else:
+                # Heuristic extraction for unknown medications or clean direct names
+                cleaned = re.sub(
+                    r"^(?:Doctor|Physician|Dr\.[^:]+):\s*", "", clause, flags=re.IGNORECASE
+                )
+                cleaned = re.sub(
+                    r"^(?:I will prescribe|will prescribe|prescribe|prescribing|take|give|start|add|continue|consider)\s+",
+                    "",
+                    cleaned,
+                    flags=re.IGNORECASE,
+                )
+                cleaned = re.sub(
+                    r"^(?:tab|tablet|cap|capsule|syr|syrup|inj|injection)\.?\s+",
+                    "",
+                    cleaned,
+                    flags=re.IGNORECASE,
+                )
+                # Strip frequency / instructions / conditions
+                cleaned = re.sub(
+                    r"\s+(?:once|twice|thrice|daily|od|bd|tds|sos|for\s+\d+\s+days?|if\s+.*).*$",
+                    "",
+                    cleaned,
+                    flags=re.IGNORECASE,
+                )
+                cleaned = cleaned.strip(" .,;:")
+                # Exclude obvious non-pharmacological advice lines and condition clauses
+                non_pharma = ["steam", "inhalation", "warm water", "water", "rest", "diet", "hydration", "walk", "exercise", "symptoms persist", "fever persists", "no improvement"]
+                # Must look like an actual medication candidate: have dosage marker, pharma marker, prescription verb, or be a standalone single word/brand
+                has_med_marker = bool(
+                    re.search(r"\b(?:\d+\s*(?:mg|g|mcg|ml)|tab|tablet|cap|capsule|syr|syrup|inj|injection|drops?|cream|ointment)\b", clause, flags=re.IGNORECASE)
+                    or re.search(r"\b(?:prescribe|prescribing)\b", clause, flags=re.IGNORECASE)
+                    or (len(clauses) == 1 and not re.search(r"\s", cleaned))
+                )
+                if has_med_marker and cleaned and not any(w in cleaned.lower() for w in non_pharma):
+                    cand = MedicationCandidate(
+                        cleaned,
+                        source_text=clause,
+                        intent=intent,
+                        is_continuation=is_continuation,
+                        is_conditional=is_conditional,
+                    )
+                    if not any(str(cand) == str(e) for e in extracted):
+                        extracted.append(cand)
+
+    return extracted
+
+
+def evaluate_soap_plan_safety(
+    patient: Patient,
+    proposed_medications: list[str],
+    db: Session | None = None,
+    rule_path_override: str | None = None,
+) -> SOAPMedicationSafetyReport | None:
+    """Evaluates all proposed medications extracted from a SOAP plan against the patient profile.
+
+    Runs deterministic evaluations:
+    1. Extracts individual proposed medication candidates with clinical intent awareness.
+    2. Runs evaluate_medication_safety for each candidate against patient allergies, active meds, and catalogue.
+    3. Evaluates co-proposed interactions and duplicate ingredients between proposed candidates.
+    4. Aggregates findings and assigns overall status following clinical priority:
+       WARNING > UNABLE_TO_VERIFY > REVIEW_REQUIRED > SAFE.
+    """
+    candidates = extract_proposed_medications(proposed_medications, db=db)
+    if not candidates:
+        return None
+
+    catalogue_result = load_rules_catalogue(rule_path_override=rule_path_override)
+    ddi_rules = catalogue_result.ddi_rules if catalogue_result.is_loaded else []
+
+    evaluations: list[SafetyCheckResponse] = []
+    all_warnings: list[SafetyFindingSchema] = []
+    all_review_required: list[SafetyFindingSchema] = []
+    unable_to_verify_meds: list[str] = []
+
+    # 1. Evaluate each proposed medication individually
+    resolved_norms = []
+    for cand in candidates:
+        cand_str = str(cand)
+        is_cont = getattr(cand, "is_continuation", False)
+        is_cond = getattr(cand, "is_conditional", False)
+        src_text = getattr(cand, "source_text", cand_str)
+
+        res: SafetyCheckResult = evaluate_medication_safety(
+            patient=patient,
+            proposed_medication_name=cand_str,
+            db=db,
+            rule_path_override=rule_path_override,
+            is_continuation=is_cont,
+            is_conditional=is_cond,
+            source_clause=src_text,
+        )
+        resp_schema = SafetyCheckResponse.model_validate(res)
+        evaluations.append(resp_schema)
+
+        norm = normalize_medication(cand_str, db=db)
+        resolved_norms.append((cand_str, norm))
+
+        # Categorize findings
+        for f in resp_schema.findings:
+            if f.rule_id in ("ALLERGY-CONF-001", "DUP-ING-001") or (
+                f.category == "drug_drug_interaction"
+                and f.severity in ("critical", "high", "moderate")
+            ):
+                all_warnings.append(f)
+            elif f.review_required:
+                all_review_required.append(f)
+
+        if resp_schema.overall_status == SafetyStatus.UNABLE_TO_VERIFY:
+            if cand_str not in unable_to_verify_meds:
+                unable_to_verify_meds.append(cand_str)
+
+    # 2. Check interactions and duplicate ingredients between co-proposed medications
+    for i in range(len(resolved_norms)):
+        for j in range(i + 1, len(resolved_norms)):
+            name_a, norm_a = resolved_norms[i]
+            name_b, norm_b = resolved_norms[j]
+
+            if not norm_a.active_ingredients or not norm_b.active_ingredients:
+                continue
+
+            clean_ings_a = [clean_text(ing) for ing in norm_a.active_ingredients]
+            clean_ings_b = [clean_text(ing) for ing in norm_b.active_ingredients]
+
+            # A. Duplicate active ingredients between co-proposed medications
+            for ing_a in clean_ings_a:
+                if ing_a in clean_ings_b:
+                    dup_finding = SafetyFindingSchema(
+                        rule_id="DUP-ING-001",
+                        category="duplicate_ingredient",
+                        severity="high",
+                        affected_medication=f"{norm_b.normalized_name or name_b} (co-proposed with {norm_a.normalized_name or name_a})",
+                        explanation=(
+                            f"Duplicate active ingredient detected across proposed medications! "
+                            f"Both '{norm_a.normalized_name or name_a}' and '{norm_b.normalized_name or name_b}' "
+                            f"contain active ingredient '{ing_a}'. Prescribing both risks accidental overdose."
+                        ),
+                        evidence="Deterministic normalized active ingredient comparison across co-proposed items.",
+                        review_required=True,
+                    )
+                    all_warnings.append(dup_finding)
+
+            # B. Drug-Drug Interactions between co-proposed medications
+            for rule in ddi_rules:
+                r1 = clean_text(rule["ingredient_1"])
+                r2 = clean_text(rule["ingredient_2"])
+                if (r1 in clean_ings_a and r2 in clean_ings_b) or (r2 in clean_ings_a and r1 in clean_ings_b):
+                    demo_notice = " [DEMO/TEST ONLY RULE — NOT CLINICALLY VALIDATED]" if rule.get("is_demo_rule") else ""
+                    ddi_finding = SafetyFindingSchema(
+                        rule_id=rule["rule_id"],
+                        category=rule.get("category", "drug_drug_interaction"),
+                        severity=rule["severity"],
+                        affected_medication=f"{norm_b.normalized_name or name_b} (co-proposed with {norm_a.normalized_name or name_a})",
+                        explanation=f"Co-proposed interaction: {rule['explanation']}{demo_notice}",
+                        evidence=f"Source: {rule['source']} (ID: {rule['source_id']})",
+                        review_required=True,
+                    )
+                    if rule["severity"] in ("critical", "high", "moderate"):
+                        all_warnings.append(ddi_finding)
+                    else:
+                        all_review_required.append(ddi_finding)
+
+    # 3. Determine overall status across all evaluations and findings
+    if all_warnings or any(e.overall_status == SafetyStatus.WARNING for e in evaluations):
+        overall_status = SafetyStatus.WARNING
+    elif unable_to_verify_meds or any(e.overall_status == SafetyStatus.UNABLE_TO_VERIFY for e in evaluations):
+        overall_status = SafetyStatus.UNABLE_TO_VERIFY
+    elif all_review_required or any(e.overall_status == SafetyStatus.REVIEW_REQUIRED for e in evaluations):
+        overall_status = SafetyStatus.REVIEW_REQUIRED
+    else:
+        overall_status = SafetyStatus.SAFE
+
+    # Deduplicate findings by (rule_id, affected_medication) preserving order
+    def _dedup_findings(finding_list: list[SafetyFindingSchema]) -> list[SafetyFindingSchema]:
+        seen = set()
+        deduped = []
+        for f in finding_list:
+            key = (f.rule_id, f.affected_medication)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(f)
+        return deduped
+
+    deduped_warnings = _dedup_findings(all_warnings)
+    deduped_review = _dedup_findings(all_review_required)
+
+    return SOAPMedicationSafetyReport(
+        overall_status=overall_status,
+        has_warnings=bool(deduped_warnings),
+        has_review_required=bool(deduped_review),
+        has_unable_to_verify=bool(unable_to_verify_meds),
+        evaluations=evaluations,
+        warnings=deduped_warnings,
+        review_required=deduped_review,
+        unable_to_verify=unable_to_verify_meds,
+    )
+

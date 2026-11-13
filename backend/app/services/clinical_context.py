@@ -48,7 +48,9 @@ def aggregate_clinical_context(
 ) -> ClinicalContextResponse | None:
     """Aggregates and structures a patient's complete clinical context deterministically.
 
-    Single roundtrip query with eager loading (selectinload) avoids N+1 query patterns.
+    Eager loading via batch SELECT queries (selectinload) loads the patient and related
+    collections (allergies, medical history, encounters with vital signs, medications)
+    across batch queries, avoiding N+1 query patterns.
     """
     # 1. Fetch patient with all clinical relationships preloaded
     stmt = (
@@ -261,6 +263,65 @@ def aggregate_clinical_context(
 
     reference_encounter: ReferenceEncounterContext | None = None
 
+    def _extract_encounter_vitals(target_enc: Encounter) -> LatestVitalsContext:
+        encounter_vitals = target_enc.vital_signs or []
+        sorted_ev = sorted(
+            encounter_vitals,
+            key=lambda v: v.recorded_at or datetime.min,
+            reverse=True,
+        )
+        enc_ctx = LatestVitalsContext()
+        found_any_metric = False
+
+        def _get_metric(field_name: str, unit: str) -> VitalMeasurement:
+            nonlocal found_any_metric
+            for v in sorted_ev:
+                val = getattr(v, field_name, None)
+                if val is not None:
+                    found_any_metric = True
+                    return VitalMeasurement(
+                        value=val,
+                        unit=unit,
+                        recorded_at=v.recorded_at,
+                        source_encounter_id=target_enc.encounter_id,
+                    )
+            return VitalMeasurement(unit=unit)
+
+        enc_ctx.systolic_bp = _get_metric("systolic_bp", "mmHg")
+        enc_ctx.diastolic_bp = _get_metric("diastolic_bp", "mmHg")
+        enc_ctx.pulse_rate = _get_metric("pulse_rate", "bpm")
+        enc_ctx.temperature_celsius = _get_metric("temperature_celsius", "°C")
+        enc_ctx.spo2_percentage = _get_metric("spo2_percentage", "%")
+        enc_ctx.respiratory_rate = _get_metric("respiratory_rate", "breaths/min")
+        enc_ctx.weight_kg = _get_metric("weight_kg", "kg")
+        enc_ctx.height_cm = _get_metric("height_cm", "cm")
+        enc_ctx.has_any_measurements = found_any_metric
+
+        w = enc_ctx.weight_kg.value
+        h = enc_ctx.height_cm.value
+        if w is not None and h is not None and h > 0 and w > 0:
+            h_m = float(h) / 100.0
+            bmi_val = round(float(w) / (h_m ** 2), 2)
+            weight_ts = enc_ctx.weight_kg.recorded_at
+            height_ts = enc_ctx.height_cm.recorded_at
+            gap_days = abs((weight_ts.date() - height_ts.date()).days) if (weight_ts and height_ts) else None
+            is_concurrent = (gap_days == 0) if gap_days is not None else None
+            bmi_recorded_at = weight_ts if is_concurrent else None
+
+            enc_ctx.bmi = BMIMeasurement(
+                value=bmi_val,
+                unit="kg/m²",
+                weight_kg_used=float(w),
+                height_cm_used=float(h),
+                weight_recorded_at=weight_ts,
+                height_recorded_at=height_ts,
+                measurement_gap_days=gap_days,
+                is_concurrent=is_concurrent,
+                recorded_at=bmi_recorded_at,
+                is_derived=True,
+            )
+        return enc_ctx
+
     if requested_encounter_id:
         matched_enc = next(
             (e for e in all_encounters if e.encounter_id == requested_encounter_id), None
@@ -287,6 +348,7 @@ def aggregate_clinical_context(
             status=matched_enc.status,
             is_synthetic=matched_enc.is_synthetic,
             is_explicitly_requested=True,
+            vital_signs=_extract_encounter_vitals(matched_enc),
         )
     else:
         # Default: if encounters exist, select the most recent encounter as context reference
@@ -300,6 +362,7 @@ def aggregate_clinical_context(
                 status=latest_enc.status,
                 is_synthetic=latest_enc.is_synthetic,
                 is_explicitly_requested=False,
+                vital_signs=_extract_encounter_vitals(latest_enc),
             )
 
     # 7. Latest Vitals Extraction Across All Available Encounter Telemetry

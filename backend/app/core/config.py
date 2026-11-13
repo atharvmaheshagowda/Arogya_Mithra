@@ -1,4 +1,8 @@
+from typing import Optional
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+SUPPORTED_LLM_PROVIDERS = {"mock", "gemini", "openai", "generic_http"}
 
 
 class Settings(BaseSettings):
@@ -7,6 +11,47 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./Arogya.db"
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
+
+    # Phase 5C LLM Provider Settings
+    LLM_PROVIDER: str = Field(
+        default="mock",
+        description="LLM provider for clinical note generation ('mock', 'gemini', 'openai', 'generic_http')",
+    )
+    LLM_API_KEY: Optional[SecretStr] = Field(
+        default=None,
+        description="Optional API key for external LLM provider (masked in logs/repr)",
+    )
+    LLM_MODEL: Optional[str] = Field(
+        default=None,
+        description="Optional model identifier specified by deployment (not hardcoded to outdated models)",
+    )
+    LLM_TIMEOUT_SECONDS: float = Field(
+        default=15.0,
+        ge=1.0,
+        le=120.0,
+        description="Timeout in seconds for LLM generation requests (1.0 - 120.0)",
+    )
+    LLM_FALLBACK_TO_MOCK: bool = Field(
+        default=True,
+        description="Fallback to DeterministicMockSOAPAdapter if external provider fails or times out",
+    )
+    LLM_BASE_URL: Optional[str] = Field(
+        default=None,
+        description="Optional base URL for OpenAI-compatible or local inference endpoints",
+    )
+
+    @field_validator("LLM_PROVIDER", mode="before")
+    @classmethod
+    def validate_llm_provider(cls, value: str) -> str:
+        if isinstance(value, str):
+            cleaned = value.strip().lower()
+            if cleaned not in SUPPORTED_LLM_PROVIDERS:
+                raise ValueError(
+                    f"Unsupported LLM_PROVIDER '{value}'. "
+                    f"Supported providers: {', '.join(sorted(SUPPORTED_LLM_PROVIDERS))}"
+                )
+            return cleaned
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env",
