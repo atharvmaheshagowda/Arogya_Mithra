@@ -1,0 +1,1165 @@
+{
+  "timestamp": "20261114_011101",
+  "mode": "offline_mock",
+  "model": "gemini-3.5-flash-lite",
+  "total_cases_evaluated": 30,
+  "overall_clean_pass_rate_pct": 83.33,
+  "total_critical_negation_inversions": 0,
+  "language_group_breakdown": {
+    "English": {
+      "total_cases": 6,
+      "clean_passes": 5,
+      "total_expected_symptoms": 10,
+      "matched_symptoms": 10,
+      "total_expected_negatives": 20,
+      "matched_negatives": 20,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 1,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    },
+    "Kannada": {
+      "total_cases": 6,
+      "clean_passes": 6,
+      "total_expected_symptoms": 13,
+      "matched_symptoms": 13,
+      "total_expected_negatives": 14,
+      "matched_negatives": 13,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 0,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    },
+    "Hindi": {
+      "total_cases": 6,
+      "clean_passes": 5,
+      "total_expected_symptoms": 12,
+      "matched_symptoms": 12,
+      "total_expected_negatives": 16,
+      "matched_negatives": 15,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 0,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    },
+    "Kanglish": {
+      "total_cases": 6,
+      "clean_passes": 4,
+      "total_expected_symptoms": 13,
+      "matched_symptoms": 12,
+      "total_expected_negatives": 19,
+      "matched_negatives": 19,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 1,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    },
+    "Hinglish": {
+      "total_cases": 6,
+      "clean_passes": 5,
+      "total_expected_symptoms": 11,
+      "matched_symptoms": 11,
+      "total_expected_negatives": 18,
+      "matched_negatives": 18,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 1,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    }
+  },
+  "case_evaluations": [
+    {
+      "case_id": "EN_01",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 4,
+        "matched_count": 4,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_02",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_03",
+      "language_group": "English",
+      "is_clean_pass": false,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": [
+          "Telmisartan 40mg"
+        ]
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": true,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_04",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_05",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_06",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 4,
+        "matched_count": 4,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_01",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_02",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_03",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": true,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_04",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 1,
+        "missing_negatives": [
+          "ಊತ"
+        ],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_05",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KN_06",
+      "language_group": "Kannada",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_01",
+      "language_group": "Hindi",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_02",
+      "language_group": "Hindi",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 2,
+        "missing_negatives": [
+          "कफ"
+        ],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_03",
+      "language_group": "Hindi",
+      "is_clean_pass": false,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": false
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": true,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_04",
+      "language_group": "Hindi",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_05",
+      "language_group": "Hindi",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HI_06",
+      "language_group": "Hindi",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_01",
+      "language_group": "Kanglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 5,
+        "matched_count": 5,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_02",
+      "language_group": "Kanglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_03",
+      "language_group": "Kanglish",
+      "is_clean_pass": false,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": false
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": true,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_04",
+      "language_group": "Kanglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_05",
+      "language_group": "Kanglish",
+      "is_clean_pass": false,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 1,
+        "missing_facts": [
+          "weakness"
+        ]
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": [
+          "Amlodipine 5mg"
+        ]
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_06",
+      "language_group": "Kanglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_01",
+      "language_group": "Hinglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 5,
+        "matched_count": 5,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_02",
+      "language_group": "Hinglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_03",
+      "language_group": "Hinglish",
+      "is_clean_pass": false,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": false
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": [
+          "Budesonide inhaler"
+        ]
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": true,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_04",
+      "language_group": "Hinglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_05",
+      "language_group": "Hinglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "HINGLISH_06",
+      "language_group": "Hinglish",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    }
+  ],
+  "disclaimer": "NOTICE: Automated grading evaluates transcript grounding and safety heuristic adherence. It does NOT replace human clinical judgment, diagnostic validation, or clinical trial approval."
+}

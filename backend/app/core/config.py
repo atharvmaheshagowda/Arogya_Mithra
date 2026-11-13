@@ -21,12 +21,16 @@ class Settings(BaseSettings):
         default=None,
         description="Optional API key for external LLM provider (masked in logs/repr)",
     )
+    GEMINI_API_KEY: Optional[SecretStr] = Field(
+        default=None,
+        description="Optional Gemini API key for Google Generative AI endpoints (masked in logs/repr)",
+    )
     LLM_MODEL: Optional[str] = Field(
         default=None,
         description="Optional model identifier specified by deployment (not hardcoded to outdated models)",
     )
     LLM_TIMEOUT_SECONDS: float = Field(
-        default=15.0,
+        default=30.0,
         ge=1.0,
         le=120.0,
         description="Timeout in seconds for LLM generation requests (1.0 - 120.0)",
@@ -53,8 +57,16 @@ class Settings(BaseSettings):
             return cleaned
         return value
 
+    def get_gemini_api_key(self) -> Optional[str]:
+        """Retrieve Gemini API key with fallback to generic LLM_API_KEY."""
+        if self.GEMINI_API_KEY:
+            return self.GEMINI_API_KEY.get_secret_value()
+        if self.LLM_API_KEY:
+            return self.LLM_API_KEY.get_secret_value()
+        return None
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

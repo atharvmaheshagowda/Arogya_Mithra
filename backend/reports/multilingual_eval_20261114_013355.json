@@ -1,0 +1,66 @@
+{
+  "timestamp": "20261114_013355",
+  "mode": "live",
+  "model": "gemini-3.5-flash-lite",
+  "total_cases_evaluated": 1,
+  "overall_clean_pass_rate_pct": 100.0,
+  "overall_fully_correct_rate_pct": 100.0,
+  "total_critical_negation_inversions": 0,
+  "language_group_breakdown": {
+    "Kanglish": {
+      "total_cases": 1,
+      "fully_correct": 1,
+      "missing_symptoms": 0,
+      "missing_negatives": 0,
+      "negation_inversion": 0,
+      "unsupported_info": 0,
+      "manual_review": 0,
+      "total_expected_symptoms": 3,
+      "matched_symptoms": 3,
+      "total_expected_negatives": 5,
+      "matched_negatives": 5,
+      "critical_negation_inversions": 0
+    }
+  },
+  "case_evaluations": [
+    {
+      "case_id": "KANGLISH_01",
+      "language_group": "Kanglish",
+      "primary_classification": "FULLY_CORRECT",
+      "classification_flags": [],
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 5,
+        "matched_count": 5,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    }
+  ],
+  "disclaimer": "NOTICE: Automated grading evaluates transcript grounding and safety heuristic adherence. It does NOT replace human clinical judgment, diagnostic validation, or clinical trial approval."
+}

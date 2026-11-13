@@ -1,0 +1,90 @@
+{
+  "timestamp": "20261114_013108",
+  "mode": "live",
+  "model": "gemini-3.5-flash-lite",
+  "total_cases_evaluated": 2,
+  "overall_clean_pass_rate_pct": 50.0,
+  "overall_fully_correct_rate_pct": 50.0,
+  "total_critical_negation_inversions": 0,
+  "language_group_breakdown": {
+    "Kannada": {
+      "total_cases": 1,
+      "fully_correct": 1,
+      "missing_symptoms": 0,
+      "missing_negatives": 0,
+      "negation_inversion": 0,
+      "unsupported_info": 0,
+      "manual_review": 0,
+      "total_expected_symptoms": 3,
+      "matched_symptoms": 3,
+      "total_expected_negatives": 3,
+      "matched_negatives": 3,
+      "critical_negation_inversions": 0
+    },
+    "Kanglish": {
+      "total_cases": 1,
+      "fully_correct": 0,
+      "missing_symptoms": 0,
+      "missing_negatives": 0,
+      "negation_inversion": 0,
+      "unsupported_info": 0,
+      "manual_review": 1,
+      "total_expected_symptoms": 0,
+      "matched_symptoms": 0,
+      "total_expected_negatives": 0,
+      "matched_negatives": 0,
+      "critical_negation_inversions": 0
+    }
+  },
+  "case_evaluations": [
+    {
+      "case_id": "KN_01",
+      "language_group": "Kannada",
+      "primary_classification": "FULLY_CORRECT",
+      "classification_flags": [],
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "No scheduled follow-up documented",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "KANGLISH_01",
+      "language_group": "Kanglish",
+      "primary_classification": "MANUAL_REVIEW_REQUIRED",
+      "classification_flags": [
+        "MANUAL_REVIEW_REQUIRED"
+      ],
+      "is_clean_pass": false,
+      "error": "Unexpected error calling Gemini API: Server error '503 Service Unavailable' for url 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503"
+    }
+  ],
+  "disclaimer": "NOTICE: Automated grading evaluates transcript grounding and safety heuristic adherence. It does NOT replace human clinical judgment, diagnostic validation, or clinical trial approval."
+}

@@ -1,0 +1,97 @@
+{
+  "timestamp": "20261114_011209",
+  "mode": "offline_mock",
+  "model": "gemini-3.5-flash-lite",
+  "total_cases_evaluated": 2,
+  "overall_clean_pass_rate_pct": 100.0,
+  "total_critical_negation_inversions": 0,
+  "language_group_breakdown": {
+    "English": {
+      "total_cases": 2,
+      "clean_passes": 2,
+      "total_expected_symptoms": 6,
+      "matched_symptoms": 6,
+      "total_expected_negatives": 7,
+      "matched_negatives": 7,
+      "critical_negation_inversions": 0,
+      "contraindication_errors": 0,
+      "objective_inventions": 0,
+      "hallucinated_tests": 0
+    }
+  },
+  "case_evaluations": [
+    {
+      "case_id": "EN_01",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 4,
+        "matched_count": 4,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": true,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 1,
+        "matched_count": 1,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    },
+    {
+      "case_id": "EN_02",
+      "language_group": "English",
+      "is_clean_pass": true,
+      "symptoms": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_facts": []
+      },
+      "negatives": {
+        "expected_count": 3,
+        "matched_count": 3,
+        "missing_negatives": [],
+        "critical_inversions": []
+      },
+      "diagnostic_uncertainty": {
+        "expected": false,
+        "preserved": true
+      },
+      "medications": {
+        "expected_count": 2,
+        "matched_count": 2,
+        "missing_medications": [],
+        "contraindication_errors": []
+      },
+      "objective_safety": {
+        "has_missing_findings_expected": false,
+        "invention_error": false
+      },
+      "plan_safety": {
+        "hallucinated_workup": [],
+        "follow_up_grounded": true,
+        "follow_up_reason": "Follow-up instruction is grounded in transcript",
+        "warnings_grounded": true
+      }
+    }
+  ],
+  "disclaimer": "NOTICE: Automated grading evaluates transcript grounding and safety heuristic adherence. It does NOT replace human clinical judgment, diagnostic validation, or clinical trial approval."
+}

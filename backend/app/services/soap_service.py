@@ -18,6 +18,16 @@ from app.schemas.clinical_note import (
 )
 from app.services.adapters.base import ClinicalNoteAdapter
 from app.services.adapters.factory import get_clinical_note_adapter
+from app.services.adapters.gemini_adapter import (
+    GeminiAdapterError,
+    GeminiAuthenticationError,
+    GeminiConfigurationError,
+    GeminiModelNotFoundError,
+    GeminiRateLimitError,
+    GeminiResponseParsingError,
+    GeminiServiceUnavailableError,
+    GeminiTimeoutError,
+)
 from app.services.adapters.mock_adapter import DeterministicMockSOAPAdapter
 from app.services.clinical_context import (
     ClinicalContextEncounterMismatchError,
@@ -34,7 +44,17 @@ MANDATORY_DISCLAIMER = (
 
 class SOAPNoteService:
     def __init__(self, adapter: Optional[ClinicalNoteAdapter] = None):
-        self.adapter = adapter if adapter is not None else get_clinical_note_adapter()
+        self._custom_adapter = adapter
+
+    @property
+    def adapter(self) -> ClinicalNoteAdapter:
+        if self._custom_adapter is not None:
+            return self._custom_adapter
+        return get_clinical_note_adapter()
+
+    @adapter.setter
+    def adapter(self, value: Optional[ClinicalNoteAdapter]) -> None:
+        self._custom_adapter = value
 
     def generate_draft(self, db: Session, request: SOAPGenerateRequest) -> ClinicalSOAPNote:
         # 1. Validate language code
@@ -280,6 +300,46 @@ class SOAPNoteService:
         # 3. Generate SOAP extraction via adapter
         try:
             soap_payload: SOAPPayload = self.adapter.generate_soap_note(request, context)
+        except GeminiAuthenticationError:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="External LLM authentication failure. Please verify provider credentials with system administrator.",
+            )
+        except GeminiRateLimitError:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="External LLM rate limit exceeded. Please retry your request shortly.",
+            )
+        except GeminiServiceUnavailableError:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="External LLM service is temporarily unavailable (HTTP 503). Please retry shortly.",
+            )
+        except GeminiTimeoutError:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="External LLM generation request timed out. Please retry.",
+            )
+        except GeminiModelNotFoundError as err:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(err),
+            )
+        except GeminiResponseParsingError as err:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Clinical note generation produced invalid structured output: {str(err)}",
+            )
+        except GeminiConfigurationError as err:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(err),
+            )
+        except GeminiAdapterError as err:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Clinical note generation provider error: {str(err)}",
+            )
         except ValueError as err:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
