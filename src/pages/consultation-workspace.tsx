@@ -331,11 +331,10 @@ export function ConsultationWorkspacePage() {
         duration: soap.subjective.history_of_present_illness,
         relevantHistory: soap.patient_context?.chronic_conditions?.join(", ") || patient.diagnoses.map((d) => d.condition).join(", ") || "Comorbidities on file",
         observations: soap.objective.vital_signs_summary || soap.objective.physical_examination.join("; ") || patient.vitals,
-        clinicianAssessment: `${soap.assessment.primary_impression}${
-          soap.assessment.differential_diagnoses.length > 0
+        clinicianAssessment: `${soap.assessment.primary_impression}${soap.assessment.differential_diagnoses.length > 0
             ? "\nDifferentials: " + soap.assessment.differential_diagnoses.join(", ")
             : ""
-        }`,
+          }`,
         treatmentPlan: formattedPlan || "Symptomatic supportive therapy.",
         uncertaintiesAndNegations: formattedUncertainties,
         evidenceConfidence: res.confidence_notes || "Evidence Grounded",

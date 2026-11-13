@@ -1598,8 +1598,8 @@ export function addPatientRecord(record: {
   const newPatient: PatientProfile = {
     id: newId,
     name: record.name,
-    avatar: record.gender === "Female" 
-      ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80" 
+    avatar: record.gender === "Female"
+      ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80"
       : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
     age: record.age,
     dob: record.dob || "1985-01-01",

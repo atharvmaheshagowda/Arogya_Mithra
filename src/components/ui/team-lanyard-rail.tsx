@@ -1130,3 +1130,4 @@ export function TeamLanyardRail({
 }
 
 export default TeamLanyardRail;
+

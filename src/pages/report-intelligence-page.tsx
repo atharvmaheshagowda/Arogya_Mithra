@@ -397,8 +397,8 @@ export function ReportsPage() {
                       rep.documentCategory === "Prescription"
                         ? "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=200&q=80"
                         : rep.fileName.toLowerCase().includes("lipid")
-                        ? "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=200&q=80"
-                        : "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=200&q=80"
+                          ? "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=200&q=80"
+                          : "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=200&q=80"
                     }
                     alt={rep.fileName}
                     className="size-full object-cover"
