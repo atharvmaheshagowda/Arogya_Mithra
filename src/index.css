@@ -4,30 +4,38 @@
 
 @layer base {
   :root {
-    /* Brand Identity: Warm Ivory canvas (#F6F4ED) & Deep Navy (#102A43) */
-    --background: 47 33% 95%;
-    --foreground: 207 62% 16%;
-    --card: 0 0% 100%;
-    --card-foreground: 207 62% 16%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 207 62% 16%;
-    --primary: 207 62% 16%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 45 22% 91%;
-    --secondary-foreground: 207 62% 16%;
-    --muted: 45 20% 90%;
-    --muted-foreground: 209 25% 42%;
-    --accent: 174 84% 32%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    /* Brand Colour System:
+       - Deep Atlantic: #102B3F (206 59% 15%)
+       - Electric Jade: #00A889 (169 100% 33%)
+       - Porcelain:     #F5F5EF (60 23% 95%)
+       - White:         #FFFFFF (0 0% 100%)
+       Clinical safety signals (Red & Amber only):
+       - Danger:        #DC2626
+       - Warning:       #D97706
+    */
+    --background: 60 23% 95%;       /* Porcelain #F5F5EF */
+    --foreground: 206 59% 15%;      /* Deep Atlantic #102B3F */
+    --card: 0 0% 100%;              /* White #FFFFFF */
+    --card-foreground: 206 59% 15%; /* Deep Atlantic */
+    --popover: 0 0% 100%;           /* White */
+    --popover-foreground: 206 59% 15%;
+    --primary: 206 59% 15%;         /* Deep Atlantic */
+    --primary-foreground: 0 0% 100%;/* White */
+    --secondary: 60 15% 91%;
+    --secondary-foreground: 206 59% 15%;
+    --muted: 60 12% 89%;
+    --muted-foreground: 206 25% 40%;
+    --accent: 169 100% 33%;         /* Electric Jade #00A889 */
+    --accent-foreground: 0 0% 100%; /* White */
+    --destructive: 0 72% 51%;       /* Clinical Red */
     --destructive-foreground: 0 0% 100%;
-    --success: 142 71% 35%;
+    --success: 169 100% 33%;        /* Electric Jade */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 207 62% 16%;
-    --border: 45 16% 84%;
-    --input: 45 16% 84%;
-    --ring: 174 84% 32%;
+    --warning: 38 92% 50%;          /* Clinical Amber */
+    --warning-foreground: 206 59% 15%;
+    --border: 60 14% 84%;
+    --input: 60 14% 84%;
+    --ring: 169 100% 33%;           /* Electric Jade */
     --radius: 0.875rem;
     --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-display: "Newsreader", "Fraunces", Iowan Old Style, Baskerville, "Times New Roman", serif;
@@ -46,39 +54,39 @@
     --radius-lg: 0.875rem;
     --radius-xl: 1.25rem;
     --radius-2xl: 1.5rem;
-    --shadow-xs: 0 1px 2px rgb(16 42 67 / 0.04);
-    --shadow-sm: 0 1px 3px rgb(16 42 67 / 0.07), 0 1px 2px rgb(16 42 67 / 0.04);
-    --shadow-md: 0 8px 24px rgb(16 42 67 / 0.08), 0 2px 6px rgb(16 42 67 / 0.04);
-    --shadow-lg: 0 18px 48px rgb(16 42 67 / 0.12), 0 4px 12px rgb(16 42 67 / 0.05);
-    --shadow-xl: 0 28px 72px rgb(16 42 67 / 0.16), 0 8px 22px rgb(16 42 67 / 0.08);
-    --shadow-teal: 0 8px 28px -4px rgb(13 148 136 / 0.28);
+    --shadow-xs: 0 1px 2px rgb(16 43 63 / 0.04);
+    --shadow-sm: 0 1px 3px rgb(16 43 63 / 0.07), 0 1px 2px rgb(16 43 63 / 0.04);
+    --shadow-md: 0 8px 24px rgb(16 43 63 / 0.08), 0 2px 6px rgb(16 43 63 / 0.04);
+    --shadow-lg: 0 18px 48px rgb(16 43 63 / 0.12), 0 4px 12px rgb(16 43 63 / 0.05);
+    --shadow-xl: 0 28px 72px rgb(16 43 63 / 0.16), 0 8px 22px rgb(16 43 63 / 0.08);
+    --shadow-teal: 0 8px 28px -4px rgb(0 168 137 / 0.32);
   }
 
   .dark {
-    /* Brand Identity: Deep Midnight Navy (#0A1926) & Inset Card (#112438) */
-    --background: 209 58% 9%;
-    --foreground: 45 25% 96%;
-    --card: 209 46% 14%;
-    --card-foreground: 45 25% 96%;
-    --popover: 209 46% 14%;
-    --popover-foreground: 45 25% 96%;
-    --primary: 45 25% 96%;
-    --primary-foreground: 207 62% 16%;
-    --secondary: 209 35% 18%;
-    --secondary-foreground: 45 25% 96%;
-    --muted: 209 32% 18%;
-    --muted-foreground: 209 20% 70%;
-    --accent: 174 84% 36%;
+    /* Brand Dark: Deep Atlantic Canvas & Electric Jade Accents */
+    --background: 206 59% 10%;
+    --foreground: 60 23% 96%;
+    --card: 206 52% 14%;
+    --card-foreground: 60 23% 96%;
+    --popover: 206 52% 14%;
+    --popover-foreground: 60 23% 96%;
+    --primary: 60 23% 96%;
+    --primary-foreground: 206 59% 15%;
+    --secondary: 206 35% 18%;
+    --secondary-foreground: 60 23% 96%;
+    --muted: 206 32% 18%;
+    --muted-foreground: 206 20% 70%;
+    --accent: 169 100% 38%;         /* Electric Jade */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 57%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 65% 45%;
-    --success-foreground: 207 57% 8%;
+    --success: 169 100% 38%;
+    --success-foreground: 206 59% 10%;
     --warning: 38 92% 55%;
-    --warning-foreground: 207 57% 8%;
-    --border: 208 30% 23%;
-    --input: 208 30% 23%;
-    --ring: 174 84% 36%;
+    --warning-foreground: 206 59% 10%;
+    --border: 206 30% 23%;
+    --input: 206 30% 23%;
+    --ring: 169 100% 38%;
     --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
     --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.38);
     --shadow-md: 0 8px 24px rgb(0 0 0 / 0.4);

@@ -31,9 +31,9 @@ function AuthFrame({
   badgeText?: string;
 }) {
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-      {/* Editorial Left Hero Panel */}
-      <section className="relative hidden overflow-hidden bg-[#102A43] p-12 text-white lg:flex lg:flex-col justify-between">
+    <main className="grid min-h-screen lg:grid-cols-[1.15fr_0.85fr]">
+      {/* Editorial Left Hero Panel with Deep Atlantic and Electric Jade aura */}
+      <section className="relative hidden overflow-hidden bg-[#102B3F] p-12 xl:p-16 text-white lg:flex lg:flex-col justify-between">
         {/* Real Clinical Context Background Photography with Deep Tint */}
         <div className="pointer-events-none absolute inset-0 z-0 select-none">
           <img
@@ -43,7 +43,7 @@ function AuthFrame({
           />
         </div>
         <div className="pointer-events-none absolute inset-0 surface-dots opacity-20 z-0" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 size-[480px] rounded-full bg-teal-500/15 blur-[120px] z-0" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 size-[480px] rounded-full bg-[#00A889]/20 blur-[130px] z-0" />
 
         <div className="relative z-10">
           <Link to="/" className="inline-block" aria-label="Go to Home">
@@ -51,28 +51,24 @@ function AuthFrame({
           </Link>
         </div>
 
-        <div className="relative my-auto max-w-lg space-y-6">
+        <div className="relative my-auto max-w-lg space-y-6 z-10">
           <div className="inline-flex items-center gap-2">
-            <Badge
-              variant="teal"
-              size="sm"
-              className="!bg-teal-500/20 !border-teal-400/40 !text-teal-200"
-              dot
-            >
-              {badgeText}
-            </Badge>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#00A889]/40 bg-[#00A889]/15 px-3.5 py-1.5 text-xs font-semibold text-[#00A889] backdrop-blur-md">
+              <span className="size-2 rounded-full bg-[#00A889] animate-pulse" />
+              <span className="tracking-wider uppercase text-white font-medium">{badgeText}</span>
+            </span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-[1.02] tracking-tight !text-white">
+          <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-[1.05] tracking-tight !text-white">
             The workspace for considered clinical care.
           </h1>
 
-          <p className="max-w-md text-base leading-relaxed text-white/75 font-normal">
+          <p className="max-w-md text-base leading-relaxed text-white/80 font-normal">
             AAROGYA MITHRA connects ambient consultation scribing, medical report OCR, and drug interaction safeguards into one calm, doctor-led OPD workflow.
           </p>
 
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-xs text-white/80 backdrop-blur-sm space-y-2">
-            <div className="flex items-center gap-2 text-teal-300 font-semibold">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/85 backdrop-blur-md space-y-2">
+            <div className="flex items-center gap-2 text-[#00A889] font-semibold">
               <ShieldCheck className="size-4" />
               <span>Hackathon Prototype Notice</span>
             </div>
@@ -82,7 +78,7 @@ function AuthFrame({
           </div>
         </div>
 
-        <div className="relative flex items-center justify-between text-xs text-white/50 pt-6 border-t border-white/10">
+        <div className="relative flex items-center justify-between text-xs text-white/60 pt-6 border-t border-white/10 z-10">
           <span>AI assists the doctor. The doctor makes the decision.</span>
           <span className="font-mono">v0.1.0 Prototype</span>
         </div>
@@ -104,7 +100,7 @@ function AuthFrame({
             <ThemeSwitcher />
             <Link
               to="/"
-              className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent/40 hover:text-foreground transition-all shadow-2xs"
+              className="rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-foreground transition-all shadow-xs"
             >
               Back to Home
             </Link>

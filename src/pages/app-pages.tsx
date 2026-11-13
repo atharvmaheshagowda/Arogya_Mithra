@@ -232,42 +232,43 @@ export function DashboardPage() {
       {/* ====================================================================
           1. TOP SECTION — GREETING & START CONSULTATION
           ==================================================================== */}
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-6 shadow-xs sm:flex-row sm:items-center">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col justify-between gap-5 rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm sm:flex-row sm:items-center">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
             <span className="text-eyebrow">Clinical Copilot Active</span>
             <Badge variant="teal" size="sm" dot pulse>
               Live OPD Session • Room 04
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">•</span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
               {doctor?.clinic || "Apollo Hospitals, Bengaluru"} • General Medicine
             </span>
           </div>
-          <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
             Good morning, Doctor.
           </h1>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm sm:text-base leading-relaxed text-muted-foreground max-w-2xl">
             Here is your clinical activity overview. 28 consultations scheduled across Kannada, Hindi, and English.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Button
             variant="outline"
-            size="md"
+            size="lg"
             onClick={() => setIsAddPatientOpen(true)}
             leftIcon={<Plus className="size-4" />}
+            className="rounded-full px-5 font-semibold"
           >
             Add Patient
           </Button>
           <Button
             variant="teal"
-            size="md"
+            size="lg"
             onClick={() => navigate("/app/consultations")}
             leftIcon={<Mic className="size-4" />}
             rightIcon={<ArrowRight className="size-4" />}
-            className="shadow-sm font-semibold"
+            className="rounded-full px-6 shadow-md shadow-accent/20 font-semibold"
           >
             Start Consultation
           </Button>
@@ -277,68 +278,68 @@ export function DashboardPage() {
       {/* ====================================================================
           2. QUICK ACTIONS BAR
           ==================================================================== */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <button
           type="button"
           onClick={() => setIsAddPatientOpen(true)}
-          className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xs"
+          className="group flex items-center gap-3.5 rounded-2xl border border-border/80 bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-md"
         >
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
-            <Plus className="size-4.5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-all duration-300">
+            <Plus className="size-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">
+            <div className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
               Add Patient
             </div>
-            <div className="text-[11px] text-muted-foreground">Enroll to OPD queue</div>
+            <div className="text-xs text-muted-foreground">Enroll to OPD queue</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => navigate("/app/consultations")}
-          className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xs"
+          className="group flex items-center gap-3.5 rounded-2xl border border-border/80 bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-md"
         >
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-            <Mic className="size-4.5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300">
+            <Mic className="size-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">
+            <div className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
               Start Consultation
             </div>
-            <div className="text-[11px] text-muted-foreground">LISTEN ambient scribe</div>
+            <div className="text-xs text-muted-foreground">LISTEN ambient scribe</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => navigate("/app/reports")}
-          className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xs"
+          className="group flex items-center gap-3.5 rounded-2xl border border-border/80 bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-md"
         >
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-            <Upload className="size-4.5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+            <Upload className="size-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">
-              Upload Medical Report
+            <div className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
+              Upload Report
             </div>
-            <div className="text-[11px] text-muted-foreground">READ diagnostic OCR</div>
+            <div className="text-xs text-muted-foreground">READ diagnostic OCR</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => navigate("/app/safety")}
-          className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xs"
+          className="group flex items-center gap-3.5 rounded-2xl border border-border/80 bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-md"
         >
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-            <ShieldAlert className="size-4.5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+            <ShieldAlert className="size-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">
-              View Safety Alerts
+            <div className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
+              Safety Alerts
             </div>
-            <div className="text-[11px] text-muted-foreground">SAFEGUARD drug rules</div>
+            <div className="text-xs text-muted-foreground">SAFEGUARD drug rules</div>
           </div>
         </button>
       </div>
@@ -880,23 +881,23 @@ export function DashboardPage() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/30 text-xs font-semibold text-muted-foreground">
+          <div className="overflow-x-auto clinical-scrollbar">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="border-b border-border/80 bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-6 py-3">Patient</th>
-                  <th className="px-4 py-3">Patient ID</th>
-                  <th className="px-4 py-3">Consultation Date</th>
-                  <th className="px-4 py-3">Language</th>
-                  <th className="px-4 py-3">Diagnosis / Complaint</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Action</th>
+                  <th className="px-6 py-4">Patient</th>
+                  <th className="px-4 py-4">Patient ID</th>
+                  <th className="px-4 py-4">Encounter Time</th>
+                  <th className="px-4 py-4">Language</th>
+                  <th className="px-4 py-4">Chief Complaint / Diagnosis</th>
+                  <th className="px-4 py-4">Oversight Status</th>
+                  <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border/70">
                 {filteredActivity.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-10 text-center text-muted-foreground">
                       No clinical consultations match your filter.
                     </td>
                   </tr>
@@ -904,16 +905,16 @@ export function DashboardPage() {
                   filteredActivity.map((item) => (
                     <tr
                       key={item.id}
-                      className="group transition-colors hover:bg-muted/30"
+                      className="group transition-colors hover:bg-muted/40"
                     >
                       {/* Patient */}
-                      <td className="px-6 py-3.5">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+                          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-xs font-bold text-accent">
                             {item.initials}
                           </div>
                           <div>
-                            <span className="font-medium text-foreground block">
+                            <span className="font-semibold text-foreground text-sm block">
                               {item.patientName}
                             </span>
                           </div>
@@ -921,31 +922,31 @@ export function DashboardPage() {
                       </td>
 
                       {/* MRN */}
-                      <td className="px-4 py-3.5">
-                        <span className="font-mono text-xs text-muted-foreground">
+                      <td className="px-4 py-4">
+                        <span className="font-mono text-xs font-medium text-muted-foreground">
                           {item.mrn}
                         </span>
                       </td>
 
                       {/* Consultation Date */}
-                      <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                      <td className="px-4 py-4 text-xs font-medium text-muted-foreground">
                         {item.dateTime}
                       </td>
 
                       {/* Language */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-4">
                         <Badge variant="outline" size="sm">
                           {item.language}
                         </Badge>
                       </td>
 
                       {/* Diagnosis */}
-                      <td className="px-4 py-3.5 text-xs text-foreground max-w-xs truncate">
+                      <td className="px-4 py-4 text-xs sm:text-sm font-medium text-foreground max-w-xs truncate">
                         {item.diagnosis}
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-4">
                         <Badge
                           variant={
                             item.statusVariant === "warning"
@@ -963,9 +964,9 @@ export function DashboardPage() {
                       </td>
 
                       {/* Action */}
-                      <td className="px-6 py-3.5 text-right">
+                      <td className="px-6 py-4 text-right">
                         <Button
-                          variant="ghost"
+                          variant={item.status === "Pending Doctor Sign-off" ? "teal" : "ghost"}
                           size="xs"
                           onClick={() => {
                             if (item.status === "Pending Doctor Sign-off") {
@@ -984,6 +985,7 @@ export function DashboardPage() {
                             }
                           }}
                           rightIcon={<ArrowRight className="size-3" />}
+                          className="font-semibold"
                         >
                           {item.status === "Pending Doctor Sign-off"
                             ? "Sign Note"

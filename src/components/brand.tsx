@@ -24,17 +24,17 @@ export function AarogyaMithraSymbol({ className = "size-8" }: BrandSymbolProps) 
     >
       <defs>
         <linearGradient id="am-brand-shield" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#0D9488" />
-          <stop offset="100%" stopColor="#102A43" />
+          <stop offset="0%" stopColor="#00A889" />
+          <stop offset="100%" stopColor="#102B3F" />
         </linearGradient>
         <linearGradient id="am-brand-teal" x1="10" y1="8" x2="22" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#2DD4BF" />
-          <stop offset="100%" stopColor="#0D9488" />
+          <stop offset="0%" stopColor="#00A889" />
+          <stop offset="100%" stopColor="#00A889" />
         </linearGradient>
       </defs>
 
-      {/* Rounded container with subtle clinical navy backdrop */}
-      <rect width="32" height="32" rx="8" className="fill-[#102A43] dark:fill-card" />
+      {/* Rounded container with Deep Atlantic backdrop */}
+      <rect width="32" height="32" rx="8" className="fill-[#102B3F] dark:fill-card" />
 
       {/* Protective shield silhouette with soft opacity */}
       <path
@@ -62,8 +62,8 @@ export function AarogyaMithraSymbol({ className = "size-8" }: BrandSymbolProps) 
         opacity="0.95"
       />
 
-      {/* Clinical Focal Core / Vital Pulse Node */}
-      <circle cx="16" cy="15" r="2.2" fill="#2DD4BF" />
+      {/* Clinical Focal Core / Vital Pulse Node in Electric Jade */}
+      <circle cx="16" cy="15" r="2.2" fill="#00A889" />
     </svg>
   );
 }

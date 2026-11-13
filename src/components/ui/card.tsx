@@ -105,22 +105,29 @@ export function MetricCard({
   ...props
 }: MetricCardProps) {
   return (
-    <Card className={cn("relative overflow-hidden p-5 transition-all hover:shadow-sm", className)} {...props}>
+    <Card
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg",
+        className,
+      )}
+      {...props}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-1.5">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {label}
           </p>
-          <p className="font-display text-3xl font-bold tracking-tight text-foreground">
+          <p className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
             {value}
           </p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground leading-normal">{subtitle}</p>
           )}
           {trend && (
             <div className="flex items-center gap-1.5 pt-1 text-xs font-medium">
               <span
                 className={cn(
+                  "font-semibold",
                   trend.isPositive ? "text-success" : "text-destructive",
                 )}
               >
@@ -131,12 +138,12 @@ export function MetricCard({
           )}
         </div>
         {Icon && (
-          <span className="grid size-11 place-items-center rounded-xl bg-accent/10 text-accent dark:bg-accent/20">
-            <Icon className="size-5" />
+          <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 group-hover:bg-accent group-hover:text-white transition-all duration-300 shrink-0">
+            <Icon className="size-5 sm:size-6" />
           </span>
         )}
       </div>
-      {badge && <div className="mt-3">{badge}</div>}
+      {badge && <div className="mt-3.5 pt-2 border-t border-border/50">{badge}</div>}
     </Card>
   );
 }
