@@ -98,3 +98,19 @@ class SOAPMedicationSafetyReport(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DirectInteractionCheckRequest(BaseModel):
+    drug_a: str = Field(..., min_length=1, max_length=255, description="First medication name or brand")
+    drug_b: str = Field(..., min_length=1, max_length=255, description="Second medication name or brand")
+
+
+class DirectInteractionCheckResponse(BaseModel):
+    matched: bool = Field(..., description="True if a clinical drug-drug interaction rule was triggered")
+    title: str = Field(..., description="Clinical title or summary of the interaction mechanism")
+    severity: str = Field(default="Info", description="Interaction severity: Critical, High, Moderate, Info, or Safe")
+    evidence: str = Field(..., description="Official clinical pharmacopoeia or BNF reference")
+    drug_a_normalized: str | None = None
+    drug_b_normalized: str | None = None
+    interacting_ingredients: list[str] = Field(default_factory=list)
+
+
+

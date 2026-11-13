@@ -121,6 +121,11 @@ export interface NoteReviewRequest {
   doctor_comments?: string | null;
 }
 
+export interface NoteDraftUpdateRequest {
+  edited_soap: SOAPPayload;
+  doctor_comments?: string | null;
+}
+
 export interface ClinicalSOAPNoteResponse {
   id: number;
   note_id: string;
@@ -205,6 +210,43 @@ export async function reviewClinicalSOAPNote(
 }
 
 /**
+ * Save draft amendments to an existing clinical SOAP note without approving.
+ * Persists modifications to SQLite backend and re-evaluates medication safety.
+ */
+export async function saveClinicalSOAPNoteDraft(
+  noteId: string,
+  draftUpdate: NoteDraftUpdateRequest,
+): Promise<ClinicalSOAPNoteResponse> {
+  const response = await apiClient.patch<ClinicalSOAPNoteResponse>(
+    `/api/v1/clinical-notes/${noteId}/draft`,
+    draftUpdate,
+  );
+  return response.data;
+}
+
+/**
+ * List clinical SOAP notes with optional status and patient filtering.
+ */
+export async function listClinicalSOAPNotes(
+  statusFilter?: string,
+  patientId?: string,
+): Promise<ClinicalSOAPNoteResponse[]> {
+  try {
+    const params: Record<string, string> = {};
+    if (statusFilter) params.status_filter = statusFilter;
+    if (patientId) params.patient_id = patientId;
+    const response = await apiClient.get<ClinicalSOAPNoteResponse[]>(
+      "/api/v1/clinical-notes",
+      { params },
+    );
+    return response.data;
+  } catch (err) {
+    console.warn("Unable to fetch clinical notes from backend", err);
+    return [];
+  }
+}
+
+/**
  * Fetch registered synthetic patients from backend API.
  */
 export async function fetchBackendPatients(): Promise<BackendPatient[]> {
@@ -215,6 +257,52 @@ export async function fetchBackendPatients(): Promise<BackendPatient[]> {
     console.warn("Unable to fetch patients from backend; using local synthetic records.", err);
     return [];
   }
+}
+
+export interface BackendPatientCreate {
+  full_name: string;
+  age?: number;
+  gender?: string;
+  phone_number?: string;
+  preferred_language?: string;
+  patient_id?: string;
+  is_synthetic?: boolean;
+}
+
+/**
+ * Register a new patient in the SQLite backend database.
+ */
+export async function createBackendPatient(
+  patient: BackendPatientCreate,
+): Promise<BackendPatient> {
+  const response = await apiClient.post<BackendPatient>(
+    "/api/v1/patients",
+    patient,
+  );
+  return response.data;
+}
+
+export interface BackendPatientUpdate {
+  full_name?: string;
+  age?: number;
+  date_of_birth?: string;
+  gender?: string;
+  phone_number?: string;
+  preferred_language?: string;
+}
+
+/**
+ * Update an existing patient's demographic details in the SQLite backend database.
+ */
+export async function updateBackendPatient(
+  patientId: string,
+  updates: BackendPatientUpdate,
+): Promise<BackendPatient> {
+  const response = await apiClient.patch<BackendPatient>(
+    `/api/v1/patients/${patientId}`,
+    updates,
+  );
+  return response.data;
 }
 
 /**
@@ -231,3 +319,99 @@ export async function fetchPatientEncounters(patientId: string): Promise<Backend
     return [];
   }
 }
+
+export interface DirectInteractionCheckRequest {
+  drug_a: string;
+  drug_b: string;
+}
+
+export interface DirectInteractionCheckResponse {
+  matched: boolean;
+  title: string;
+  severity: string;
+  evidence: string;
+  drug_a_normalized?: string | null;
+  drug_b_normalized?: string | null;
+  interacting_ingredients: string[];
+}
+
+/**
+ * Deterministically check direct drug-drug interactions between two queried medications.
+ */
+export async function checkDirectMedicationInteraction(
+  req: DirectInteractionCheckRequest,
+): Promise<DirectInteractionCheckResponse> {
+  const response = await apiClient.post<DirectInteractionCheckResponse>(
+    "/api/v1/medications/interaction-check",
+    req,
+  );
+  return response.data;
+}
+
+export interface ExtractedBiomarker {
+  test_name: string;
+  result: string;
+  unit: string;
+  reference_range: string;
+  flag: string;
+  confidence: number;
+  source_section: string;
+}
+
+export interface DocumentUploadResponse {
+  document_id: string;
+  filename: string;
+  original_filename: string;
+  file_size_bytes: number;
+  content_type: string;
+  document_type: string;
+  patient_id?: string | null;
+  upload_timestamp: string;
+  ocr_confidence: number;
+  extracted_biomarkers: ExtractedBiomarker[];
+  storage_path: string;
+  disclaimer: string;
+}
+
+/**
+ * Upload a clinical lab report scan or prescription document to the backend.
+ */
+export async function uploadClinicalDocument(
+  file: File,
+  patientId?: string,
+  documentType: string = "Laboratory Report",
+): Promise<DocumentUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (patientId) formData.append("patient_id", patientId);
+  formData.append("document_type", documentType);
+
+  const response = await apiClient.post<DocumentUploadResponse>(
+    "/api/v1/documents/upload",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+}
+
+export interface ClinicalStatsResponse {
+  total_patients: number;
+  total_encounters: number;
+  pending_notes: number;
+  approved_notes: number;
+  llm_provider?: string;
+  llm_model?: string;
+}
+
+/**
+ * Fetch live system and clinical database statistics from the FastAPI backend.
+ */
+export async function getClinicalStats(): Promise<ClinicalStatsResponse> {
+  const response = await apiClient.get<ClinicalStatsResponse>("/api/v1/stats");
+  return response.data;
+}
+

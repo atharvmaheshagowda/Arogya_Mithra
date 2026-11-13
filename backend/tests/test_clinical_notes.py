@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 import pytest
 from fastapi import status
 from sqlalchemy import select
@@ -1954,6 +1954,98 @@ def test_doctor_review_retaining_unsafe_medication_triggers_fresh_evaluation(cli
     assert rev_data["edited_soap"]["medication_safety"]["overall_status"] == "WARNING"
     assert any(w["rule_id"] == "DDI-001" for w in rev_data["edited_soap"]["medication_safety"]["warnings"])
     assert rev_data["medication_safety"]["overall_status"] == "WARNING"
+
+
+def test_draft_update_persistence_and_safety_reevaluation(client, db_session):
+    """Verify clinician can save draft amendments without approving, re-evaluating safety."""
+    p = Patient(
+        patient_id="PAT-DRAFT-TEST",
+        full_name="Draft Test Patient",
+        gender="male",
+        date_of_birth=date(1980, 1, 1),
+        preferred_language="en",
+        is_synthetic=True,
+    )
+    db_session.add(p)
+    db_session.flush()
+    db_session.add(Allergy(patient_id=p.id, substance="Amoxicillin", verification_status="documented"))
+    db_session.commit()
+
+    text = (
+        "Doctor: Hello. What brings you in today?\n"
+        "Patient: Severe cough and sore throat.\n"
+        "Doctor: Throat congested.\n"
+        "Doctor: I will prescribe Paracetamol 650mg TDS.\n"
+        "Doctor: Review in 4 days."
+    )
+    draft_resp = client.post(
+        "/api/v1/clinical-notes/generate",
+        json={"patient_id": "PAT-DRAFT-TEST", "consultation_text": text},
+    )
+    assert draft_resp.status_code == 201
+    draft_data = draft_resp.json()
+    note_id = draft_data["note_id"]
+    assert draft_data["status"] == "draft"
+
+    # Save draft amendment with Amoxicillin (triggers allergy warning)
+    edited_soap = draft_data["soap"]
+    edited_soap["plan"]["proposed_medications"] = ["Amoxicillin 500mg TDS for 5 days"]
+
+    patch_resp = client.patch(
+        f"/api/v1/clinical-notes/{note_id}/draft",
+        json={
+            "edited_soap": edited_soap,
+            "doctor_comments": "Saved interim draft edits prior to final verification.",
+        },
+    )
+    assert patch_resp.status_code == 200
+    updated_data = patch_resp.json()
+    assert updated_data["status"] == "draft"
+    assert updated_data["doctor_comments"] == "Saved interim draft edits prior to final verification."
+    assert updated_data["edited_soap"]["plan"]["proposed_medications"] == ["Amoxicillin 500mg TDS for 5 days"]
+    assert updated_data["medication_safety"] is not None
+    assert updated_data["medication_safety"]["overall_status"] == "WARNING"
+    assert any("amoxicillin" in str(w).lower() for w in updated_data["medication_safety"]["warnings"])
+
+    # Reload from GET to verify SQLite persistence
+    get_resp = client.get(f"/api/v1/clinical-notes/{note_id}")
+    assert get_resp.status_code == 200
+    reloaded = get_resp.json()
+    assert reloaded["status"] == "draft"
+    assert reloaded["edited_soap"]["plan"]["proposed_medications"] == ["Amoxicillin 500mg TDS for 5 days"]
+
+    # Verify list notes endpoint
+    list_resp = client.get("/api/v1/clinical-notes?status_filter=draft")
+    assert list_resp.status_code == 200
+    notes_list = list_resp.json()
+    assert any(n["note_id"] == note_id for n in notes_list)
+
+
+def test_draft_update_rejected_on_approved_or_rejected_notes(client, db_session):
+    """Verify cannot update draft on an already approved note."""
+    seed_synthetic_clinical_data(db_session)
+    gen_resp = client.post(
+        "/api/v1/clinical-notes/generate",
+        json={"patient_id": "SYN-PAT-001", "consultation_text": SYNTHETIC_CONSULTATION_TEXT},
+    )
+    note_id = gen_resp.json()["note_id"]
+    soap = gen_resp.json()["soap"]
+
+    # Approve note
+    client.patch(
+        f"/api/v1/clinical-notes/{note_id}/review",
+        json={"reviewing_doctor": "Dr. Rao", "action": "approved"},
+    )
+
+    # Attempt to update draft on approved note -> 400 Bad Request
+    patch_resp = client.patch(
+        f"/api/v1/clinical-notes/{note_id}/draft",
+        json={"edited_soap": soap},
+    )
+    assert patch_resp.status_code == 400
+    assert "already been officially approved" in patch_resp.json()["detail"].lower()
+
+
 
 
 

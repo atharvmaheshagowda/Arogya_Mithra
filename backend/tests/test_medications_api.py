@@ -222,3 +222,29 @@ def test_medication_safety_check_api_endpoint(client):
     assert check_res3.status_code == 200
     res_data3 = check_res3.json()
     assert res_data3["overall_status"] == "UNABLE_TO_VERIFY"
+
+
+def test_direct_medication_interaction_check_endpoint(client):
+    """Verify standalone drug interaction check endpoint between two arbitrary medications."""
+    # Test 1: Warfarin + Aspirin -> Triggers DDI-001
+    resp1 = client.post(
+        "/api/v1/medications/interaction-check",
+        json={"drug_a": "Warfarin Sodium 5mg", "drug_b": "Aspirin 75mg"},
+    )
+    assert resp1.status_code == 200
+    data1 = resp1.json()
+    assert data1["matched"] is True
+    assert "hemorrhage" in data1["title"].lower() or "antithrombotic" in data1["title"].lower()
+    assert "warfarin" in [i.lower() for i in data1["interacting_ingredients"]]
+    assert "aspirin" in [i.lower() for i in data1["interacting_ingredients"]]
+
+    # Test 2: Two safe medications without known DDI -> Safe
+    resp2 = client.post(
+        "/api/v1/medications/interaction-check",
+        json={"drug_a": "Paracetamol 650mg", "drug_b": "Amoxicillin 500mg"},
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["matched"] is False
+    assert data2["severity"].lower() == "safe"
+

@@ -48,6 +48,7 @@ import { Input, SearchInput } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth";
+import { checkDirectMedicationInteraction } from "@/lib/api-client";
 import {
   getSafetyAlerts,
   getSafetyMetrics,
@@ -169,8 +170,43 @@ export function MedicationSafetyPage() {
     }
   };
 
-  // Run Real-time Interaction Tester
-  const handleRunInteractionTest = () => {
+  // Run Real-time Interaction Tester against backend deterministic DDI engine
+  const handleRunInteractionTest = async () => {
+    try {
+      const res = await checkDirectMedicationInteraction({
+        drug_a: testDrugA,
+        drug_b: testDrugB,
+      });
+
+      const mappedSeverity: SafetyAlertSeverity =
+        res.severity.toLowerCase() === "high" || res.severity.toLowerCase() === "critical"
+          ? "Critical"
+          : res.severity.toLowerCase() === "moderate"
+          ? "Moderate"
+          : "Informational";
+
+      setTestResult({
+        matched: res.matched,
+        title: res.title,
+        severity: mappedSeverity,
+        evidence: res.evidence,
+      });
+
+      if (res.matched) {
+        toast.warning("Drug Interaction Detected", {
+          description: `${res.severity} severity interaction flagged between ${testDrugA} and ${testDrugB}.`,
+        });
+      } else {
+        toast.success("No Direct Interaction Flagged", {
+          description: "Both medications cleared against active formulary rules.",
+        });
+      }
+      return;
+    } catch (err) {
+      console.warn("Backend interaction check deferred to local evaluation:", err);
+    }
+
+    // Local heuristic fallback
     const a = testDrugA.toLowerCase();
     const b = testDrugB.toLowerCase();
 
@@ -188,13 +224,6 @@ export function MedicationSafetyPage() {
         severity: "Critical",
         evidence: "CDSCO Guidelines & American College of Radiology (ACR)",
       });
-    } else if ((a.includes("pantoprazole") && b.includes("rabeprazole")) || (b.includes("pantoprazole") && a.includes("rabeprazole"))) {
-      setTestResult({
-        matched: true,
-        title: "Therapeutic Duplication: Simultaneous prescription of dual proton pump inhibitors",
-        severity: "Moderate",
-        evidence: "NICE Guideline CG184",
-      });
     } else {
       setTestResult({
         matched: false,
@@ -205,7 +234,7 @@ export function MedicationSafetyPage() {
     }
 
     toast.info("Rules Engine Query Complete", {
-      description: "Queried 14,280 deterministic pharmacological interaction rules.",
+      description: "Queried deterministic pharmacological interaction rules.",
     });
   };
 

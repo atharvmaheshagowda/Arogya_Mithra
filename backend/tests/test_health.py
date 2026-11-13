@@ -59,3 +59,75 @@ def test_health_endpoint_db_failure(client, monkeypatch):
     data = response.json()
     assert data["status"] == "unhealthy"
     assert data["database"] == "disconnected"
+
+
+def test_stats_endpoint_returns_real_counts(client, db_session):
+    """TEST 7: /api/v1/stats accurately queries SQLite database for patient, encounter, and notes counts."""
+    from datetime import date, datetime
+    from app.models.patient import Patient
+    from app.models.encounter import Encounter
+    from app.models.clinical_note import ClinicalSOAPNote
+
+    # Clean existing data in this test session
+    p1 = Patient(
+        patient_id="SYN-STAT-001",
+        full_name="Stat Test Patient",
+        gender="female",
+        date_of_birth=date(1990, 5, 20),
+        preferred_language="kannada",
+        is_synthetic=True,
+    )
+    db_session.add(p1)
+    db_session.commit()
+
+    enc = Encounter(
+        encounter_id="ENC-STAT-001",
+        patient_id=p1.id,
+        consultation_date=datetime.now(),
+        chief_complaint="Follow-up",
+        status="completed",
+        is_synthetic=True,
+    )
+    db_session.add(enc)
+    db_session.commit()
+
+    note_draft = ClinicalSOAPNote(
+        note_id="NOTE-STAT-DRAFT",
+        patient_id=p1.id,
+        encounter_id=enc.id,
+        status="draft",
+        is_ai_generated=True,
+        disclaimer="AI-assisted clinical draft. Requires physician review.",
+        language_code="en",
+        consultation_text="Patient reporting mild headache",
+        soap_data={"subjective": {"chief_complaint": "Headache"}},
+    )
+    note_approved = ClinicalSOAPNote(
+        note_id="NOTE-STAT-APP",
+        patient_id=p1.id,
+        encounter_id=enc.id,
+        status="approved",
+        is_ai_generated=True,
+        disclaimer="AI-assisted clinical draft. Requires physician review.",
+        language_code="en",
+        consultation_text="Routine checkup normal",
+        soap_data={"subjective": {"chief_complaint": "Normal"}},
+    )
+    db_session.add_all([note_draft, note_approved])
+    db_session.commit()
+
+    response = client.get("/api/v1/stats")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "total_patients" in data
+    assert "total_encounters" in data
+    assert "pending_notes" in data
+    assert "approved_notes" in data
+    assert data["total_patients"] >= 1
+    assert data["total_encounters"] >= 1
+    assert data["pending_notes"] >= 1
+    assert data["approved_notes"] >= 1
+    assert data["llm_provider"] == settings.LLM_PROVIDER
+    assert data["llm_model"] == settings.LLM_MODEL
+

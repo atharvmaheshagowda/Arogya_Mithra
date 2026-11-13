@@ -181,3 +181,102 @@ def test_list_patients_pagination(client):
 
     res_invalid_limit = client.get("/api/v1/patients?limit=150")
     assert res_invalid_limit.status_code == 422
+
+
+def test_update_patient_details(client):
+    """TEST (TC-07): Verifies updating patient demographic details via PATCH and PUT."""
+    # Create patient SYN-TEST-101
+    create_res = client.post(
+        "/api/v1/patients",
+        json={
+            "patient_id": "SYN-TEST-101",
+            "full_name": "Original Synthetic Patient",
+            "age": 40,
+            "gender": "Male",
+            "phone_number": "+91-90000-11111",
+            "preferred_language": "Kannada",
+            "is_synthetic": True,
+        },
+    )
+    assert create_res.status_code == 201
+
+    # Update demographics
+    update_res = client.patch(
+        "/api/v1/patients/SYN-TEST-101",
+        json={
+            "full_name": "Updated Synthetic Patient",
+            "age": 41,
+            "phone_number": "+91-99999-22222",
+            "preferred_language": "Hindi",
+        },
+    )
+    assert update_res.status_code == 200
+    updated_data = update_res.json()
+    assert updated_data["patient_id"] == "SYN-TEST-101"
+    assert updated_data["full_name"] == "Updated Synthetic Patient"
+    assert updated_data["age"] == 41
+    assert updated_data["phone_number"] == "+91-99999-22222"
+    assert updated_data["preferred_language"] == "Hindi"
+
+    # Confirm persistence with fresh GET
+    get_res = client.get("/api/v1/patients/SYN-TEST-101")
+    assert get_res.status_code == 200
+    assert get_res.json()["full_name"] == "Updated Synthetic Patient"
+    assert get_res.json()["age"] == 41
+
+
+def test_update_patient_preserves_allergies_and_history(client):
+    """TEST (TC-07): Confirms updating demographic fields preserves existing clinical allergies and history."""
+    # Create patient with documented allergy and history
+    create_res = client.post(
+        "/api/v1/patients",
+        json={
+            "patient_id": "SYN-TEST-102",
+            "full_name": "Clinical Preservation Test",
+            "age": 55,
+            "allergies": [
+                {
+                    "substance": "Aspirin",
+                    "reaction": "Bronchospasm",
+                    "severity": "severe",
+                    "verification_status": "documented",
+                }
+            ],
+            "medical_history": [
+                {
+                    "condition": "Hypertension",
+                    "description": "Essential stage 1",
+                    "status": "active",
+                    "source": "clinical_records",
+                }
+            ],
+        },
+    )
+    assert create_res.status_code == 201
+
+    # Update only phone number and name
+    patch_res = client.patch(
+        "/api/v1/patients/SYN-TEST-102",
+        json={
+            "phone_number": "+91-88888-77777",
+            "full_name": "Preserved Patient Name",
+        },
+    )
+    assert patch_res.status_code == 200
+    data = patch_res.json()
+    assert data["phone_number"] == "+91-88888-77777"
+    assert len(data["allergies"]) == 1
+    assert data["allergies"][0]["substance"] == "Aspirin"
+    assert len(data["medical_history"]) == 1
+    assert data["medical_history"][0]["condition"] == "Hypertension"
+
+
+def test_update_nonexistent_patient_returns_404(client):
+    """TEST (TC-07): Confirms HTTP 404 when updating non-existent patient."""
+    res = client.patch(
+        "/api/v1/patients/NON-EXISTENT-999",
+        json={"full_name": "Ghost Patient"},
+    )
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"].lower()
+

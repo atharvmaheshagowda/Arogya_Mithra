@@ -7,7 +7,7 @@ from app.models.allergy import Allergy
 from app.models.encounter import Encounter
 from app.models.medical_history import MedicalHistory
 from app.models.patient import Patient
-from app.schemas.patient import PatientCreate
+from app.schemas.patient import PatientCreate, PatientUpdate
 
 
 class ClinicalHistoryRetentionError(Exception):
@@ -85,6 +85,22 @@ def create_patient(db: Session, patient_in: PatientCreate) -> Patient:
             source=history_in.source,
         )
         db.add(history)
+
+    db.commit()
+    db.refresh(patient)
+    return patient
+
+
+def update_patient(db: Session, patient_id: str, patient_update: PatientUpdate) -> Patient | None:
+    """Updates demographic attributes of an existing patient without mutating clinical records or patient_id."""
+    patient = get_patient_by_identifier(db, patient_id)
+    if not patient:
+        return None
+
+    update_dict = patient_update.model_dump(exclude_unset=True)
+    for field, value in update_dict.items():
+        if value is not None and hasattr(patient, field):
+            setattr(patient, field, value)
 
     db.commit()
     db.refresh(patient)

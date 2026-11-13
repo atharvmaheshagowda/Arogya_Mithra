@@ -7,6 +7,7 @@ from app.schemas.patient import (
     PatientCreate,
     PatientDetailResponse,
     PatientResponse,
+    PatientUpdate,
 )
 from app.services import patient_service
 
@@ -86,4 +87,31 @@ def get_patient_history(
         )
 
     return patient_service.get_patient_encounter_history(db, patient.id)
+
+
+@router.patch(
+    "/{patient_id}",
+    response_model=PatientDetailResponse,
+    summary="Update patient demographic details",
+    description="Updates existing patient demographics without altering stable identifiers, allergies, or clinical history.",
+)
+@router.put(
+    "/{patient_id}",
+    response_model=PatientDetailResponse,
+    summary="Update patient demographic details",
+    description="Updates existing patient demographics without altering stable identifiers, allergies, or clinical history.",
+)
+def update_patient(
+    patient_id: str,
+    patient_in: PatientUpdate,
+    db: Session = Depends(get_db),
+):
+    patient = patient_service.update_patient(db, patient_id, patient_in)
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Patient '{patient_id}' not found.",
+        )
+    return patient
+
 

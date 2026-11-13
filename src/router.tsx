@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { ApplicationShell } from "@/components/app-shell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RouteErrorBoundary } from "@/components/route-error-boundary";
 
 // Loading Skeleton Fallback for Lazy Loaded Routes
 function PageLoader() {
@@ -82,12 +83,25 @@ const SettingsPage = lazy(() =>
 );
 
 export const router = createBrowserRouter([
-  { path: "/", element: withSuspense(LandingPage) },
-  { path: "/login", element: withSuspense(LoginPage) },
-  { path: "/register", element: withSuspense(RegisterPage) },
+  {
+    path: "/",
+    element: withSuspense(LandingPage),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/login",
+    element: withSuspense(LoginPage),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/register",
+    element: withSuspense(RegisterPage),
+    errorElement: <RouteErrorBoundary />,
+  },
   {
     path: "/app",
     element: <ApplicationShell />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <Navigate to="/app/dashboard" replace /> },
       { path: "dashboard", element: withSuspense(DashboardPage) },

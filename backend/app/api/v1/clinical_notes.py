@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.clinical_note import ClinicalSOAPNote
 from app.schemas.clinical_note import (
     ClinicalSOAPNoteResponse,
+    NoteDraftUpdateRequest,
     NoteReviewRequest,
     SOAPGenerateRequest,
     SOAPPayload,
@@ -73,6 +75,44 @@ def get_clinical_note(
     db: Session = Depends(get_db),
 ):
     note = default_soap_service.get_by_note_id(db, note_id)
+    return _format_note_response(note)
+
+
+@router.get(
+    "",
+    response_model=list[ClinicalSOAPNoteResponse],
+    summary="List clinical SOAP notes",
+    description="Retrieves a list of generated clinical SOAP notes, with optional filtering by status and patient ID.",
+)
+def list_clinical_notes(
+    status_filter: Optional[str] = Query(None, description="Optional status filter: draft, reviewed_with_edits, approved, rejected"),
+    patient_id: Optional[str] = Query(None, description="Optional patient identifier filter"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    notes = default_soap_service.list_notes(
+        db, status_filter=status_filter, patient_id=patient_id, skip=skip, limit=limit
+    )
+    return [_format_note_response(n) for n in notes]
+
+
+@router.patch(
+    "/{note_id}/draft",
+    response_model=ClinicalSOAPNoteResponse,
+    summary="Save draft amendments to a clinical SOAP note without approving",
+    description=(
+        "Persists clinician modifications to an unapproved clinical SOAP note draft. "
+        "Re-evaluates medication safety on the amended proposed medications and preserves "
+        "the draft status until explicit clinician approval."
+    ),
+)
+def update_clinical_note_draft(
+    note_id: str,
+    draft_req: NoteDraftUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    note = default_soap_service.update_draft(db, note_id, draft_req)
     return _format_note_response(note)
 
 

@@ -9,7 +9,12 @@ from app.models.medication import Medication
 from app.models.patient import Patient
 from app.models.patient_medication import PatientMedication
 from app.schemas.medication import MedicationCreate, MedicationResponse
-from app.schemas.medication_safety import SafetyCheckRequest, SafetyCheckResponse
+from app.schemas.medication_safety import (
+    DirectInteractionCheckRequest,
+    DirectInteractionCheckResponse,
+    SafetyCheckRequest,
+    SafetyCheckResponse,
+)
 from app.schemas.patient_medication import (
     PatientMedicationCreate,
     PatientMedicationResponse,
@@ -262,4 +267,86 @@ def check_patient_medication_safety(
     )
 
     return result
+
+
+@router.post(
+    "/medications/interaction-check",
+    response_model=DirectInteractionCheckResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Evaluate direct drug-drug interaction between two medications",
+    description="Deterministically checks two medications against the curated DDI rules catalogue.",
+)
+def check_direct_medication_interaction(
+    req: DirectInteractionCheckRequest,
+    db: Session = Depends(get_db),
+):
+    from app.services.medication_safety import (
+        extract_proposed_medications,
+        load_rules_catalogue,
+    )
+
+    cands_a = extract_proposed_medications([req.drug_a], db=db)
+    cand_a = cands_a[0] if cands_a else req.drug_a
+    norm_a = normalize_medication(cand_a, db=db)
+    if norm_a.match_status not in (MatchStatus.EXACT_MATCH, MatchStatus.ALIAS_MATCH):
+        norm_a = normalize_medication(req.drug_a, db=db)
+
+    cands_b = extract_proposed_medications([req.drug_b], db=db)
+    cand_b = cands_b[0] if cands_b else req.drug_b
+    norm_b = normalize_medication(cand_b, db=db)
+    if norm_b.match_status not in (MatchStatus.EXACT_MATCH, MatchStatus.ALIAS_MATCH):
+        norm_b = normalize_medication(req.drug_b, db=db)
+
+    ingredients_a = [clean_text(i) for i in norm_a.active_ingredients]
+    ingredients_b = [clean_text(i) for i in norm_b.active_ingredients]
+
+    cat_result = load_rules_catalogue()
+    if cat_result.is_loaded and cat_result.ddi_rules:
+        for rule in cat_result.ddi_rules:
+            ing_1 = clean_text(rule["ingredient_1"])
+            ing_2 = clean_text(rule["ingredient_2"])
+
+            match_forward = any(ing_1 in a for a in ingredients_a) and any(ing_2 in b for b in ingredients_b)
+            match_reverse = any(ing_2 in a for a in ingredients_a) and any(ing_1 in b for b in ingredients_b)
+
+            if match_forward or match_reverse:
+                return DirectInteractionCheckResponse(
+                    matched=True,
+                    title=rule["explanation"],
+                    severity=rule.get("severity", "High").capitalize(),
+                    evidence=rule.get("source", "Standard Clinical Pharmacopoeia"),
+                    drug_a_normalized=norm_a.normalized_name or req.drug_a,
+                    drug_b_normalized=norm_b.normalized_name or req.drug_b,
+                    interacting_ingredients=[rule["ingredient_1"], rule["ingredient_2"]],
+                )
+
+    return DirectInteractionCheckResponse(
+        matched=False,
+        title="No significant drug-drug interaction detected between the queried therapies in the curated formulary.",
+        severity="Safe",
+        evidence="Curated Indian OPD Formulary & British National Formulary (BNF 86)",
+        drug_a_normalized=norm_a.normalized_name or req.drug_a,
+        drug_b_normalized=norm_b.normalized_name or req.drug_b,
+        interacting_ingredients=[],
+    )
+
+
+@router.get(
+    "/medications/rules",
+    summary="List all loaded medication safety rules",
+    description="Returns the curated clinical contraindication and drug-drug interaction catalogue.",
+)
+def list_medication_rules():
+    from app.services.medication_safety import load_rules_catalogue
+    cat_result = load_rules_catalogue()
+    ddi_rules = cat_result.catalogue.get("ddi_rules", []) if hasattr(cat_result, "catalogue") and isinstance(cat_result.catalogue, dict) else []
+    allergy_rules = cat_result.catalogue.get("drug_allergy_rules", []) if hasattr(cat_result, "catalogue") and isinstance(cat_result.catalogue, dict) else []
+    return {
+        "status": "loaded" if cat_result.is_loaded else "unloaded",
+        "total_rules": len(ddi_rules) + len(allergy_rules),
+        "ddi_rules": ddi_rules,
+        "allergy_rules": allergy_rules,
+    }
+
+
 

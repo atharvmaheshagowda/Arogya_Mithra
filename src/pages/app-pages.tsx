@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Activity,
   AlertCircle,
@@ -64,6 +64,13 @@ import {
   type RecentPatientProfile,
 } from "@/lib/dashboard-service";
 import { cn } from "@/lib/utils";
+import {
+  getClinicalStats,
+  listClinicalSOAPNotes,
+  reviewClinicalSOAPNote,
+  createBackendPatient,
+  type ClinicalStatsResponse,
+} from "@/lib/api-client";
 
 /* ==========================================================================
    1. DASHBOARD PAGE
@@ -73,6 +80,26 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { doctor } = useAuth();
   const { toast } = useToast();
+
+  const [liveStats, setLiveStats] = useState<ClinicalStatsResponse | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  const fetchDashboardStats = async () => {
+    setStatsLoading(true);
+    setStatsError(null);
+    try {
+      const stats = await getClinicalStats();
+      setLiveStats(stats);
+    } catch (err: any) {
+      console.warn("Failed to fetch live clinical stats:", err);
+      setStatsError(
+        "Unable to fetch real-time clinical statistics from backend. Verify FastAPI server is running on port 8000.",
+      );
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   // State management for interactive actions
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
@@ -86,6 +113,37 @@ export function DashboardPage() {
   );
   const [activitySearch, setActivitySearch] = useState("");
   const [activityFilter, setActivityFilter] = useState<"all" | "pending" | "signed">("all");
+
+  // Fetch live stats & draft notes from FastAPI backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchDashboardStats();
+
+    listClinicalSOAPNotes("draft")
+      .then((notes) => {
+        if (!isMounted || !notes || notes.length === 0) return;
+        const liveApprovals: PendingApproval[] = notes.map((n) => ({
+          id: n.note_id,
+          patientName: n.patient_id ? `Patient (${n.patient_id})` : "OPD Consultation",
+          mrn: n.patient_id || "AM-LIVE",
+          time: new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          type: "AI SOAP Draft",
+          language: "Multilingual",
+          urgency: "medium",
+          summary: n.soap?.assessment?.primary_impression || "Clinical SOAP documentation pending sign-off.",
+        }));
+        setPendingApprovals((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newUnique = liveApprovals.filter((a) => !existingIds.has(a.id));
+          return [...newUnique, ...prev];
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Modal states
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
@@ -103,8 +161,19 @@ export function DashboardPage() {
   });
 
   // Handle Signing a Pending Clinical Note
-  const handleSignNote = (approvalId: string, patientName: string) => {
+  const handleSignNote = async (approvalId: string, patientName: string) => {
     setPendingApprovals((prev) => prev.filter((item) => item.id !== approvalId));
+
+    if (approvalId.startsWith("note-")) {
+      try {
+        await reviewClinicalSOAPNote(approvalId, {
+          reviewing_doctor: doctor?.name || "Dr. Rajesh",
+          action: "approved",
+        });
+      } catch (err) {
+        console.warn("Backend note review persistence fallback:", err);
+      }
+    }
 
     // Update corresponding activity status if exists
     setRecentActivity((prev) =>
@@ -182,6 +251,19 @@ export function DashboardPage() {
     setRecentPatients((prev) => [newProfile, ...prev.slice(0, 3)]);
     setRecentActivity((prev) => [newActivity, ...prev]);
 
+    // Asynchronously synchronize patient with FastAPI SQLite backend
+    createBackendPatient({
+      patient_id: newMrn,
+      full_name: newPatientForm.name,
+      age: parseInt(newPatientForm.age, 10) || 30,
+      gender: newPatientForm.gender.toLowerCase(),
+      phone_number: newPatientForm.phone || undefined,
+      preferred_language: newPatientForm.language.toLowerCase(),
+      is_synthetic: true,
+    }).catch((err) => {
+      console.warn("Backend patient registration sync fallback:", err);
+    });
+
     setIsAddPatientOpen(false);
     setNewPatientForm({
       name: "",
@@ -253,6 +335,16 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={fetchDashboardStats}
+            leftIcon={<RefreshCw className={cn("size-4", statsLoading && "animate-spin")} />}
+            className="rounded-full px-5 font-semibold"
+            disabled={statsLoading}
+          >
+            {statsLoading ? "Refreshing..." : "Refresh Stats"}
+          </Button>
           <Button
             variant="outline"
             size="lg"
@@ -345,59 +437,118 @@ export function DashboardPage() {
       </div>
 
       {/* ====================================================================
-          3. STATISTICS (5 CARDS)
+          3. STATISTICS (5 CARDS) — WITH LOADING, ERROR, SUCCESS & EMPTY STATES
           ==================================================================== */}
+      {statsError && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="size-4 shrink-0 text-destructive" />
+            <span className="font-medium">{statsError}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={fetchDashboardStats}
+            leftIcon={<RefreshCw className="size-3" />}
+          >
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {/* 1. Total Patients */}
         <MetricCard
-          label={mockDashboardData.stats.totalPatients.label}
-          value={mockDashboardData.stats.totalPatients.value}
-          subtitle={mockDashboardData.stats.totalPatients.change}
+          label="Total Registered Patients"
+          value={
+            statsLoading
+              ? "..."
+              : liveStats
+                ? liveStats.total_patients.toString()
+                : "0"
+          }
+          subtitle={
+            statsLoading
+              ? "Querying clinical registry..."
+              : liveStats && liveStats.total_patients > 0
+                ? "Active in hospital EHR registry"
+                : "No registered patients yet"
+          }
           icon={Users}
-          trend={{ value: "+14 this wk", isPositive: true }}
+          badge={<Badge variant="teal" size="sm">Live DB</Badge>}
         />
 
-        {/* 2. Today's Consultations */}
+        {/* 2. Total Consultations / Encounters */}
         <MetricCard
-          label={mockDashboardData.stats.todayConsultations.label}
-          value={mockDashboardData.stats.todayConsultations.value}
-          subtitle={mockDashboardData.stats.todayConsultations.change}
+          label="Total Clinical Encounters"
+          value={
+            statsLoading
+              ? "..."
+              : liveStats
+                ? liveStats.total_encounters.toString()
+                : "0"
+          }
+          subtitle={
+            statsLoading
+              ? "Querying encounter history..."
+              : liveStats && liveStats.total_encounters > 0
+                ? "Logged outpatient visits"
+                : "No visits recorded"
+          }
           icon={HeartPulse}
           badge={<Badge variant="teal" size="sm" dot>Live OPD</Badge>}
         />
 
         {/* 3. Pending Clinical Notes */}
         <MetricCard
-          label={mockDashboardData.stats.pendingNotes.label}
-          value={pendingApprovals.length.toString()}
+          label="Pending Notes Sign-Off"
+          value={
+            statsLoading
+              ? "..."
+              : liveStats
+                ? liveStats.pending_notes.toString()
+                : pendingApprovals.length.toString()
+          }
           subtitle="Require doctor signature"
           icon={FileText}
           badge={
             <Badge
-              variant={pendingApprovals.length > 0 ? "warning" : "success"}
+              variant={
+                (liveStats ? liveStats.pending_notes : pendingApprovals.length) > 0
+                  ? "warning"
+                  : "success"
+              }
               size="sm"
             >
-              {pendingApprovals.length > 0 ? `${pendingApprovals.length} Pending` : "All Signed"}
+              {(liveStats ? liveStats.pending_notes : pendingApprovals.length) > 0
+                ? `${liveStats ? liveStats.pending_notes : pendingApprovals.length} Pending`
+                : "All Signed"}
             </Badge>
           }
         />
 
-        {/* 4. Reports Processed */}
+        {/* 4. Approved & Signed Notes */}
         <MetricCard
-          label={mockDashboardData.stats.reportsProcessed.label}
-          value={mockDashboardData.stats.reportsProcessed.value}
-          subtitle={mockDashboardData.stats.reportsProcessed.change}
+          label="Approved Clinical Notes"
+          value={
+            statsLoading
+              ? "..."
+              : liveStats
+                ? liveStats.approved_notes.toString()
+                : "0"
+          }
+          subtitle="Committed to hospital EHR"
           icon={FileCheck2}
-          trend={{ value: "98.6% OCR", isPositive: true }}
+          badge={<Badge variant="success" size="sm">Verified</Badge>}
         />
 
-        {/* 5. Medication Safety Alerts */}
+        {/* 5. Medication Safety Rules */}
         <MetricCard
-          label={mockDashboardData.stats.safetyAlerts.label}
-          value={mockDashboardData.stats.safetyAlerts.value}
-          subtitle={mockDashboardData.stats.safetyAlerts.change}
+          label="Active Safety Rules"
+          value="18"
+          subtitle="SAFEGUARD DDI & Allergies"
           icon={ShieldAlert}
-          badge={<Badge variant="danger" size="sm">SafeGuarded</Badge>}
+          badge={<Badge variant="danger" size="sm">Formulary</Badge>}
         />
       </div>
 

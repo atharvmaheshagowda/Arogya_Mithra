@@ -7,6 +7,8 @@
  * medical histories, deterministic allergy gating, lab values, and timeline data.
  */
 
+import { createBackendPatient, updateBackendPatient } from "@/lib/api-client";
+
 export interface AllergyItem {
   id: string;
   allergen: string;
@@ -1531,7 +1533,32 @@ export const initialPatients: PatientProfile[] = [
 ];
 
 // In-memory patient store with local persistence
-let patientStore: PatientProfile[] = [...initialPatients];
+const PATIENT_STORAGE_KEY = "arogya_patient_store_v1";
+
+function initPatientStore(): PatientProfile[] {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const saved = localStorage.getItem(PATIENT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    }
+  } catch {}
+  return [...initialPatients];
+}
+
+function persistPatientStore(store: PatientProfile[]) {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem(PATIENT_STORAGE_KEY, JSON.stringify(store));
+    }
+  } catch {}
+}
+
+let patientStore: PatientProfile[] = initPatientStore();
 const listeners: Array<() => void> = [];
 
 export function getPatients(): PatientProfile[] {
@@ -1629,8 +1656,76 @@ export function addPatientRecord(record: {
   };
 
   patientStore = [newPatient, ...patientStore];
+  persistPatientStore(patientStore);
   listeners.forEach((l) => l());
+
+  // Asynchronously persist newly registered patient to FastAPI/SQLite backend
+  createBackendPatient({
+    patient_id: newId,
+    full_name: record.name,
+    age: record.age,
+    gender: record.gender.toLowerCase(),
+    phone_number: record.phone,
+    preferred_language: record.preferredLanguage,
+    is_synthetic: true,
+  }).catch((err) => {
+    console.warn("Backend patient registration deferred or already synced:", err);
+  });
+
   return newPatient;
+}
+
+/**
+ * Updates demographic attributes of an existing patient without altering
+ * stable patient identifiers, clinical history, or documented allergies.
+ */
+export async function updatePatientRecord(
+  patientId: string,
+  updates: {
+    name?: string;
+    age?: number;
+    gender?: "Male" | "Female" | "Other";
+    phone?: string;
+    preferredLanguage?: string;
+    bloodGroup?: string;
+    address?: string;
+  },
+): Promise<PatientProfile> {
+  const idx = patientStore.findIndex((p) => p.id.toUpperCase() === patientId.toUpperCase());
+  if (idx === -1) {
+    throw new Error(`Patient with ID "${patientId}" not found in patient registry.`);
+  }
+
+  const existing = patientStore[idx];
+  const updated: PatientProfile = {
+    ...existing,
+    name: updates.name !== undefined && updates.name.trim() !== "" ? updates.name.trim() : existing.name,
+    age: updates.age !== undefined ? updates.age : existing.age,
+    gender: updates.gender !== undefined ? updates.gender : existing.gender,
+    phone: updates.phone !== undefined ? updates.phone.trim() : existing.phone,
+    preferredLanguage: updates.preferredLanguage !== undefined ? updates.preferredLanguage : existing.preferredLanguage,
+    bloodGroup: updates.bloodGroup !== undefined ? updates.bloodGroup : existing.bloodGroup,
+    address: updates.address !== undefined ? updates.address : existing.address,
+  };
+
+  patientStore[idx] = updated;
+  persistPatientStore(patientStore);
+  listeners.forEach((l) => l());
+
+  // Submit update to FastAPI backend
+  try {
+    await updateBackendPatient(patientId, {
+      full_name: updates.name,
+      age: updates.age,
+      gender: updates.gender?.toLowerCase(),
+      phone_number: updates.phone,
+      preferred_language: updates.preferredLanguage,
+    });
+  } catch (err) {
+    console.warn(`Backend patient update sync for ${patientId} deferred:`, err);
+  }
+
+  return updated;
 }
 
 export function subscribePatients(callback: () => void): () => void {

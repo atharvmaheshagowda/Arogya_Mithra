@@ -244,6 +244,17 @@ class NoteReviewRequest(BaseModel):
     )
 
 
+class NoteDraftUpdateRequest(BaseModel):
+    edited_soap: SOAPPayload = Field(
+        ...,
+        description="Amended SOAP payload containing clinician updates to be saved as draft",
+    )
+    doctor_comments: Optional[str] = Field(
+        default=None,
+        description="Optional clinical remarks, rationale, or working draft notes",
+    )
+
+
 class ClinicalSOAPNoteResponse(BaseModel):
     id: int
     note_id: str

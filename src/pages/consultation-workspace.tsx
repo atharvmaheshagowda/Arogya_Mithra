@@ -71,8 +71,11 @@ import {
 import {
   generateClinicalSOAPNote,
   reviewClinicalSOAPNote,
+  saveClinicalSOAPNoteDraft,
+  listClinicalSOAPNotes,
   type ClinicalSOAPNoteResponse,
   type SOAPMedicationSafetyReport,
+  type SOAPPayload,
 } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -200,6 +203,47 @@ export function ConsultationWorkspacePage() {
       }
     }
   };
+
+  // Hydrate existing draft note from backend database on patient switch
+  useEffect(() => {
+    let isMounted = true;
+    async function hydrateExistingDraft() {
+      try {
+        const patId = selectedPatientId === "AM-94021" ? "SYN-PAT-001" : selectedPatientId;
+        const notes = await listClinicalSOAPNotes("draft", patId);
+        if (isMounted && notes && notes.length > 0) {
+          const draft = notes[0];
+          setBackendNoteId(draft.note_id);
+          setActiveBackendNote(draft);
+          if (draft.medication_safety) {
+            setBackendMedSafety(draft.medication_safety);
+          }
+          if (draft.unextracted_or_missing) {
+            setBackendMissingInfo(draft.unextracted_or_missing);
+          }
+          const activeSoap = draft.edited_soap || draft.soap;
+          if (activeSoap) {
+            setClinicalNote((prev) => ({
+              ...prev,
+              chiefComplaint: activeSoap.subjective.chief_complaint,
+              relevantHistory: activeSoap.subjective.history_of_present_illness,
+              symptoms: activeSoap.subjective.reported_symptoms || [],
+              observations: activeSoap.objective.physical_examination.join(". ") || prev.observations,
+              clinicianAssessment: activeSoap.assessment.primary_impression,
+              treatmentPlan: activeSoap.plan.patient_instructions.join(". ") || prev.treatmentPlan,
+            }));
+            setWorkflowState("draft_generated");
+          }
+        }
+      } catch (err) {
+        console.warn("Could not hydrate existing draft from backend", err);
+      }
+    }
+    hydrateExistingDraft();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedPatientId]);
 
   // Safety Panel Collapse State
   const [isSafetyOpen, setIsSafetyOpen] = useState(true);
@@ -362,10 +406,64 @@ export function ConsultationWorkspacePage() {
     }
   };
 
-  // Save Draft Note
-  const handleSaveDraft = () => {
+  // Save Draft Note (Persists to backend SQLite database)
+  const handleSaveDraft = async () => {
     setIsEditingNote(false);
     setIsNoteEdited(true);
+
+    if (backendNoteId && activeBackendNote) {
+      try {
+        const baseSoap = activeBackendNote.edited_soap || activeBackendNote.soap;
+        const updatedSoapPayload: SOAPPayload = {
+          subjective: {
+            chief_complaint: clinicalNote.chiefComplaint || baseSoap.subjective.chief_complaint,
+            history_of_present_illness: clinicalNote.relevantHistory || baseSoap.subjective.history_of_present_illness,
+            reported_symptoms: clinicalNote.symptoms.length > 0 ? clinicalNote.symptoms : baseSoap.subjective.reported_symptoms,
+            pertinent_negatives: baseSoap.subjective.pertinent_negatives,
+            evidence: baseSoap.subjective.evidence,
+          },
+          objective: {
+            vital_signs_summary: baseSoap.objective.vital_signs_summary,
+            physical_examination: clinicalNote.observations ? [clinicalNote.observations] : baseSoap.objective.physical_examination,
+            investigations_reviewed: baseSoap.objective.investigations_reviewed,
+            evidence: baseSoap.objective.evidence,
+          },
+          assessment: {
+            primary_impression: clinicalNote.clinicianAssessment || baseSoap.assessment.primary_impression,
+            differential_diagnoses: baseSoap.assessment.differential_diagnoses,
+            chronic_conditions_status: baseSoap.assessment.chronic_conditions_status,
+            evidence: baseSoap.assessment.evidence,
+          },
+          plan: {
+            diagnostic_workup: baseSoap.plan.diagnostic_workup,
+            proposed_medications: baseSoap.plan.proposed_medications,
+            patient_instructions: clinicalNote.treatmentPlan ? [clinicalNote.treatmentPlan] : baseSoap.plan.patient_instructions,
+            red_flag_warnings: baseSoap.plan.red_flag_warnings,
+            follow_up: baseSoap.plan.follow_up,
+            evidence: baseSoap.plan.evidence,
+          },
+          patient_context: baseSoap.patient_context,
+        };
+
+        const res = await saveClinicalSOAPNoteDraft(backendNoteId, {
+          edited_soap: updatedSoapPayload,
+          doctor_comments: "Saved interim draft edits prior to final verification.",
+        });
+
+        setActiveBackendNote(res);
+        if (res.medication_safety) {
+          setBackendMedSafety(res.medication_safety);
+        }
+
+        toast.success("Draft Note Saved", {
+          description: "Edits persisted to backend database. SAFEGUARD recalculated.",
+        });
+        return;
+      } catch (err: any) {
+        console.error("Failed to save draft to backend:", err);
+      }
+    }
+
     toast.success("Draft Note Saved", {
       description: "Edits stored locally. Remains a draft until doctor signature.",
     });

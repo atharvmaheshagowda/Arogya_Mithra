@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Edit3,
   ExternalLink,
   Eye,
   FileCheck2,
@@ -58,6 +59,7 @@ import {
   getPatients,
   getPatientById,
   addPatientRecord,
+  updatePatientRecord,
   subscribePatients,
   type PatientProfile,
   type AllergyItem,
@@ -825,10 +827,52 @@ export function PatientProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
-  const patient = useMemo(() => {
-    if (!patientId) return undefined;
-    return getPatientById(patientId);
+  const [patientData, setPatientData] = useState<PatientProfile | undefined>(() =>
+    patientId ? getPatientById(patientId) : undefined,
+  );
+
+  useEffect(() => {
+    if (patientId) {
+      setPatientData(getPatientById(patientId));
+    }
+    return subscribePatients(() => {
+      if (patientId) {
+        setPatientData(getPatientById(patientId));
+      }
+    });
   }, [patientId]);
+
+  const patient = patientData;
+
+  // Edit Patient Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    age: "",
+    gender: "Male" as "Male" | "Female" | "Other",
+    phone: "",
+    preferredLanguage: "Kannada (ಕನ್ನಡ)",
+    bloodGroup: "O+",
+    address: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Sync edit form with current patient data whenever modal opens
+  useEffect(() => {
+    if (patient) {
+      setEditForm({
+        name: patient.name,
+        age: patient.age.toString(),
+        gender: patient.gender,
+        phone: patient.phone,
+        preferredLanguage: patient.preferredLanguage,
+        bloodGroup: patient.bloodGroup || "O+",
+        address: patient.address || "",
+      });
+      setEditError(null);
+    }
+  }, [patient, isEditModalOpen]);
 
   // Active tab from URL query param or state (default: overview)
   const activeTab = searchParams.get("tab") || "overview";
@@ -838,6 +882,48 @@ export function PatientProfilePage() {
 
   // Timeline category filter
   const [timelineFilter, setTimelineFilter] = useState<string>("all");
+
+  // Handle Edit Patient Submit
+  const handleEditPatientSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError(null);
+
+    if (!editForm.name.trim()) {
+      setEditError("Patient full name is required.");
+      return;
+    }
+    const ageNum = parseInt(editForm.age, 10);
+    if (isNaN(ageNum) || ageNum < 0 || ageNum > 130) {
+      setEditError("Valid age between 0 and 130 is required.");
+      return;
+    }
+    if (!editForm.phone.trim()) {
+      setEditError("Contact phone number is required.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await updatePatientRecord(patient!.id, {
+        name: editForm.name.trim(),
+        age: ageNum,
+        gender: editForm.gender,
+        phone: editForm.phone.trim(),
+        preferredLanguage: editForm.preferredLanguage,
+        bloodGroup: editForm.bloodGroup,
+        address: editForm.address.trim(),
+      });
+
+      setIsEditModalOpen(false);
+      toast.success("Patient Details Updated", {
+        description: `Successfully updated clinical record for ${editForm.name.trim()} (${patient!.id}).`,
+      });
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update patient details on server.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!patient) {
     return (
@@ -953,6 +1039,14 @@ export function PatientProfilePage() {
 
           {/* Quick Consultation Actions */}
           <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              leftIcon={<Edit3 className="size-4" />}
+            >
+              Edit Patient
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1778,6 +1872,178 @@ export function PatientProfilePage() {
           </div>
         </div>
       )}
+
+      {/* ====================================================================
+          MODAL: EDIT PATIENT DETAILS
+          ==================================================================== */}
+      <Modal
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditError(null);
+          }
+          setIsEditModalOpen(open);
+        }}
+        title={`Edit Patient Details — ${patient.id}`}
+        description="Update patient demographic information and clinical contact details."
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isSaving}
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="teal"
+              size="sm"
+              disabled={isSaving}
+              onClick={handleEditPatientSubmit}
+              leftIcon={<Check className="size-4" />}
+            >
+              {isSaving ? "Saving Changes..." : "Save Changes"}
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleEditPatientSubmit} className="space-y-4">
+          {editError && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive flex items-center gap-2">
+              <AlertCircle className="size-4 shrink-0" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Patient Full Name *
+              </label>
+              <Input
+                placeholder="e.g. Ramesh Kumar"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="mt-1"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Age *
+              </label>
+              <Input
+                type="number"
+                placeholder="e.g. 45"
+                value={editForm.age}
+                onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+                className="mt-1"
+                min={0}
+                max={130}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Gender
+              </label>
+              <select
+                value={editForm.gender}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    gender: e.target.value as "Male" | "Female" | "Other",
+                  })
+                }
+                className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Blood Group
+              </label>
+              <select
+                value={editForm.bloodGroup}
+                onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
+                className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="O+">O Positive (O+)</option>
+                <option value="O-">O Negative (O-)</option>
+                <option value="A+">A Positive (A+)</option>
+                <option value="A-">A Negative (A-)</option>
+                <option value="B+">B Positive (B+)</option>
+                <option value="B-">B Negative (B-)</option>
+                <option value="AB+">AB Positive (AB+)</option>
+                <option value="AB-">AB Negative (AB-)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Contact Phone *
+              </label>
+              <Input
+                placeholder="e.g. +91 98450 12345"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                className="mt-1"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-foreground">
+                Preferred Language
+              </label>
+              <select
+                value={editForm.preferredLanguage}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    preferredLanguage: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                <option value="English">English</option>
+                <option value="Kannada / English">Kannada + English Mix</option>
+                <option value="Hindi / English">Hindi + English Mix</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-foreground">
+              Address / Residence
+            </label>
+            <Input
+              placeholder="e.g. 12th Cross, Indiranagar, Bengaluru"
+              value={editForm.address}
+              onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+
+          <div className="rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-muted-foreground flex items-center gap-2">
+            <Sparkles className="size-4 shrink-0 text-accent" />
+            <span>
+              Stable MRN identifier ({patient.id}) and all clinical records, encounters, and allergy safeguards will remain intact.
+            </span>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

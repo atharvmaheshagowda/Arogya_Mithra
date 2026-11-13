@@ -12,6 +12,7 @@ from app.models.patient_medication import PatientMedication
 from app.models.vital_sign import VitalSign
 from app.schemas.clinical_note import (
     ClinicalNoteStatus,
+    NoteDraftUpdateRequest,
     NoteReviewRequest,
     SOAPGenerateRequest,
     SOAPPayload,
@@ -491,6 +492,71 @@ class SOAPNoteService:
         db.commit()
         db.refresh(note)
         return note
+
+    def update_draft(
+        self,
+        db: Session,
+        note_id: str,
+        draft_req: NoteDraftUpdateRequest,
+    ) -> ClinicalSOAPNote:
+        note = self.get_by_note_id(db, note_id)
+
+        # Cannot edit a rejected note
+        if note.status == ClinicalNoteStatus.REJECTED.value:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Clinical note '{note_id}' was previously rejected and cannot be modified.",
+            )
+
+        # Cannot edit an already approved note as draft
+        if note.status == ClinicalNoteStatus.APPROVED.value:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Clinical note '{note_id}' has already been officially approved.",
+            )
+
+        # Re-evaluate medication safety on edited plan proposed medications
+        if note.patient_id and draft_req.edited_soap.plan.proposed_medications:
+            patient = db.execute(
+                select(Patient)
+                .where(Patient.id == note.patient_id)
+                .options(
+                    selectinload(Patient.allergies),
+                    selectinload(Patient.medications).selectinload(PatientMedication.medication),
+                )
+            ).scalar_one_or_none()
+            if patient:
+                draft_req.edited_soap.medication_safety = evaluate_soap_plan_safety(
+                    patient=patient,
+                    proposed_medications=draft_req.edited_soap.plan.proposed_medications,
+                    db=db,
+                )
+        else:
+            draft_req.edited_soap.medication_safety = None
+
+        note.edited_soap_data = draft_req.edited_soap.model_dump(mode="json")
+        if draft_req.doctor_comments:
+            note.doctor_comments = draft_req.doctor_comments
+
+        db.commit()
+        db.refresh(note)
+        return note
+
+    def list_notes(
+        self,
+        db: Session,
+        status_filter: Optional[str] = None,
+        patient_id: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> List[ClinicalSOAPNote]:
+        stmt = select(ClinicalSOAPNote).order_by(ClinicalSOAPNote.created_at.desc())
+        if status_filter:
+            stmt = stmt.where(ClinicalSOAPNote.status == status_filter.lower())
+        if patient_id:
+            stmt = stmt.where(ClinicalSOAPNote.patient_identifier == patient_id)
+        stmt = stmt.offset(skip).limit(limit)
+        return list(db.execute(stmt).scalars().all())
 
     def _identify_missing_domains(
         self, soap: SOAPPayload, context: Dict[str, Any]

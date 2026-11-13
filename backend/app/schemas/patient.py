@@ -75,6 +75,65 @@ class PatientCreate(PatientBase):
     )
 
 
+class PatientUpdate(BaseModel):
+    full_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        description="Updated full name of the patient",
+    )
+    date_of_birth: date | None = Field(
+        default=None,
+        description="Updated date of birth",
+    )
+    age: int | None = Field(
+        default=None,
+        ge=0,
+        le=130,
+        description="Updated age in years (0-130)",
+    )
+    gender: str | None = Field(
+        default=None,
+        max_length=32,
+        description="Updated gender",
+    )
+    phone_number: str | None = Field(
+        default=None,
+        max_length=32,
+        description="Updated contact phone number",
+    )
+    preferred_language: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Updated preferred language",
+    )
+
+    @model_validator(mode="after")
+    def validate_demographic_source_of_truth(self) -> "PatientUpdate":
+        if self.date_of_birth:
+            today = date.today()
+            if self.date_of_birth > today:
+                raise ValueError("Date of birth cannot be in the future.")
+
+            computed_age = (
+                today.year
+                - self.date_of_birth.year
+                - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            )
+
+            if self.age is not None:
+                if abs(computed_age - self.age) > 1:
+                    raise ValueError(
+                        f"Provided age ({self.age}) significantly conflicts with date of birth "
+                        f"({self.date_of_birth}, calculated age: {computed_age})."
+                    )
+            else:
+                self.age = computed_age
+
+        return self
+
+
+
 class PatientResponse(PatientBase):
     patient_id: str
     is_active: bool = True
