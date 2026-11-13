@@ -48,6 +48,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "var(--radius-xl)",
         "2xl": "var(--radius-2xl)",
+        "3xl": "1.75rem",
+        "4xl": "2.25rem",
       },
     },
   },

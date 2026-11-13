@@ -57,3 +57,4 @@ backend/uploads/*
 Thumbs.db
 *.local
 current_*.png
+test_*.png
