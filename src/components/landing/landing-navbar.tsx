@@ -42,8 +42,8 @@ export function LandingNavbar() {
       <header
         className={cn(
           "fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-5xl rounded-full transition-all duration-300",
-          "border border-border/70 bg-card/85 dark:bg-card/90 backdrop-blur-xl shadow-md",
-          scrolled ? "py-2 sm:py-2.5 shadow-lg border-border" : "py-2.5 sm:py-3",
+          "liquid-glass-pill",
+          scrolled ? "py-2 sm:py-2.5 shadow-xl scale-[0.985]" : "py-2.5 sm:py-3",
         )}
       >
         <div className="flex items-center justify-between px-3 sm:px-5">

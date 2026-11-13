@@ -411,9 +411,9 @@ function WorkflowCanvasInner() {
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           {/* View Mode Toggle */}
-          <div className="flex items-center rounded-xl border border-border bg-muted/30 p-1 text-xs">
+          <div className="flex items-center rounded-xl border border-border bg-muted/30 p-1 text-xs shrink-0">
             <button
               type="button"
               onClick={() => setViewMode("canvas")}
@@ -562,7 +562,7 @@ function WorkflowCanvasInner() {
             <strong>Architecture Visualization Mode:</strong> This canvas visualizes the target 8-stage clinical copilot orchestration topology. In this demonstration prototype, node interactions illustrate data contracts; external cloud GPU clusters and hospital PACS are simulated.
           </span>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" size="sm">
             8 Pipeline Nodes
           </Badge>

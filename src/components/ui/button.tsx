@@ -4,24 +4,26 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:translate-y-px",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-300 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground shadow-xs hover:-translate-y-0.5 hover:shadow-md dark:bg-primary dark:text-primary-foreground",
+          "bg-primary text-primary-foreground shadow-sm hover:-translate-y-0.5 hover:shadow-lg dark:bg-primary dark:text-primary-foreground border border-white/10",
         teal:
-          "bg-accent text-accent-foreground shadow-xs hover:-translate-y-0.5 hover:shadow-teal hover:bg-teal-600 dark:hover:bg-teal-500",
+          "bg-accent text-accent-foreground shadow-sm hover:-translate-y-0.5 hover:shadow-teal hover:bg-teal-600 dark:hover:bg-teal-500 border border-teal-400/30",
+        glass:
+          "liquid-glass text-foreground shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40",
         outline:
-          "border border-border bg-card text-foreground shadow-xs hover:border-primary/30 hover:bg-muted/60 dark:hover:border-accent/40",
+          "border border-border bg-card/80 backdrop-blur-md text-foreground shadow-xs hover:border-primary/40 hover:bg-muted/70 dark:hover:border-accent/40",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
-          "text-muted-foreground hover:bg-muted hover:text-foreground",
+          "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 hover:shadow-md",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 hover:shadow-md border border-red-400/20",
         subtle:
-          "bg-accent/10 text-accent hover:bg-accent/20 dark:bg-accent/15 dark:text-teal-300",
+          "bg-accent/10 text-accent hover:bg-accent/20 dark:bg-accent/15 dark:text-teal-300 border border-accent/20",
         link:
           "h-auto p-0 text-accent underline-offset-4 hover:underline hover:translate-y-0",
       },
