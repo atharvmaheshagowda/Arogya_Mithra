@@ -45,9 +45,22 @@ export function LandingPage() {
     restDelta: 0.001,
   });
 
-  // Background Parallax: Gently drifts vertically across the scroll duration
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "-14%"]);
-  const backgroundScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  // Inertia-smoothed parallax scroll driver with natural spring damping
+  const smoothParallax = useSpring(scrollYProgress, {
+    stiffness: 75,
+    damping: 24,
+    mass: 0.25,
+    restDelta: 0.0005,
+  });
+
+  // Layer 1 (Deep Hospital Architecture Sanctuary): Continuous fluid vertical parallax drift
+  const backgroundY = useTransform(smoothParallax, [0, 0.35, 0.7, 1], ["0%", "-18%", "-36%", "-52%"]);
+  const backgroundScale = useTransform(smoothParallax, [0, 0.5, 1], [1.06, 1.16, 1.28]);
+
+  // Layer 2 (Atmospheric Jade & Cyan Glow Aurora): Moves at an independent higher parallax velocity
+  const auraY = useTransform(smoothParallax, [0, 1], ["0%", "-75%"]);
+  const auraScale = useTransform(smoothParallax, [0, 0.5, 1], [1, 1.25, 1.5]);
+  const auraOpacity = useTransform(smoothParallax, [0, 0.4, 0.8, 1], [0.35, 0.5, 0.3, 0.15]);
 
   const sectionReveal = {
     initial: { opacity: 0, y: 36 },
@@ -67,24 +80,35 @@ export function LandingPage() {
         style={{ scaleX }}
       />
 
-      {/* 2. Fixed Cinematic Parallax Clinical Sanctuary Background Image */}
+      {/* 2. Fixed Cinematic Multi-Layer Parallax Background Canvas */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        {/* Layer 1: Photorealistic Hospital Architecture Sanctuary */}
         <motion.div
           style={{ y: backgroundY, scale: backgroundScale }}
-          className="relative w-full h-[125vh] -top-[12vh]"
+          className="relative w-full h-[180vh] -top-[25vh] will-change-transform"
         >
           {/* Authentic High-Resolution Hospital Architecture Sanctuary */}
           <img
             src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2600&q=85"
             alt="Aarogya Mithra Modern Clinical Sanctuary"
-            className="size-full object-cover object-center filter brightness-[1.02] contrast-[1.02] dark:brightness-[0.72] dark:contrast-[1.08]"
+            className="size-full object-cover object-center filter brightness-[1.02] contrast-[1.02] dark:brightness-[0.74] dark:contrast-[1.08]"
             loading="eager"
           />
 
           {/* Luxury Adaptive Overlays: Warm Porcelain in light mode, Deep Atlantic in dark mode */}
           <div className="absolute inset-0 bg-[#F5F5EF]/80 dark:bg-[#102B3F]/75 backdrop-blur-[0.5px] transition-colors duration-500" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/25 to-background/95" />
           <div className="absolute inset-0 surface-dots opacity-20 dark:opacity-10" />
+        </motion.div>
+
+        {/* Layer 2: Secondary Floating Atmospheric Aurora Depth Plane */}
+        <motion.div
+          style={{ y: auraY, scale: auraScale, opacity: auraOpacity }}
+          className="absolute inset-0 will-change-transform"
+        >
+          <div className="absolute -top-32 left-1/4 size-[600px] rounded-full bg-accent/15 blur-[160px] dark:bg-accent/25" />
+          <div className="absolute top-1/2 -right-24 size-[550px] rounded-full bg-teal-500/10 blur-[180px] dark:bg-teal-400/20" />
+          <div className="absolute top-3/4 left-1/3 size-[500px] rounded-full bg-[#102B3F]/20 blur-[150px] dark:bg-accent/10" />
         </motion.div>
       </div>
 
