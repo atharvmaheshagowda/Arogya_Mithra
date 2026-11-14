@@ -427,6 +427,7 @@ export async function uploadClinicalDocument(
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 120000,
     },
   );
   return response.data;
@@ -454,7 +455,11 @@ export async function getClinicalDocument(documentId: string): Promise<DocumentD
  * Trigger reprocessing of an uploaded document with enhanced text/OCR extraction.
  */
 export async function reprocessClinicalDocument(documentId: string): Promise<DocumentDetailResponse> {
-  const response = await apiClient.post<DocumentDetailResponse>(`/api/v1/documents/${documentId}/reprocess`);
+  const response = await apiClient.post<DocumentDetailResponse>(
+    `/api/v1/documents/${documentId}/reprocess`,
+    undefined,
+    { timeout: 120000 },
+  );
   return response.data;
 }
 

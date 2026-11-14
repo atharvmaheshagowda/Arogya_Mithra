@@ -156,6 +156,13 @@ def _parse_bt_et_stream(chunk_str: str, font_name_to_cmap: Dict[str, Dict[int, s
             if i < n and chunk_str[i] == '>':
                 i += 1
             continue
+        if c == '>':
+            if i + 1 < n and chunk_str[i + 1] == '>':
+                tokens.append(('DICT_END', '>>'))
+                i += 2
+                continue
+            i += 1
+            continue
         if c == '[':
             depth = 1
             i += 1
@@ -168,6 +175,9 @@ def _parse_bt_et_stream(chunk_str: str, font_name_to_cmap: Dict[str, Dict[int, s
                 i += 1
             tokens.append(('ARR', chunk_str[start : i - 1]))
             continue
+        if c in (']', ')'):
+            i += 1
+            continue
         if c == '/':
             i += 1
             start = i
@@ -179,7 +189,10 @@ def _parse_bt_et_stream(chunk_str: str, font_name_to_cmap: Dict[str, Dict[int, s
         start = i
         while i < n and not chunk_str[i].isspace() and chunk_str[i] not in '/[]<>()%':
             i += 1
-        tokens.append(('WORD', chunk_str[start:i]))
+        if i == start:
+            i += 1
+        else:
+            tokens.append(('WORD', chunk_str[start:i]))
 
     current_font: Optional[str] = None
     curr_x = 0.0
@@ -356,7 +369,6 @@ def extract_text_from_pdf(content: bytes) -> Tuple[str, List[Dict[str, Any]]]:
     positioned_items: List[Tuple[float, float, str]] = []
     has_image_xobject = bool(re.search(rb'/Subtype\s*/Image', content))
 
-    stream_chunks: List[bytes] = []
     for sm in re.finditer(rb'stream\r?\n(.*?)\r?\nendstream', content, re.DOTALL):
         try:
             d = zlib.decompress(sm.group(1))
@@ -365,16 +377,19 @@ def extract_text_from_pdf(content: bytes) -> Tuple[str, List[Dict[str, Any]]]:
                 d = zlib.decompress(sm.group(1), -15)
             except Exception:
                 d = sm.group(1)
-        stream_chunks.append(d)
-
-    if not stream_chunks:
-        stream_chunks.append(content)
-
-    for d in stream_chunks:
         if b'BT' in d and b'ET' in d:
             for bt in re.finditer(rb'BT(.*?)ET', d, re.DOTALL):
                 chunk = bt.group(1).decode('latin1', errors='ignore')
                 positioned_items.extend(_parse_bt_et_stream(chunk, font_name_to_cmap))
+                if len(positioned_items) >= 5000:
+                    break
+        if len(positioned_items) >= 5000:
+            break
+
+    if not positioned_items and b'BT' in content and b'ET' in content:
+        for bt in re.finditer(rb'BT(.*?)ET', content, re.DOTALL):
+            chunk = bt.group(1).decode('latin1', errors='ignore')
+            positioned_items.extend(_parse_bt_et_stream(chunk, font_name_to_cmap))
 
     # Fallback for plain literal strings if no positioned items were captured
     if not positioned_items:

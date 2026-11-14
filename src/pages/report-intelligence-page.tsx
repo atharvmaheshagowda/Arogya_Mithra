@@ -429,6 +429,7 @@ export function ReportsPage() {
       console.error("Backend document upload failed:", err);
       setUploadStatus("idle");
       setUploadProgress(0);
+      setUploadFile(null);
       const detail = err?.response?.data?.detail || err?.message || "Failed to process medical document";
       toast.error("Document Upload & Extraction Failed", {
         description: detail,
