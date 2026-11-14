@@ -185,7 +185,7 @@ export function ConsultationWorkspacePage() {
     clearError: clearSpeechError,
   } = useSpeechRecognition({
     language: speechLang,
-    onFinalTranscript: (text) => {
+    onFinalTranscript: (text: string) => {
       setEditableLiveTranscript(text);
     },
   });

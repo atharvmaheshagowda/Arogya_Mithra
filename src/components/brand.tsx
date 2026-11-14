@@ -87,8 +87,8 @@ export function AarogyaMithraBrand({
   const isLightText = inverted || className?.includes("text-white") || className?.includes("!text-white");
 
   return (
-    <div className={cn("inline-flex items-center gap-2.5", className)}>
-      <AarogyaMithraSymbol className="size-8" />
+    <div className={cn("inline-flex items-center gap-2.5 shrink-0", className)}>
+      <AarogyaMithraSymbol className="size-8 shrink-0" />
       {!compact && (
         <div className="flex flex-col leading-tight">
           <div className="flex items-baseline gap-1.5">
