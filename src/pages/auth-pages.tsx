@@ -28,6 +28,25 @@ import { ThemeSwitcher } from "@/components/theme-provider";
 import { DEMO_DOCTORS, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
+function DoctorAvatar({ doc }: { doc: (typeof DEMO_DOCTORS)[number] }) {
+  const [imgError, setImgError] = useState(false);
+  if (!doc.avatar || imgError) {
+    return (
+      <span className="grid size-full place-items-center bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold text-xs">
+        {doc.initials}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={doc.avatar}
+      alt={doc.name}
+      onError={() => setImgError(true)}
+      className="size-full object-cover"
+    />
+  );
+}
+
 function AuthFrame({
   children,
   badgeText = "Clinical Intelligence • Human Oversight",
@@ -52,7 +71,7 @@ function AuthFrame({
 
         <div className="relative z-10">
           <Link to="/" className="inline-block" aria-label="Go to Home">
-            <AarogyaMithraBrand className="!text-white" showSubtitle />
+            <AarogyaMithraBrand inverted showSubtitle />
           </Link>
         </div>
 
@@ -64,28 +83,28 @@ function AuthFrame({
             </span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-[1.05] tracking-tight !text-white">
+          <h1 className="font-sans text-4xl sm:text-5xl font-bold leading-[1.08] tracking-[-0.03em] !text-white">
             The workspace for considered clinical care.
           </h1>
 
-          <p className="max-w-md text-base leading-relaxed text-white/80 font-normal">
+          <p className="max-w-md text-base leading-relaxed text-white/90 font-normal">
             AAROGYA MITHRA connects ambient consultation scribing, medical report OCR, and drug interaction safeguards into one calm, doctor-led OPD workflow.
           </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/85 backdrop-blur-md space-y-2">
-            <div className="flex items-center gap-2 text-[#00A889] font-semibold">
+          <div className="rounded-2xl border border-white/15 bg-white/10 p-5 text-xs text-white/90 backdrop-blur-md space-y-2">
+            <div className="flex items-center gap-2 text-[#00A889] font-semibold text-sm">
               <ShieldCheck className="size-4" />
               <span>National Medical Commission (NMC) Node</span>
             </div>
-            <p className="text-white/70 leading-relaxed">
+            <p className="text-white/80 leading-relaxed text-xs">
               Secured with TLS 1.3 encryption and cryptographic clinician tokens. Every prescription and consultation sign-off is logged into the EHR hospital audit registry.
             </p>
           </div>
         </div>
 
-        <div className="relative flex items-center justify-between text-xs text-white/60 pt-6 border-t border-white/10 z-10">
+        <div className="relative flex items-center justify-between text-xs text-white/70 pt-6 border-t border-white/10 z-10 font-medium">
           <span>AI assists the doctor. The doctor makes the decision.</span>
-          <span className="font-mono">ABDM / EHR Validated Node</span>
+          <span className="font-mono text-white/80">ABDM / EHR Validated Node</span>
         </div>
       </section>
 
@@ -226,7 +245,7 @@ export function LoginPage() {
               Physician Access
             </Badge>
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-display font-semibold tracking-tight">
+          <CardTitle className="text-2xl sm:text-3xl font-sans font-bold tracking-tight text-foreground">
             Sign in to Workspace
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -345,13 +364,7 @@ export function LoginPage() {
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="relative size-8 shrink-0 rounded-lg overflow-hidden border border-border shadow-2xs">
-                      {doc.avatar ? (
-                        <img src={doc.avatar} alt={doc.name} className="size-full object-cover" />
-                      ) : (
-                        <span className="grid size-full place-items-center bg-accent/15 text-accent font-bold text-[11px]">
-                          {doc.initials}
-                        </span>
-                      )}
+                      <DoctorAvatar doc={doc} />
                     </div>
                     <div>
                       <p className="font-semibold text-foreground group-hover:text-accent transition-colors flex items-center gap-1.5">
@@ -443,7 +456,7 @@ export function RegisterPage() {
               New Enrollment
             </Badge>
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Create Doctor Workspace</CardTitle>
+          <CardTitle className="text-2xl sm:text-3xl font-sans font-bold tracking-tight text-foreground">Create Doctor Workspace</CardTitle>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
             Register your clinical profile with hospital institution and medical council license credentials.
           </CardDescription>

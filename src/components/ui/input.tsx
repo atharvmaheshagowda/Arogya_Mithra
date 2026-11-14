@@ -11,7 +11,7 @@ import { Search, X, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const baseFieldClasses =
-  "flex w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/15 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card";
+  "flex w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground shadow-2xs transition-all placeholder:text-muted-foreground/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card";
 
 /* ==========================================================================
    Input
@@ -165,7 +165,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <label
         ref={ref}
-        className={cn("block text-xs font-semibold text-foreground/90 uppercase tracking-[0.06em]", className)}
+        className={cn("block text-xs font-semibold text-foreground tracking-tight", className)}
         {...props}
       >
         {children}
