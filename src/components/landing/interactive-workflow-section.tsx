@@ -154,7 +154,7 @@ export function InteractiveWorkflowSection() {
         </div>
 
         {/* Step Sequence Bar (Clickable) */}
-        <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-6 shadow-xs overflow-x-auto">
+        <div className="rounded-2xl glass-morph-card p-4 sm:p-6 shadow-lg border border-white/60 dark:border-white/15 overflow-x-auto">
           <div className="flex items-center justify-between min-w-[760px] gap-2">
             {workflowSteps.map((step, idx) => {
               const isSelected = step.id === selectedStepId;
@@ -211,7 +211,7 @@ export function InteractiveWorkflowSection() {
         {/* Selected Step Deep Dive Inspector */}
         <div className="grid gap-8 lg:grid-cols-12 items-start">
           {/* Step Overview Panel */}
-          <Card className="lg:col-span-5 p-6 sm:p-8 space-y-6 border-border/80 bg-card shadow-lg">
+          <Card className="lg:col-span-5 p-6 sm:p-8 space-y-6 glass-morph-card shadow-2xl border border-white/60 dark:border-white/15">
             <div className="flex items-center justify-between border-b border-border/80 pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="grid size-9 place-items-center rounded-xl bg-accent text-accent-foreground font-bold text-sm">
@@ -264,7 +264,7 @@ export function InteractiveWorkflowSection() {
           </Card>
 
           {/* AI Copilot & Safety Architecture Panel */}
-          <Card className="lg:col-span-7 p-6 sm:p-8 space-y-6 border-border/80 bg-card shadow-lg">
+          <Card className="lg:col-span-7 p-6 sm:p-8 space-y-6 glass-morph-card shadow-2xl border border-white/60 dark:border-white/15">
             <div className="flex items-center justify-between border-b border-border/80 pb-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 text-accent" />

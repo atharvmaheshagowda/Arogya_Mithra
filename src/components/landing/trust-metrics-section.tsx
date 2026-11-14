@@ -97,7 +97,7 @@ export function TrustMetricsSection() {
               transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
               <Card
-                className="h-full flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xl p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg shadow-sm"
+                className="h-full flex flex-col justify-between rounded-3xl glass-morph-card p-6 sm:p-7 border border-white/60 dark:border-white/15"
               >
                 <div className="space-y-4">
                   <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
@@ -126,7 +126,7 @@ export function TrustMetricsSection() {
         </div>
 
         {/* Trust Metrics Ribbon */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 lg:p-10 shadow-xs">
+        <div className="rounded-3xl glass-morph-card p-6 sm:p-8 lg:p-10 shadow-lg border border-white/60 dark:border-white/15">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-border/80">
             {metrics.map((metric, idx) => (
               <motion.div

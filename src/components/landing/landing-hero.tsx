@@ -52,21 +52,21 @@ export function LandingHero() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Editorial Heading Stack in Frosted Liquid Glass Card */}
         <div className="relative mx-auto max-w-4xl">
-          {/* Frosted Glass Enclosure Card - Crystal Clear Text Contrast */}
+          {/* Frosted Translucent Glassmorphism Card */}
           <motion.div
             style={shouldReduceMotion ? {} : { y: cardY, scale: cardScale, opacity: cardOpacity }}
-            className="relative rounded-3xl sm:rounded-4xl border border-border/70 dark:border-white/12 bg-card/85 dark:bg-[#102B3F]/85 backdrop-blur-2xl p-6 sm:p-10 lg:p-12 shadow-2xl shadow-black/10 dark:shadow-black/35 ring-1 ring-black/5 dark:ring-white/10 text-center space-y-6 overflow-hidden"
+            className="relative rounded-3xl sm:rounded-4xl glass-morph-card p-6 sm:p-10 lg:p-12 text-center space-y-6 overflow-hidden"
             initial="initial"
             animate="animate"
             transition={{ staggerChildren: 0.12 }}
           >
             {/* Ambient Internal Light Accent */}
-            <div className="pointer-events-none absolute -top-32 -left-32 size-64 rounded-full bg-accent/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-32 -right-32 size-64 rounded-full bg-teal-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-32 -left-32 size-64 rounded-full bg-accent/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-32 -right-32 size-64 rounded-full bg-teal-400/15 blur-3xl" />
 
-            {/* Clinical Announcement Pill */}
+            {/* Clinical Announcement Pill in Translucent Glass */}
             <motion.div variants={fadeInUp} className="inline-flex items-center justify-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-3.5 py-1.5 text-[11px] font-semibold text-muted-foreground backdrop-blur-md shadow-xs hover:border-accent/40 transition-colors">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/60 dark:border-white/15 bg-white/40 dark:bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold text-foreground/90 backdrop-blur-md shadow-xs hover:border-accent/50 transition-colors">
                 <span className="flex size-2 rounded-full bg-accent" />
                 <span className="tracking-wide uppercase">Evidence-Grounded Multilingual Clinical AI</span>
                 <span className="text-muted-foreground/60">•</span>
@@ -86,7 +86,7 @@ export function LandingHero() {
             {/* Subtitle with High Readability */}
             <motion.p
               variants={fadeInUp}
-              className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground font-normal"
+              className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-foreground/80 font-normal"
             >
               An evidence-grounded multilingual copilot for high-volume Indian OPDs. It listens to consultations, reads medical reports, connects patient history and safeguards medication decisions — keeping doctors in complete control.
             </motion.p>
@@ -98,7 +98,7 @@ export function LandingHero() {
                 size="lg"
                 onClick={() => navigate("/app")}
                 rightIcon={<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />}
-                className="group rounded-full px-7 py-3 text-sm font-semibold shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 transition-all"
+                className="group rounded-full px-7 py-3 text-sm font-semibold shadow-md shadow-accent/25 hover:shadow-lg hover:shadow-accent/35 transition-all"
               >
                 Open Workspace
               </Button>
@@ -107,7 +107,7 @@ export function LandingHero() {
                 size="lg"
                 onClick={handleExploreClick}
                 rightIcon={<ChevronRight className="size-4" />}
-                className="rounded-full px-7 py-3 text-sm font-semibold border-border/90 bg-card hover:bg-muted/80 transition-all"
+                className="rounded-full px-7 py-3 text-sm font-semibold border-white/60 dark:border-white/15 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md text-foreground transition-all"
               >
                 Explore Capabilities
               </Button>
@@ -116,7 +116,7 @@ export function LandingHero() {
             {/* Clinical Assurance Strip */}
             <motion.div
               variants={fadeInUp}
-              className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 pt-4 text-xs text-muted-foreground font-medium"
+              className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 pt-4 text-xs text-foreground/85 font-medium"
             >
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-accent shrink-0" />
@@ -146,11 +146,11 @@ export function LandingHero() {
                 y: previewY,
               }
           }
-          initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 36 }}
+          initial={shouldReduceMotion ? {} : { opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative rounded-3xl sm:rounded-4xl p-2 sm:p-3 bg-gradient-to-b from-border/70 via-border/30 to-transparent shadow-2xl transition-shadow duration-500 hover:shadow-teal/20">
+          <div className="relative rounded-3xl sm:rounded-4xl p-2 sm:p-3 glass-morph-card shadow-2xl transition-shadow duration-500 hover:shadow-teal/20">
             <ProductPreviewDashboard />
           </div>
         </motion.div>

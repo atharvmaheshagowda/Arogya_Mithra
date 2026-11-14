@@ -67,7 +67,7 @@ export function ClinicalSafetySection() {
           {safetyPillars.map((pillar) => (
             <Card
               key={pillar.title}
-              className="flex flex-col justify-between border-border/80 bg-card/90 backdrop-blur-xl p-6 transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
+              className="flex flex-col justify-between glass-morph-card p-6 border border-white/60 dark:border-white/15"
             >
               <div className="space-y-4">
                 <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
@@ -93,7 +93,7 @@ export function ClinicalSafetySection() {
         </div>
 
         {/* Clinical Declaration Callout */}
-        <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl p-8 sm:p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="rounded-2xl glass-morph-card p-8 sm:p-10 shadow-lg border border-white/60 dark:border-white/15 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <span className="grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground shrink-0 mt-1">
               <Stethoscope className="size-6" />

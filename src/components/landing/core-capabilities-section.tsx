@@ -99,7 +99,7 @@ export function CoreCapabilitiesSection() {
 
           {/* Interactive Scribe UI Showcase */}
           <div className="lg:col-span-7">
-            <Card className="overflow-hidden border-border/80 bg-card shadow-xl">
+            <Card className="overflow-hidden glass-morph-card shadow-2xl border border-white/60 dark:border-white/15">
               <div className="flex items-center justify-between border-b border-border bg-muted/30 px-5 py-3">
                 <div className="flex items-center gap-2">
                   <span className="size-2.5 rounded-full bg-accent animate-pulse" />
@@ -208,7 +208,7 @@ export function CoreCapabilitiesSection() {
         >
           {/* Interactive OCR & Report Visualizer */}
           <div className="order-2 lg:order-1 lg:col-span-7">
-            <Card className="overflow-hidden border-border/80 bg-card shadow-xl">
+            <Card className="overflow-hidden glass-morph-card shadow-2xl border border-white/60 dark:border-white/15">
               <div className="flex items-center justify-between border-b border-border bg-muted/30 px-5 py-3">
                 <div className="flex items-center gap-2">
                   <ScanLine className="size-4 text-accent" />
@@ -387,7 +387,7 @@ export function CoreCapabilitiesSection() {
 
           {/* Interactive Timeline Preview */}
           <div className="lg:col-span-7">
-            <Card className="overflow-hidden border-border/80 bg-card shadow-xl p-6 space-y-4">
+            <Card className="overflow-hidden glass-morph-card shadow-2xl border border-white/60 dark:border-white/15 p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-border/80 pb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                   Longitudinal Patient Timeline
@@ -461,7 +461,7 @@ export function CoreCapabilitiesSection() {
         >
           {/* Interactive Safeguard Preview */}
           <div className="order-2 lg:order-1 lg:col-span-7">
-            <Card className="overflow-hidden border-border/80 bg-card shadow-xl p-6 space-y-4">
+            <Card className="overflow-hidden glass-morph-card shadow-2xl border border-white/60 dark:border-white/15 p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-border/80 pb-3">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="size-4 text-success" />
