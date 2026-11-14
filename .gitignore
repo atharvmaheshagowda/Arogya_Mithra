@@ -67,6 +67,7 @@ audit_screenshots/
 test_audit_screenshots/
 reference_video_frames/
 navbar_*.png
+consultation_*.png
 *.html
 *.txt
 *.csv
