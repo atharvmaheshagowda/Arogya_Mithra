@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-const partnerHospitals = [
-  { name: "Apollo Hospitals", city: "Bengaluru & Chennai" },
-  { name: "Manipal Hospitals", city: "PAN India" },
-  { name: "Narayana Health", city: "Health City" },
-  { name: "AIIMS", city: "New Delhi" },
-  { name: "Fortis Healthcare", city: "National Network" },
+const healthcareTiers = [
+  { name: "Tertiary Care Hospitals", detail: "High-acuity outpatient departments" },
+  { name: "Multi-Specialty Networks", detail: "Cross-department EHR sync" },
+  { name: "District Civil Hospitals", detail: "High-volume patient queues" },
+  { name: "Community Health Centers", detail: "Multilingual regional care" },
+  { name: "Private Clinical Suites", detail: "Streamlined single-physician OPDs" },
 ];
 
 const challenges = [
@@ -57,19 +57,19 @@ export function TrustMetricsSection() {
   return (
     <section className="relative border-y border-border/80 bg-muted/20 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
-        {/* Hospital Trust Strip (Inspired by reference brand ribbon) */}
+        {/* Healthcare Tiers Strip */}
         <div className="text-center space-y-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Benchmarked for High-Volume Outpatient Clinical Workflows
+            Engineered for Outpatient Workflows Across India&apos;s Healthcare Tiers
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-14 pt-1 opacity-75">
-            {partnerHospitals.map((hosp) => (
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-12 pt-1 opacity-80">
+            {healthcareTiers.map((tier) => (
               <div
-                key={hosp.name}
-                className="flex items-center gap-2 text-foreground/80 font-display text-base sm:text-lg font-medium tracking-tight hover:opacity-100 transition-opacity"
+                key={tier.name}
+                className="flex items-center gap-2 text-foreground/80 font-sans text-xs sm:text-sm font-medium tracking-tight hover:opacity-100 transition-opacity"
               >
-                <Building2 className="size-4 text-accent/80 shrink-0" />
-                <span>{hosp.name}</span>
+                <Building2 className="size-3.5 text-accent/80 shrink-0" />
+                <span>{tier.name}</span>
               </div>
             ))}
           </div>
@@ -97,7 +97,7 @@ export function TrustMetricsSection() {
               transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
               <Card
-                className="h-full flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
+                className="h-full flex flex-col justify-between rounded-3xl glass-morph-card p-6 sm:p-7 border border-white/60 dark:border-white/15"
               >
                 <div className="space-y-4">
                   <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
@@ -126,7 +126,7 @@ export function TrustMetricsSection() {
         </div>
 
         {/* Trust Metrics Ribbon */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 lg:p-10 shadow-xs">
+        <div className="rounded-3xl glass-morph-card p-6 sm:p-8 lg:p-10 shadow-lg border border-white/60 dark:border-white/15">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-border/80">
             {metrics.map((metric, idx) => (
               <motion.div

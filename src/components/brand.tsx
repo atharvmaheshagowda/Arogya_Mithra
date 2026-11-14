@@ -71,6 +71,7 @@ export function AarogyaMithraSymbol({ className = "size-8" }: BrandSymbolProps) 
 export interface BrandProps {
   compact?: boolean;
   showSubtitle?: boolean;
+  inverted?: boolean;
   className?: string;
 }
 
@@ -80,23 +81,36 @@ export interface BrandProps {
 export function AarogyaMithraBrand({
   compact = false,
   showSubtitle = false,
+  inverted = false,
   className,
 }: BrandProps) {
+  const isLightText = inverted || className?.includes("text-white") || className?.includes("!text-white");
+
   return (
     <div className={cn("inline-flex items-center gap-2.5", className)}>
       <AarogyaMithraSymbol className="size-8" />
       {!compact && (
         <div className="flex flex-col leading-tight">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-lg font-bold tracking-tight text-foreground">
+            <span
+              className={cn(
+                "font-sans text-lg font-extrabold tracking-tight",
+                isLightText ? "text-white" : "text-foreground",
+              )}
+            >
               AAROGYA
             </span>
-            <span className="font-sans text-lg font-semibold tracking-tight text-accent">
+            <span className="font-sans text-lg font-bold tracking-tight text-accent">
               MITHRA
             </span>
           </div>
           {showSubtitle && (
-            <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+            <span
+              className={cn(
+                "text-[9px] font-semibold tracking-[0.18em] uppercase",
+                isLightText ? "text-white/75" : "text-muted-foreground",
+              )}
+            >
               AI Clinical Copilot
             </span>
           )}

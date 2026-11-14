@@ -78,10 +78,10 @@ export function FaqSection() {
               <div
                 key={faq.question}
                 className={cn(
-                  "overflow-hidden rounded-2xl border transition-all duration-200",
+                  "overflow-hidden rounded-2xl glass-morph-card transition-all duration-200",
                   isOpen
-                    ? "border-accent/40 bg-card shadow-md ring-1 ring-accent/15"
-                    : "border-border/80 bg-card/60 hover:border-border",
+                    ? "border-accent/60 bg-white/55 dark:bg-[#102B3F]/65 ring-1 ring-accent/20"
+                    : "border-white/60 dark:border-white/12",
                 )}
               >
                 <button

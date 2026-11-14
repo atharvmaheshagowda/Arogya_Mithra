@@ -7,12 +7,11 @@ export function CtaSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden py-24 sm:py-32 bg-[#102A43] text-white">
-      {/* Background radial teal aura & dots pattern */}
-      <div className="pointer-events-none absolute inset-0 surface-dots opacity-20" />
-      <div className="pointer-events-none absolute -bottom-32 left-1/2 -translate-x-1/2 size-[600px] rounded-full bg-teal-500/15 blur-[120px]" />
+    <section className="relative overflow-hidden py-24 sm:py-32 bg-gradient-to-b from-[#102B3F]/90 via-[#0E2333]/95 to-[#0B1D28] backdrop-blur-2xl text-white border-t border-slate-800">
+      {/* Background radial teal aura */}
+      <div className="pointer-events-none absolute -bottom-32 left-1/2 -translate-x-1/2 size-[600px] rounded-full bg-teal-500/10 blur-[140px]" />
 
-      <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 space-y-8">
+      <div className="relative mx-auto max-w-5xl px-6 py-12 sm:px-10 sm:py-16 text-center rounded-3xl sm:rounded-4xl glass-morph-card border border-white/20 shadow-2xl space-y-8">
         <div className="inline-flex items-center gap-2">
           <Badge variant="teal" size="md" className="!bg-teal-500/20 !border-teal-400/40 !text-teal-200" dot pulse>
             READY FOR LIVE CLINICAL PILOT

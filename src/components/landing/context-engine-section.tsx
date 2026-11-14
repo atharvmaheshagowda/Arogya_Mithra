@@ -40,7 +40,7 @@ export function ContextEngineSection() {
         </div>
 
         {/* 5 Input Streams to 1 Unified Timeline Diagram */}
-        <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-10 shadow-xl space-y-8">
+        <div className="rounded-2xl glass-morph-card p-6 sm:p-10 shadow-2xl border border-white/60 dark:border-white/15 space-y-8">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-6">
             <div>
               <h3 className="font-display text-2xl font-bold text-foreground">
