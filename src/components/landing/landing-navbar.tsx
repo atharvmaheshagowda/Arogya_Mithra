@@ -41,29 +41,29 @@ export function LandingNavbar() {
       {/* Floating Centered Pill Navbar */}
       <header
         className={cn(
-          "fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-5xl rounded-full transition-all duration-300",
+          "fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl xl:max-w-7xl rounded-full transition-all duration-300",
           "liquid-glass-pill",
           scrolled ? "py-2 sm:py-2.5 shadow-xl scale-[0.985]" : "py-2.5 sm:py-3",
         )}
       >
-        <div className="flex items-center justify-between px-3 sm:px-5">
+        <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6">
           {/* Brand Logo & Symbol */}
           <a
             href="#"
-            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full py-0.5 px-1 sm:px-1.5"
+            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full py-0.5 px-1 sm:px-1.5 shrink-0"
             aria-label="AAROGYA MITHRA Home"
           >
-            <AarogyaMithraBrand compact={false} showSubtitle={false} className="gap-2 sm:gap-2.5" />
+            <AarogyaMithraBrand compact={false} showSubtitle={false} className="gap-2 sm:gap-2.5 shrink-0" />
           </a>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-xs lg:text-sm font-medium text-muted-foreground">
+          <nav className="hidden md:flex items-center gap-3.5 lg:gap-5 xl:gap-7 text-xs xl:text-sm font-medium text-muted-foreground mx-2 lg:mx-4">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleScrollTo(e, link.href)}
-                className="relative py-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
+                className="relative py-1 whitespace-nowrap shrink-0 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
               >
                 {link.label}
               </a>
@@ -71,14 +71,14 @@ export function LandingNavbar() {
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <ThemeSwitcher className="size-8 sm:size-9" />
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-2.5 shrink-0">
+            <ThemeSwitcher className="size-8 sm:size-9 shrink-0" />
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/login")}
-              className="hidden sm:inline-flex text-xs font-semibold text-muted-foreground hover:text-foreground h-8 px-3 rounded-full"
+              className="hidden lg:inline-flex text-xs font-semibold text-muted-foreground hover:text-foreground h-8 px-2.5 lg:px-3 rounded-full shrink-0"
             >
               Doctor Login
             </Button>
@@ -88,9 +88,9 @@ export function LandingNavbar() {
               size="sm"
               onClick={() => navigate("/app")}
               rightIcon={<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
-              className="group h-8 sm:h-9 rounded-full px-3.5 sm:px-4 text-xs font-semibold shadow-xs"
+              className="group h-8 sm:h-9 rounded-full px-3.5 sm:px-4 text-xs font-semibold shadow-xs shrink-0 whitespace-nowrap"
             >
-              <span className="hidden xs:inline">Open </span>Workspace
+              <span className="hidden xl:inline">Open </span>Workspace
             </Button>
 
             {/* Mobile Hamburger Trigger */}
@@ -98,7 +98,7 @@ export function LandingNavbar() {
               type="button"
               aria-label="Toggle navigation menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden grid size-8 place-items-center rounded-full text-foreground/80 hover:bg-muted/80 transition-colors"
+              className="md:hidden grid size-8 place-items-center rounded-full text-foreground/80 hover:bg-muted/80 transition-colors shrink-0"
             >
               {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>

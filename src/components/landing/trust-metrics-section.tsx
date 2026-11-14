@@ -47,10 +47,27 @@ const challenges = [
 ];
 
 const metrics = [
-  { value: "3.2x", label: "Faster OPD note generation", detail: "from ambient speech to structured draft" },
-  { value: "3 Languages", label: "Concurrent code-mixed AI", detail: "Kannada, Hindi & Indian English" },
-  { value: "100%", label: "Clinician oversight gate", detail: "Zero autonomous prescription approval" },
-  { value: "ABDM", label: "FHIR & ICD-10 aligned", detail: "Ready for Indian digital health integration" },
+  {
+    value: "3.2x",
+    label: "Faster OPD note generation",
+    detail: "from ambient speech to structured draft",
+  },
+  {
+    value: "3",
+    suffix: "Languages",
+    label: "Concurrent code-mixed AI",
+    detail: "Kannada, Hindi & Indian English",
+  },
+  {
+    value: "100%",
+    label: "Clinician oversight gate",
+    detail: "Zero autonomous prescription approval",
+  },
+  {
+    value: "ABDM",
+    label: "FHIR & ICD-10 aligned",
+    detail: "Ready for Indian digital health integration",
+  },
 ];
 
 export function TrustMetricsSection() {
@@ -135,15 +152,24 @@ export function TrustMetricsSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
-                className={idx === 0 ? "space-y-1" : "pt-6 sm:pt-0 lg:pl-8 space-y-1"}
+                className="flex flex-col justify-between pt-6 sm:pt-0 lg:px-6 first:lg:pl-0 last:lg:pr-0 space-y-3"
               >
-                <p className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
-                  {metric.value}
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {metric.label}
-                </p>
-                <p className="text-xs text-muted-foreground">
+                <div className="space-y-1.5">
+                  <div className="flex items-baseline gap-1.5 h-10 sm:h-12">
+                    <span className="font-sans text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+                      {metric.value}
+                    </span>
+                    {"suffix" in metric && metric.suffix && (
+                      <span className="font-sans text-base sm:text-lg font-bold text-accent tracking-tight">
+                        {metric.suffix}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-foreground tracking-tight leading-snug">
+                    {metric.label}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   {metric.detail}
                 </p>
               </motion.div>

@@ -147,8 +147,8 @@ export function ConsultationWorkspacePage() {
   const [isNoteEdited, setIsNoteEdited] = useState(false);
   const [noteProvenance, setNoteProvenance] = useState<NoteProvenance>("none");
 
-  // Workflow Progression State
-  const [workflowState, setWorkflowState] = useState<WorkflowState>("started");
+  // Workflow Progression State (defaults to draft_generated since consultation draft is loaded)
+  const [workflowState, setWorkflowState] = useState<WorkflowState>("draft_generated");
 
   // Audio Recording & Scribe State
   const [isSimulationRecording, setIsSimulationRecording] = useState(false);
@@ -157,8 +157,8 @@ export function ConsultationWorkspacePage() {
     "Kannada" | "Hindi" | "English" | "Code-Mixed"
   >("English");
 
-  // Center Panel View Mode: "live" | "manual" | "simulation"
-  const [listenMode, setListenMode] = useState<"live" | "manual" | "simulation">("live");
+  // Center Panel View Mode: "live" | "manual" | "simulation" (defaults to simulation for instant live demonstration)
+  const [listenMode, setListenMode] = useState<"live" | "manual" | "simulation">("simulation");
   const [manualTranscriptInput, setManualTranscriptInput] = useState("");
   const [editableLiveTranscript, setEditableLiveTranscript] = useState("");
   const [transcriptTurns, setTranscriptTurns] = useState<SpeechTurn[]>(
@@ -185,7 +185,7 @@ export function ConsultationWorkspacePage() {
     clearError: clearSpeechError,
   } = useSpeechRecognition({
     language: speechLang,
-    onFinalTranscript: (text) => {
+    onFinalTranscript: (text: string) => {
       setEditableLiveTranscript(text);
     },
   });
@@ -802,15 +802,15 @@ export function ConsultationWorkspacePage() {
       {/* ====================================================================
           TOP WORKFLOW PROGRESSION STEPPER & ACTION BAR
           ==================================================================== */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-xs overflow-hidden max-w-full">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           {/* Left: Consultation ID & Encounter Context */}
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm">
+            <div className="grid size-10 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm shrink-0">
               <Stethoscope className="size-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-display text-base font-bold text-foreground">
                   Clinical Consultation Workspace
                 </span>
@@ -821,22 +821,22 @@ export function ConsultationWorkspacePage() {
                   {session.room}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 Attending: {doctor?.name || session.doctorName} • Department: {session.department} • Started: {session.startedAt}
               </p>
             </div>
           </div>
 
           {/* Right: Quick Patient Switcher & Encounter Selection */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 max-w-full">
+            <span className="text-xs font-semibold text-muted-foreground shrink-0">
               Patient:
             </span>
             <select
               value={selectedPatientId}
               onChange={(e) => handlePatientChange(e.target.value)}
               aria-label="Switch active patient for consultation"
-              className="h-8 rounded-lg border border-border bg-input px-2.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="h-8 max-w-[210px] sm:max-w-xs md:max-w-none truncate rounded-lg border border-border bg-input px-2.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             >
               <optgroup label="Verified Synthetic EHR Patients">
                 <option value="SYN-PAT-001">
@@ -860,14 +860,14 @@ export function ConsultationWorkspacePage() {
               </optgroup>
             </select>
 
-            <span className="text-xs font-semibold text-muted-foreground ml-1">
+            <span className="text-xs font-semibold text-muted-foreground ml-1 shrink-0">
               Encounter:
             </span>
             <select
               value={selectedEncounterId}
               onChange={(e) => setSelectedEncounterId(e.target.value)}
               aria-label="Select encounter"
-              className="h-8 rounded-lg border border-border bg-input px-2.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="h-8 max-w-[150px] sm:max-w-none truncate rounded-lg border border-border bg-input px-2.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             >
               {availableEncounters.map((enc) => (
                 <option key={enc.id} value={enc.id}>
@@ -1002,16 +1002,16 @@ export function ConsultationWorkspacePage() {
       {/* ====================================================================
           THREE-PANEL CLINICAL WORKSPACE
           1. LEFT PANEL: Patient Context (3 cols)
-          2. CENTRE PANEL: LISTEN Scribe (5 cols)
-          3. RIGHT PANEL: Clinical Notes & Safety (4 cols)
+          2. CENTRE PANEL: LISTEN Scribe (4 cols)
+          3. RIGHT PANEL: Clinical Notes & Safety (5 cols)
           ==================================================================== */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 items-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 items-start lg:h-[calc(100vh-13.5rem)] lg:min-h-[600px]">
         {/* ==================================================================
             PANEL 1: PATIENT CONTEXT (LEFT PANEL — 3 COLS)
             ================================================================== */}
         <div
           className={cn(
-            "space-y-4 lg:col-span-3",
+            "space-y-4 lg:col-span-3 lg:h-full lg:overflow-y-auto lg:pr-1.5 clinical-scrollbar",
             activeMobilePanel !== "context" && "hidden lg:block",
           )}
         >
@@ -1224,11 +1224,11 @@ export function ConsultationWorkspacePage() {
         </div>
 
         {/* ==================================================================
-            PANEL 2: LISTEN (CENTRE PANEL — 5 COLS)
+            PANEL 2: LISTEN (CENTRE PANEL — 4 COLS)
             ================================================================== */}
         <div
           className={cn(
-            "space-y-4 lg:col-span-5",
+            "space-y-4 lg:col-span-4 lg:h-full lg:overflow-y-auto lg:pr-1.5 clinical-scrollbar",
             activeMobilePanel !== "listen" && "hidden lg:block",
           )}
         >
@@ -1707,11 +1707,11 @@ export function ConsultationWorkspacePage() {
         </div>
 
         {/* ==================================================================
-            PANEL 3: CLINICAL NOTES & SAFETY (RIGHT PANEL — 4 COLS)
+            PANEL 3: CLINICAL NOTES & SAFETY (RIGHT PANEL — 5 COLS)
             ================================================================== */}
         <div
           className={cn(
-            "space-y-4 lg:col-span-4",
+            "space-y-4 lg:col-span-5 lg:h-full lg:overflow-y-auto lg:pr-1.5 clinical-scrollbar",
             activeMobilePanel !== "notes" && "hidden lg:block",
           )}
         >
