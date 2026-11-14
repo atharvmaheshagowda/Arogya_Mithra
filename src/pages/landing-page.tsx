@@ -56,6 +56,8 @@ export function LandingPage() {
   // Layer 1 (Deep Hospital Architecture Sanctuary): Continuous fluid vertical parallax drift
   const backgroundY = useTransform(smoothParallax, [0, 0.35, 0.7, 1], ["0%", "-18%", "-36%", "-52%"]);
   const backgroundScale = useTransform(smoothParallax, [0, 0.5, 1], [1.06, 1.16, 1.28]);
+  // Camera Focal Shift (Depth-of-Field): 0px blur at top (still & crisp), gently softens (4px) as user scrolls into lower sections
+  const backgroundBlur = useTransform(smoothParallax, [0, 0.45, 0.9], ["blur(0px)", "blur(2px)", "blur(5px)"]);
 
   // Layer 2 (Atmospheric Jade & Cyan Glow Aurora): Moves at an independent higher parallax velocity
   const auraY = useTransform(smoothParallax, [0, 1], ["0%", "-75%"]);
@@ -82,9 +84,9 @@ export function LandingPage() {
 
       {/* 2. Fixed Cinematic Parallax Background Image (Full Opacity, Still & Scroll Parallax) */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        {/* Layer 1: Crisp, Full-Opacity Clinical Photography Background */}
+        {/* Layer 1: Crisp, Full-Opacity Clinical Photography Background with Camera Focus */}
         <motion.div
-          style={{ y: backgroundY, scale: backgroundScale }}
+          style={{ y: backgroundY, scale: backgroundScale, filter: backgroundBlur }}
           className="relative w-full h-[180vh] -top-[20vh] will-change-transform"
         >
           <img
