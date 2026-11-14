@@ -80,25 +80,27 @@ export function LandingPage() {
         style={{ scaleX }}
       />
 
-      {/* 2. Fixed Cinematic Multi-Layer Parallax Background Canvas */}
+      {/* 2. Fixed Cinematic Parallax Background Image (Full Opacity, Still & Scroll Parallax) */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        {/* Layer 1: Photorealistic Hospital Architecture Sanctuary */}
+        {/* Layer 1: Crisp, Full-Opacity Clinical Photography Background */}
         <motion.div
           style={{ y: backgroundY, scale: backgroundScale }}
-          className="relative w-full h-[180vh] -top-[25vh] will-change-transform"
+          className="relative w-full h-[180vh] -top-[20vh] will-change-transform"
         >
-          {/* Authentic High-Resolution Hospital Architecture Sanctuary */}
           <img
-            src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2600&q=85"
+            src="/images/hero-clinical-bg.jpg"
             alt="Aarogya Mithra Modern Clinical Sanctuary"
-            className="size-full object-cover object-center filter brightness-[1.02] contrast-[1.02] dark:brightness-[0.74] dark:contrast-[1.08]"
+            className="size-full object-cover object-center brightness-100 contrast-[1.04] dark:brightness-[0.92] dark:contrast-[1.10] opacity-100"
             loading="eager"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src =
+                "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2600&q=85";
+            }}
           />
 
-          {/* Luxury Adaptive Overlays: Warm Porcelain in light mode, Deep Atlantic in dark mode */}
-          <div className="absolute inset-0 bg-[#F5F5EF]/80 dark:bg-[#102B3F]/75 backdrop-blur-[0.5px] transition-colors duration-500" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/25 to-background/95" />
-          <div className="absolute inset-0 surface-dots opacity-20 dark:opacity-10" />
+          {/* Clean clinical lighting: crisp and luminous at rest, seamless transition to content below */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background dark:from-black/35 dark:via-transparent dark:to-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(16,43,63,0.35)_100%)]" />
         </motion.div>
 
         {/* Layer 2: Secondary Floating Atmospheric Aurora Depth Plane */}
@@ -106,9 +108,8 @@ export function LandingPage() {
           style={{ y: auraY, scale: auraScale, opacity: auraOpacity }}
           className="absolute inset-0 will-change-transform"
         >
-          <div className="absolute -top-32 left-1/4 size-[600px] rounded-full bg-accent/15 blur-[160px] dark:bg-accent/25" />
-          <div className="absolute top-1/2 -right-24 size-[550px] rounded-full bg-teal-500/10 blur-[180px] dark:bg-teal-400/20" />
-          <div className="absolute top-3/4 left-1/3 size-[500px] rounded-full bg-[#102B3F]/20 blur-[150px] dark:bg-accent/10" />
+          <div className="absolute -top-32 left-1/4 size-[600px] rounded-full bg-accent/20 blur-[150px]" />
+          <div className="absolute top-1/2 -right-24 size-[550px] rounded-full bg-teal-400/15 blur-[180px]" />
         </motion.div>
       </div>
 

@@ -63,7 +63,7 @@ export function LandingHero() {
           </motion.div>
 
           {/* Majestic Newsreader Headline */}
-          <motion.h1 variants={fadeInUp} className="text-display-hero text-foreground tracking-[-0.04em]">
+          <motion.h1 variants={fadeInUp} className="text-display-hero text-foreground tracking-[-0.04em] drop-shadow-sm">
             Your Clinical Workflow.
             <br />
             <span className="text-teal-600 dark:text-teal-400 font-serif italic font-normal">
@@ -78,7 +78,7 @@ export function LandingHero() {
           {/* Subtitle with High Readability */}
           <motion.p
             variants={fadeInUp}
-            className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground font-normal"
+            className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground font-normal drop-shadow-2xs"
           >
             An evidence-grounded multilingual copilot for high-volume Indian OPDs. It listens to consultations, reads medical reports, connects patient history and safeguards medication decisions — keeping doctors in complete control.
           </motion.p>
