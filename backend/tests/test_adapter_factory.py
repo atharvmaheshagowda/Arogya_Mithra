@@ -18,6 +18,15 @@ class CustomTestAdapter(ClinicalNoteAdapter):
         raise NotImplementedError("Custom test stub")
 
 
+@pytest.fixture(autouse=True)
+def mock_default_env(monkeypatch):
+    """Ensure tests run with mock provider default, isolating from runtime .env file."""
+    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    from app.core.config import settings as app_settings
+    monkeypatch.setattr(app_settings, "LLM_PROVIDER", "mock")
+
+
 def test_default_provider_selects_mock():
     """Test 1: Default configuration selects DeterministicMockSOAPAdapter."""
     settings = Settings()
@@ -41,8 +50,8 @@ def test_unsupported_provider_is_rejected():
 
 
 def test_selecting_real_provider_fails_clearly():
-    """Test 4: Selecting a real provider fails with actionable error until implemented."""
-    for provider in ["gemini", "openai", "generic_http"]:
+    """Test 4: Selecting an unimplemented real provider fails with actionable error."""
+    for provider in ["openai", "generic_http"]:
         settings = Settings(LLM_PROVIDER=provider)
         with pytest.raises(LLMAdapterNotImplementedError) as excinfo:
             get_clinical_note_adapter(settings)

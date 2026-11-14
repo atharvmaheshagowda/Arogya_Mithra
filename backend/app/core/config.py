@@ -1,14 +1,21 @@
+from pathlib import Path
 from typing import Optional
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SUPPORTED_LLM_PROVIDERS = {"mock", "gemini", "openai", "generic_http"}
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+AUTHORITATIVE_DB_PATH = PROJECT_ROOT / "Arogya.db"
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Arogya Mithra"
     ENVIRONMENT: str = "development"
-    DATABASE_URL: str = "sqlite:///./Arogya.db"
+    DATABASE_URL: str = Field(
+        default=f"sqlite:///{AUTHORITATIVE_DB_PATH.as_posix()}",
+        description="Authoritative SQLite database URL anchored to project repository root",
+    )
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
 
@@ -43,6 +50,16 @@ class Settings(BaseSettings):
         default=None,
         description="Optional base URL for OpenAI-compatible or local inference endpoints",
     )
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def resolve_database_url(cls, value: str) -> str:
+        if isinstance(value, str):
+            if value == "sqlite:///./Arogya.db" or value.startswith("sqlite:///./"):
+                rel_file = value[len("sqlite:///./") :]
+                abs_path = (PROJECT_ROOT / rel_file).resolve()
+                return f"sqlite:///{abs_path.as_posix()}"
+        return value
 
     @field_validator("LLM_PROVIDER", mode="before")
     @classmethod

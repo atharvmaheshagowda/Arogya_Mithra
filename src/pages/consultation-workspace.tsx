@@ -77,7 +77,10 @@ import {
   type SOAPMedicationSafetyReport,
   type SOAPPayload,
 } from "@/lib/api-client";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { cn } from "@/lib/utils";
+
+type NoteProvenance = "none" | "hydrated_ehr" | "newly_generated" | "simulated";
 
 type WorkflowState =
   | "started"
@@ -98,10 +101,8 @@ export function ConsultationWorkspacePage() {
     return getConsultationSession(consultationId || "CS-101")!;
   }, [consultationId]);
 
-  // Selected patient from session or patient store
-  const [selectedPatientId, setSelectedPatientId] = useState<string>(
-    session.patientId || "SYN-PAT-001",
-  );
+  // Selected patient: default to verified synthetic patient SYN-PAT-001
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("SYN-PAT-001");
   const patient = useMemo(() => {
     return getPatientById(selectedPatientId) || getPatientById("SYN-PAT-001") || getPatientById("AM-94021")!;
   }, [selectedPatientId]);
@@ -144,25 +145,50 @@ export function ConsultationWorkspacePage() {
   const [backendMissingInfo, setBackendMissingInfo] = useState<string[]>([]);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isNoteEdited, setIsNoteEdited] = useState(false);
+  const [noteProvenance, setNoteProvenance] = useState<NoteProvenance>("none");
 
   // Workflow Progression State
-  const [workflowState, setWorkflowState] = useState<WorkflowState>("recording");
+  const [workflowState, setWorkflowState] = useState<WorkflowState>("started");
 
   // Audio Recording & Scribe State
-  const [isRecording, setIsRecording] = useState(true);
-  const [recordingSeconds, setRecordingSeconds] = useState(258); // 04:18
+  const [isSimulationRecording, setIsSimulationRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState<
     "Kannada" | "Hindi" | "English" | "Code-Mixed"
-  >("Kannada");
+  >("English");
 
-  // Center Panel View Mode: "stream" | "manual" | "upload"
-  const [listenMode, setListenMode] = useState<"stream" | "manual" | "upload">(
-    "stream",
-  );
+  // Center Panel View Mode: "live" | "manual" | "simulation"
+  const [listenMode, setListenMode] = useState<"live" | "manual" | "simulation">("live");
   const [manualTranscriptInput, setManualTranscriptInput] = useState("");
+  const [editableLiveTranscript, setEditableLiveTranscript] = useState("");
   const [transcriptTurns, setTranscriptTurns] = useState<SpeechTurn[]>(
     session.transcript,
   );
+
+  // Web Speech API Integration for Live Microphone Mode
+  const speechLang = useMemo(() => {
+    if (selectedLanguage === "Kannada") return "kn-IN";
+    if (selectedLanguage === "Hindi") return "hi-IN";
+    return "en-IN";
+  }, [selectedLanguage]);
+
+  const {
+    isSupported: isSpeechSupported,
+    isListening,
+    interimTranscript,
+    finalTranscript,
+    errorMessage: speechError,
+    startListening,
+    stopListening,
+    resetTranscript: resetSpeechTranscript,
+    setFinalTranscriptText,
+    clearError: clearSpeechError,
+  } = useSpeechRecognition({
+    language: speechLang,
+    onFinalTranscript: (text) => {
+      setEditableLiveTranscript(text);
+    },
+  });
 
   // Right Panel Clinical Note State
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -180,26 +206,24 @@ export function ConsultationWorkspacePage() {
     setBackendMedSafety(null);
     setBackendMissingInfo([]);
     setIsNoteEdited(false);
+    setNoteProvenance("none");
 
     if (newPatientId === "SYN-PAT-001") {
       const synSession = getConsultationSession("CS-SYN-001");
       if (synSession) {
         setTranscriptTurns(synSession.transcript);
-        setClinicalNote(synSession.draftNote);
         setSelectedLanguage("Kannada");
       }
     } else if (newPatientId === "SYN-PAT-002") {
       const synSession = getConsultationSession("CS-102");
       if (synSession) {
         setTranscriptTurns(synSession.transcript);
-        setClinicalNote(synSession.draftNote);
         setSelectedLanguage("Hindi");
       }
     } else {
       const synSession = getConsultationSession("CS-101");
       if (synSession) {
         setTranscriptTurns(synSession.transcript);
-        setClinicalNote(synSession.draftNote);
       }
     }
   };
@@ -215,6 +239,7 @@ export function ConsultationWorkspacePage() {
           const draft = notes[0];
           setBackendNoteId(draft.note_id);
           setActiveBackendNote(draft);
+          setNoteProvenance("hydrated_ehr");
           if (draft.medication_safety) {
             setBackendMedSafety(draft.medication_safety);
           }
@@ -234,6 +259,10 @@ export function ConsultationWorkspacePage() {
             }));
             setWorkflowState("draft_generated");
           }
+        } else if (isMounted) {
+          setActiveBackendNote(null);
+          setBackendNoteId(null);
+          setNoteProvenance("none");
         }
       } catch (err) {
         console.warn("Could not hydrate existing draft from backend", err);
@@ -253,16 +282,16 @@ export function ConsultationWorkspacePage() {
     "context" | "listen" | "notes"
   >("listen");
 
-  // Recording Timer Effect
+  // Simulation Recording Timer Effect
   useEffect(() => {
     let interval: any = null;
-    if (isRecording) {
+    if (isSimulationRecording) {
       interval = setInterval(() => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRecording]);
+  }, [isSimulationRecording]);
 
   // Format Timer string
   const formatTimer = (seconds: number) => {
@@ -271,36 +300,36 @@ export function ConsultationWorkspacePage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Recording Controls
-  const handleStartRecording = () => {
-    setIsRecording(true);
+  // Simulation Controls (Clearly separated from Live Microphone mode)
+  const handleStartSimulation = () => {
+    setIsSimulationRecording(true);
     setWorkflowState("recording");
-    toast.info("Ambient Scribe Active", {
-      description: `Listening in ${selectedLanguage}. Dual-channel acoustic array engaged.`,
+    toast.info("Simulation Playback Started", {
+      description: `Simulating consultation audio stream in ${selectedLanguage}. (Demonstration data).`,
     });
   };
 
-  const handlePauseRecording = () => {
-    setIsRecording(false);
-    toast.info("Recording Paused", {
-      description: "Audio capture paused. Click resume to continue dialogue.",
+  const handlePauseSimulation = () => {
+    setIsSimulationRecording(false);
+    toast.info("Simulation Paused", {
+      description: "Demonstration playback paused.",
     });
   };
 
-  const handleStopRecording = () => {
-    setIsRecording(false);
+  const handleStopSimulation = () => {
+    setIsSimulationRecording(false);
     setWorkflowState("transcribed");
-    toast.success("Transcription Completed", {
-      description: `Captured ${formatTimer(recordingSeconds)} of multilingual dialogue.`,
+    toast.success("Simulation Completed", {
+      description: `Demonstration finished (${formatTimer(recordingSeconds)} simulated duration).`,
     });
   };
 
-  const handleResetRecording = () => {
-    setIsRecording(false);
+  const handleResetSimulation = () => {
+    setIsSimulationRecording(false);
     setRecordingSeconds(0);
     setWorkflowState("started");
-    toast.info("Scribe Reset", {
-      description: "Recording buffer reset. Ready for new consultation.",
+    toast.info("Simulation Reset", {
+      description: "Demonstration recording buffer reset.",
     });
   };
 
@@ -309,32 +338,57 @@ export function ConsultationWorkspacePage() {
     setIsGeneratingNote(true);
     setGenerationError(null);
     try {
-      // 1. Gather consultation dialogue
-      let textToProcess = manualTranscriptInput.trim();
-      if (!textToProcess) {
+      // 1. Gather consultation dialogue strictly based on active input mode
+      let textToProcess = "";
+      if (listenMode === "manual") {
+        textToProcess = manualTranscriptInput.trim();
+        if (!textToProcess) {
+          toast.error("Manual Text Required", {
+            description: "Please enter consultation dialogue or physician dictation before generating a SOAP note.",
+          });
+          setIsGeneratingNote(false);
+          return;
+        }
+      } else if (listenMode === "live") {
+        textToProcess = (editableLiveTranscript || finalTranscript).trim();
+        if (!textToProcess) {
+          toast.error("Microphone Speech Required", {
+            description: "No transcribed speech detected. Click 'Start Listening' to capture your voice, or switch to Manual Text Input.",
+          });
+          setIsGeneratingNote(false);
+          return;
+        }
+      } else {
+        // Simulation mode
         textToProcess = transcriptTurns
           .map((turn) => `${turn.speakerName} (${turn.speaker}): ${turn.originalText}`)
           .join("\n");
+        if (!textToProcess) {
+          toast.error("Dialogue Required", {
+            description: "Simulation transcript buffer is empty.",
+          });
+          setIsGeneratingNote(false);
+          return;
+        }
       }
-      if (textToProcess.length < 15) {
-        textToProcess = `Doctor: Good morning. What brings you in today?\nPatient: ${textToProcess || "I have severe throat pain and fever."}`;
+
+      // 2. Validate patient and encounter selection
+      const backendPatId = selectedPatientId;
+      const backendEncId = selectedEncounterId;
+
+      // Validate verified patient ID pattern
+      if (!backendPatId.startsWith("SYN-PAT-") && !["AM-94021", "AM-93112"].includes(backendPatId)) {
+        const err = `Patient '${backendPatId}' is not verified in the clinical EHR backend. Please select a verified synthetic record (SYN-PAT-001, SYN-PAT-002, or SYN-PAT-003).`;
+        setGenerationError(err);
+        toast.error("Unverified Patient", { description: err });
+        setIsGeneratingNote(false);
+        return;
       }
 
       // Map language code: "en", "kn", "hi"
       let langCode = "en";
       if (selectedLanguage === "Kannada") langCode = "kn";
       else if (selectedLanguage === "Hindi") langCode = "hi";
-
-      // Map patient ID to backend synthetic patient
-      let backendPatId = selectedPatientId;
-      let backendEncId = selectedEncounterId;
-      if (selectedPatientId === "AM-94021") {
-        backendPatId = "SYN-PAT-001";
-        backendEncId = "SYN-ENC-001-B";
-      } else if (selectedPatientId === "AM-93112") {
-        backendPatId = "SYN-PAT-002";
-        backendEncId = "SYN-ENC-002-A";
-      }
 
       const res = await generateClinicalSOAPNote({
         consultation_text: textToProcess,
@@ -345,6 +399,8 @@ export function ConsultationWorkspacePage() {
 
       setActiveBackendNote(res);
       setBackendNoteId(res.note_id);
+      setNoteProvenance(listenMode === "simulation" ? "simulated" : "newly_generated");
+
       if (res.medication_safety) {
         setBackendMedSafety(res.medication_safety);
       }
@@ -353,9 +409,10 @@ export function ConsultationWorkspacePage() {
       }
 
       const soap = res.soap;
-      const formattedSymptoms = soap.subjective.reported_symptoms.length > 0
-        ? soap.subjective.reported_symptoms
-        : [soap.subjective.history_of_present_illness];
+      const formattedSymptoms =
+        soap.subjective.reported_symptoms.length > 0
+          ? soap.subjective.reported_symptoms
+          : [soap.subjective.history_of_present_illness];
 
       const formattedPlan = [
         ...soap.plan.proposed_medications.map((m) => `• ${m}`),
@@ -373,16 +430,26 @@ export function ConsultationWorkspacePage() {
         chiefComplaint: soap.subjective.chief_complaint,
         symptoms: formattedSymptoms,
         duration: soap.subjective.history_of_present_illness,
-        relevantHistory: soap.patient_context?.chronic_conditions?.join(", ") || patient.diagnoses.map((d) => d.condition).join(", ") || "Comorbidities on file",
-        observations: soap.objective.vital_signs_summary || soap.objective.physical_examination.join("; ") || patient.vitals,
-        clinicianAssessment: `${soap.assessment.primary_impression}${soap.assessment.differential_diagnoses.length > 0
+        relevantHistory:
+          soap.patient_context?.chronic_conditions?.join(", ") ||
+          patient.diagnoses.map((d) => d.condition).join(", ") ||
+          "Comorbidities on file",
+        observations:
+          soap.objective.vital_signs_summary ||
+          soap.objective.physical_examination.join("; ") ||
+          patient.vitals,
+        clinicianAssessment: `${soap.assessment.primary_impression}${
+          soap.assessment.differential_diagnoses.length > 0
             ? "\nDifferentials: " + soap.assessment.differential_diagnoses.join(", ")
             : ""
-          }`,
+        }`,
         treatmentPlan: formattedPlan || "Symptomatic supportive therapy.",
         uncertaintiesAndNegations: formattedUncertainties,
         evidenceConfidence: res.confidence_notes || "Evidence Grounded",
-        generatedAt: new Date(res.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        generatedAt: new Date(res.created_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         status: "Draft Advisory",
       });
 
@@ -395,10 +462,14 @@ export function ConsultationWorkspacePage() {
       }, 600);
     } catch (err: any) {
       console.error("Clinical note generation error:", err);
-      const errMsg = err.response?.data?.detail || err.message || "Failed to contact backend API.";
-      setGenerationError(typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg));
+      const errMsg =
+        err.response?.data?.detail || err.message || "Failed to contact backend API.";
+      const errStr = typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg);
+      setGenerationError(errStr);
+      setActiveBackendNote(null);
+      setNoteProvenance("none");
       toast.error("Generation Issue", {
-        description: typeof errMsg === "string" ? errMsg : "External LLM / API service unavailable.",
+        description: errStr,
       });
     } finally {
       setIsGeneratingNote(false);
@@ -514,7 +585,7 @@ export function ConsultationWorkspacePage() {
 
     setTranscriptTurns((prev) => [...prev, newTurn]);
     setManualTranscriptInput("");
-    setListenMode("stream");
+    setListenMode("live");
     toast.success("Transcript Appended", {
       description: "Manual clinical dictation processed into dialogue stream.",
     });
@@ -528,7 +599,7 @@ export function ConsultationWorkspacePage() {
         description: `Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`,
       });
       setTimeout(() => {
-        setListenMode("stream");
+        setListenMode("live");
         setWorkflowState("transcribed");
         toast.success("Audio File Ingested", {
           description: "Multilingual transcription generated with 98.6% speech confidence.",
@@ -592,11 +663,26 @@ export function ConsultationWorkspacePage() {
               aria-label="Switch active patient for consultation"
               className="h-8 rounded-lg border border-border bg-input px-2.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             >
-              {allPatients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (#{p.id}) — {p.age}y {p.gender}
+              <optgroup label="Verified Synthetic EHR Patients">
+                <option value="SYN-PAT-001">
+                  Ramesh Kumar (SYN-PAT-001) — 51y Male [Verified EHR]
                 </option>
-              ))}
+                <option value="SYN-PAT-002">
+                  Sunita Devi (SYN-PAT-002) — 38y Female [Verified EHR]
+                </option>
+                <option value="SYN-PAT-003">
+                  David D&apos;Souza (SYN-PAT-003) — 64y Male [Verified EHR]
+                </option>
+              </optgroup>
+              <optgroup label="Other Demonstration Profiles">
+                {allPatients
+                  .filter((p) => !["SYN-PAT-001", "SYN-PAT-002", "SYN-PAT-003"].includes(p.id))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (#{p.id}) — {p.age}y {p.gender}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
 
             <span className="text-xs font-semibold text-muted-foreground ml-1">
@@ -619,19 +705,23 @@ export function ConsultationWorkspacePage() {
               variant={
                 workflowState === "approved"
                   ? "success"
-                  : workflowState === "recording"
-                    ? "teal"
-                    : "warning"
+                  : isListening
+                    ? "danger"
+                    : workflowState === "draft_generated"
+                      ? "teal"
+                      : "outline"
               }
               size="sm"
-              dot={workflowState === "recording"}
-              pulse={workflowState === "recording"}
+              dot={isListening}
+              pulse={isListening}
             >
               {workflowState === "approved"
                 ? "Signed & EHR Committed"
-                : workflowState === "recording"
-                  ? "Live Ambient Audio"
-                  : "Review Pending"}
+                : isListening
+                  ? "Live Microphone Active"
+                  : workflowState === "draft_generated"
+                    ? "Draft Generated"
+                    : "Standby"}
             </Badge>
           </div>
         </div>
@@ -972,339 +1062,469 @@ export function ConsultationWorkspacePage() {
               <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Mic className="size-4.5 text-accent animate-pulse" />
+                    <Mic className={cn("size-4.5 text-accent", isListening && "animate-pulse text-red-500")} />
                     <CardTitle className="text-base font-bold text-foreground">
-                      LISTEN — Multilingual Clinical Scribe
+                      LISTEN — Clinical Consultation Scribe
                     </CardTitle>
                   </div>
                   <CardDescription className="text-xs mt-0.5">
-                    Real-time ambient consultation capture with speech-to-clinical entity extraction.
+                    Live speech-to-text dictation and multilingual consultation capture.
                   </CardDescription>
                 </div>
 
-                {/* Recording Status & Live Timer */}
+                {/* Microphone Recording Status & Indicator */}
                 <div className="flex items-center gap-2 self-start rounded-xl border border-border bg-muted/40 px-3 py-1.5">
                   <span
                     className={cn(
-                      "size-2.5 rounded-full",
-                      isRecording ? "bg-red-500 animate-ping" : "bg-muted-foreground",
+                      "size-2.5 rounded-full transition-all",
+                      isListening ? "bg-red-500 animate-ping" : isSimulationRecording ? "bg-amber-500 animate-ping" : "bg-muted-foreground/60",
                     )}
                   />
-                  <span className="font-mono font-bold text-sm text-foreground">
-                    {formatTimer(recordingSeconds)}
+                  <span className="font-mono font-bold text-xs text-foreground">
+                    {isListening ? "RECORDING" : isSimulationRecording ? formatTimer(recordingSeconds) : "IDLE"}
                   </span>
                   <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                    {isRecording ? "Live" : "Paused"}
+                    {listenMode === "live" ? "Live Mic" : listenMode === "manual" ? "Manual" : "Simulation"}
                   </span>
                 </div>
               </div>
 
-              {/* Language Selector Strip */}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Languages className="size-3.5 text-accent" />
-                  <span className="font-medium text-foreground">Target Language:</span>
-                </div>
+              {/* Mode Selection Strip */}
+              <div className="mt-3 flex rounded-lg border border-border bg-card p-1 text-xs font-semibold gap-1">
+                <button
+                  type="button"
+                  onClick={() => setListenMode("live")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-colors",
+                    listenMode === "live"
+                      ? "bg-accent text-accent-foreground shadow-xs font-bold"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Mic className="size-3.5" />
+                  <span>Live Microphone</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setListenMode("manual")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-colors",
+                    listenMode === "manual"
+                      ? "bg-accent text-accent-foreground shadow-xs font-bold"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Edit3 className="size-3.5" />
+                  <span>Manual Input</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setListenMode("simulation")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-colors",
+                    listenMode === "simulation"
+                      ? "bg-amber-600 text-white shadow-xs font-bold"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Play className="size-3.5" />
+                  <span>Simulation Mode</span>
+                </button>
+              </div>
 
-                <div className="flex gap-1 rounded-lg border border-border bg-muted/30 p-0.5 text-xs">
-                  {(["Kannada", "Hindi", "English", "Code-Mixed"] as const).map((lang) => (
+              {/* Target Language Strip */}
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2 text-xs">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Languages className="size-3.5 text-accent" />
+                  <span className="font-medium text-foreground">Speech Language:</span>
+                </div>
+                <div className="flex gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
+                  {(["English", "Kannada", "Hindi"] as const).map((lang) => (
                     <button
                       key={lang}
                       type="button"
                       onClick={() => setSelectedLanguage(lang)}
                       className={cn(
-                        "rounded px-2.5 py-1 font-medium transition-colors text-xs",
+                        "rounded px-2.5 py-0.5 text-xs font-medium transition-colors",
                         selectedLanguage === lang
                           ? "bg-card text-foreground font-bold shadow-xs"
                           : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {lang === "Kannada" ? "ಕನ್ನಡ" : lang === "Hindi" ? "हिंदी" : lang}
+                      {lang === "Kannada" ? "ಕನ್ನಡ (kn-IN)" : lang === "Hindi" ? "हिंदी (hi-IN)" : "English (en-IN)"}
                     </button>
                   ))}
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4 pt-4">
-              {/* Audio Visualizer Waveform Bar */}
-              <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5 font-medium text-foreground">
-                    <Volume2 className="size-3.5 text-accent" />
-                    Acoustic Input Spectrum (Dual Channel Array)
-                  </span>
-                  <span className="font-mono text-[10px]">Sampling: 44.1 kHz PCM</span>
-                </div>
+            <CardContent className="space-y-4 pt-4 text-xs">
+              {/* ==========================================================
+                  MODE 1: LIVE MICROPHONE SCRIBE (Web Speech API)
+                  ========================================================== */}
+              {listenMode === "live" && (
+                <div className="space-y-3.5">
+                  {/* Privacy Disclosure Notice */}
+                  <div className="rounded-xl border border-border/80 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start gap-2.5">
+                    <Lock className="size-4 shrink-0 text-accent mt-0.5" />
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-foreground text-[11px] uppercase tracking-wider block">
+                        Live Speech Privacy Disclosure
+                      </span>
+                      <p className="text-[11px] leading-relaxed">
+                        Live microphone speech uses your browser&apos;s native SpeechRecognition service.
+                        Audio signals may be evaluated by browser cloud providers.
+                        <strong> Do NOT speak real Protected Health Information (PHI)</strong> or real patient identifiers during testing.
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Animated Waveform Bars */}
-                <div className="flex h-10 items-end justify-between gap-1 px-1">
-                  {[
-                    30, 65, 80, 45, 95, 55, 75, 90, 40, 85, 90, 35, 60, 75, 90,
-                    50, 70, 85, 40, 60, 95, 80, 50, 35, 65, 80, 45, 90, 60, 75,
-                    85, 40, 70, 90, 55, 35, 65, 80, 50, 95,
-                  ].map((height, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        height: isRecording ? `${height}%` : "18%",
-                      }}
-                      className={cn(
-                        "w-1 rounded-full transition-all duration-200",
-                        isRecording
-                          ? "bg-accent/80 hover:bg-accent"
-                          : "bg-muted-foreground/30",
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Primary Recording Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 p-2.5">
-                <div className="flex items-center gap-2">
-                  {isRecording ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePauseRecording}
-                      leftIcon={<Pause className="size-4 text-warning" />}
-                    >
-                      Pause
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="teal"
-                      size="sm"
-                      onClick={handleStartRecording}
-                      leftIcon={<Play className="size-4" />}
-                    >
-                      Resume Scribe
-                    </Button>
+                  {/* Browser Support Check Warning */}
+                  {!isSpeechSupported && (
+                    <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive flex items-start gap-2.5">
+                      <AlertCircle className="size-4 shrink-0 text-destructive mt-0.5" />
+                      <div>
+                        <span className="font-bold block text-[11px] uppercase tracking-wider">
+                          Web Speech Recognition Unsupported
+                        </span>
+                        <p className="text-[11px] text-destructive/90 leading-relaxed">
+                          Your current web browser does not support the Web Speech API (window.SpeechRecognition).
+                          Please open this application in <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong>, or use the <strong>Manual Input</strong> tab.
+                        </p>
+                      </div>
+                    </div>
                   )}
 
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleStopRecording}
-                    leftIcon={<Square className="size-3.5" />}
-                  >
-                    Stop & Process
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleResetRecording}
-                    leftIcon={<RotateCcw className="size-3.5" />}
-                  >
-                    Reset
-                  </Button>
-                </div>
-
-                {/* Scribe Input Mode Selector */}
-                <div className="flex rounded-lg border border-border bg-card p-0.5 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setListenMode("stream")}
-                    className={cn(
-                      "px-2.5 py-1 rounded font-medium transition-colors",
-                      listenMode === "stream"
-                        ? "bg-muted text-foreground font-bold"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    Live Speech
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setListenMode("manual")}
-                    className={cn(
-                      "px-2.5 py-1 rounded font-medium transition-colors",
-                      listenMode === "manual"
-                        ? "bg-muted text-foreground font-bold"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    Manual Note
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setListenMode("upload")}
-                    className={cn(
-                      "px-2.5 py-1 rounded font-medium transition-colors",
-                      listenMode === "upload"
-                        ? "bg-muted text-foreground font-bold"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    Upload Audio
-                  </button>
-                </div>
-              </div>
-
-              {/* Simulation Disclaimer Callout */}
-              <div className="rounded-lg border border-border/80 bg-muted/40 p-2.5 text-[11px] text-muted-foreground flex items-center gap-2">
-                <Info className="size-4 shrink-0 text-accent" />
-                <span>
-                  <strong>Interactive Simulation:</strong> Ambient speech playback demonstrating real-time Kannada-English code mixing and clinical extraction. Zero live external audio recorded.
-                </span>
-              </div>
-
-              {/* MODE 1: LIVE SPEECH DIALOGUE STREAM */}
-              {listenMode === "stream" && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                    <span>Multi-turn Transcription Stream ({transcriptTurns.length} turns)</span>
-                    <Badge variant="teal" size="sm">Code-Mixed ASR</Badge>
-                  </div>
-
-                  <div className="max-h-[380px] overflow-y-auto space-y-3 pr-1 text-xs">
-                    {transcriptTurns.map((turn) => {
-                      const isDoc = turn.speaker === "doctor";
-                      return (
-                        <div
-                          key={turn.id}
-                          className={cn(
-                            "rounded-xl border p-3 space-y-1.5 transition-colors",
-                            isDoc
-                              ? "border-border/80 bg-muted/30 ml-4"
-                              : "border-accent/30 bg-card mr-4",
-                          )}
-                        >
-                          <div className="flex items-center justify-between text-[11px]">
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={cn(
-                                  "font-bold",
-                                  isDoc ? "text-foreground" : "text-accent",
-                                )}
-                              >
-                                {turn.speakerName}
-                              </span>
-                              <span className="text-muted-foreground">({turn.language})</span>
-                            </div>
-                            <span className="font-mono text-muted-foreground text-[10px]">
-                              {turn.timestamp}
-                            </span>
-                          </div>
-
-                          {/* Original Native Speech */}
-                          <p className="text-foreground leading-relaxed font-normal">
-                            &quot;{turn.originalText}&quot;
-                          </p>
-
-                          {/* Clinical Translation */}
-                          {turn.translation && turn.translation !== turn.originalText && (
-                            <div className="rounded-md bg-accent/5 p-2 text-[11px] text-accent border border-accent/15 leading-relaxed">
-                              <span className="font-bold mr-1">[Clinical Translation]:</span>
-                              {turn.translation}
-                            </div>
-                          )}
-
-                          {/* Turn-level Extracted Entities */}
-                          {turn.entities && turn.entities.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-1">
-                              {turn.entities.map((ent, i) => (
-                                <Badge
-                                  key={i}
-                                  variant={ent.includes("Negated") ? "success" : "teal"}
-                                  size="sm"
-                                  className="text-[10px]"
-                                >
-                                  {ent}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                  {/* Recognition Error Alert */}
+                  {speechError && (
+                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="size-4 shrink-0 text-amber-600 mt-0.5" />
+                        <div>
+                          <span className="font-bold block text-[11px] uppercase tracking-wider">
+                            Speech Recognition Error
+                          </span>
+                          <p className="text-[11px] leading-relaxed">{speechError}</p>
                         </div>
-                      );
-                    })}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={clearSpeechError}
+                        className="h-6 px-1.5 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20"
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Microphone Action Control Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "size-3 rounded-full transition-all",
+                          isListening ? "bg-red-500 animate-ping" : "bg-muted-foreground/40",
+                        )}
+                      />
+                      <span className="font-bold text-xs text-foreground">
+                        {isListening ? "Listening Active (Speak now)" : "Microphone Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isListening ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={stopListening}
+                          leftIcon={<MicOff className="size-4" />}
+                        >
+                          Stop Listening
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="teal"
+                          size="sm"
+                          onClick={startListening}
+                          disabled={!isSpeechSupported}
+                          leftIcon={<Mic className="size-4" />}
+                        >
+                          Start Listening
+                        </Button>
+                      )}
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          resetSpeechTranscript();
+                          setEditableLiveTranscript("");
+                        }}
+                        leftIcon={<RotateCcw className="size-3.5" />}
+                      >
+                        Clear
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Extracted Clinical Concepts Strip */}
-                  <div className="pt-2 border-t border-border space-y-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Continuous Concept Extraction (NLP Engine)
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {session.extractedEntities.map((ent, idx) => (
-                        <Badge
-                          key={idx}
-                          variant={
-                            ent.category === "Contraindication"
-                              ? "danger"
-                              : ent.category === "Negation"
-                                ? "success"
-                                : ent.category === "Symptom"
-                                  ? "teal"
-                                  : "outline"
-                          }
-                          size="sm"
-                          className="text-[10px]"
-                        >
-                          {ent.text} {ent.code && `(${ent.code})`}
-                        </Badge>
-                      ))}
+                  {/* Interim Speech Hypothesis (Active only while speaking) */}
+                  {interimTranscript && (
+                    <div className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-xs text-accent italic space-y-1">
+                      <div className="flex items-center gap-1.5 not-italic font-bold text-[10px] uppercase tracking-wider">
+                        <span className="size-2 rounded-full bg-accent animate-pulse" />
+                        <span>Live Interim Hypothesis</span>
+                      </div>
+                      <p className="leading-relaxed">&quot;{interimTranscript}...&quot;</p>
+                    </div>
+                  )}
+
+                  {/* Live Finalized / Editable Transcript Area */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                      <span>Transcribed Consultation Speech (Editable)</span>
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {(editableLiveTranscript || finalTranscript).split(/\s+/).filter(Boolean).length} words
+                      </span>
+                    </div>
+
+                    <textarea
+                      rows={7}
+                      value={editableLiveTranscript || finalTranscript}
+                      onChange={(e) => {
+                        setEditableLiveTranscript(e.target.value);
+                        setFinalTranscriptText(e.target.value);
+                      }}
+                      placeholder="Live microphone transcription will appear here in real time as you speak. You can also edit, correct, or add clinical dictation directly into this box..."
+                      className="w-full rounded-xl border border-border bg-input p-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent leading-relaxed"
+                    />
+
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                      <span>Exact text above will be sent for clinical SOAP structuring.</span>
+                      <Button
+                        variant="teal"
+                        size="xs"
+                        onClick={handleGenerateNote}
+                        loading={isGeneratingNote}
+                        disabled={isListening}
+                        leftIcon={<Sparkles className="size-3.5" />}
+                      >
+                        Generate SOAP Draft
+                      </Button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* MODE 2: MANUAL TRANSCRIPT / DICTATION INPUT */}
+              {/* ==========================================================
+                  MODE 2: MANUAL TEXT INPUT / DICTATION (Authoritative)
+                  ========================================================== */}
               {listenMode === "manual" && (
-                <form onSubmit={handleManualTranscriptSubmit} className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                    <span>Manual Clinician Input / Dictation</span>
-                    <span className="text-muted-foreground text-[11px]">Type or paste transcript</span>
-                  </div>
-
-                  <textarea
-                    rows={6}
-                    value={manualTranscriptInput}
-                    onChange={(e) => setManualTranscriptInput(e.target.value)}
-                    placeholder="Type or paste doctor-patient conversation here in Kannada, Hindi, or English..."
-                    className="w-full rounded-xl border border-border bg-input p-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent leading-relaxed"
-                  />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">
-                      Will append as timestamped clinician turn in active transcript.
+                <div className="space-y-3.5">
+                  <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-xs text-foreground space-y-1">
+                    <span className="font-bold text-accent text-[11px] uppercase tracking-wider block">
+                      Authoritative Clinician Input
                     </span>
-                    <Button
-                      type="submit"
-                      variant="teal"
-                      size="sm"
-                      leftIcon={<Plus className="size-3.5" />}
-                    >
-                      Append to Dialogue
-                    </Button>
-                  </div>
-                </form>
-              )}
-
-              {/* MODE 3: AUDIO UPLOAD SIMULATOR */}
-              {listenMode === "upload" && (
-                <div className="rounded-xl border border-dashed border-border p-6 text-center space-y-3">
-                  <Upload className="mx-auto size-8 text-muted-foreground" />
-                  <div>
-                    <h4 className="font-semibold text-xs text-foreground">
-                      Upload Audio Consultation File
-                    </h4>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Supports WAV, MP3, M4A, OGG up to 25 MB.
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      The exact text entered below will be passed directly to the SOAP generation engine without alteration or simulated text injection.
                     </p>
                   </div>
 
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors">
-                    <span>Choose Audio File</span>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleAudioFileUpload}
-                      className="sr-only"
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                      <span>Doctor-Patient Consultation Text</span>
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {manualTranscriptInput.length} chars • {manualTranscriptInput.split(/\s+/).filter(Boolean).length} words
+                      </span>
+                    </div>
+
+                    <textarea
+                      rows={8}
+                      value={manualTranscriptInput}
+                      onChange={(e) => setManualTranscriptInput(e.target.value)}
+                      placeholder="Type or paste doctor-patient conversation or clinical dictation here..."
+                      className="w-full rounded-xl border border-border bg-input p-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent leading-relaxed font-sans"
                     />
-                  </label>
+
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => setManualTranscriptInput("")}
+                        leftIcon={<RotateCcw className="size-3" />}
+                      >
+                        Clear Text
+                      </Button>
+
+                      <Button
+                        variant="teal"
+                        size="sm"
+                        onClick={handleGenerateNote}
+                        loading={isGeneratingNote}
+                        leftIcon={<Sparkles className="size-3.5" />}
+                      >
+                        Generate SOAP Draft
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ==========================================================
+                  MODE 3: SIMULATION MODE (Pre-recorded Demonstration)
+                  ========================================================== */}
+              {listenMode === "simulation" && (
+                <div className="space-y-3.5">
+                  {/* Simulation Banner */}
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                    <Info className="size-4 shrink-0 text-amber-600 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-[11px] uppercase tracking-wider">
+                        Interactive Simulation (Demonstration Only)
+                      </span>
+                      <p className="text-[11px] leading-relaxed">
+                        Pre-recorded synthetic consultation dialogue demonstrating bilingual Kannada-English code mixing and clinical NLP extraction. <strong>Zero live audio is captured.</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Audio Visualizer Waveform Bar */}
+                  <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5 font-medium text-foreground">
+                        <Volume2 className="size-3.5 text-accent" />
+                        Simulated Acoustic Array Spectrum
+                      </span>
+                      <span className="font-mono text-[10px]">Sampling: 44.1 kHz PCM (Sim)</span>
+                    </div>
+
+                    <div className="flex h-10 items-end justify-between gap-1 px-1">
+                      {[
+                        30, 65, 80, 45, 95, 55, 75, 90, 40, 85, 90, 35, 60, 75, 90,
+                        50, 70, 85, 40, 60, 95, 80, 50, 35, 65, 80, 45, 90, 60, 75,
+                        85, 40, 70, 90, 55, 35, 65, 80, 50, 95,
+                      ].map((height, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            height: isSimulationRecording ? `${height}%` : "18%",
+                          }}
+                          className={cn(
+                            "w-1 rounded-full transition-all duration-200",
+                            isSimulationRecording
+                              ? "bg-amber-500/80 hover:bg-amber-500"
+                              : "bg-muted-foreground/30",
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Simulation Controls */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 p-2.5">
+                    <div className="flex items-center gap-2">
+                      {isSimulationRecording ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handlePauseSimulation}
+                          leftIcon={<Pause className="size-4 text-warning" />}
+                        >
+                          Pause Simulation
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="teal"
+                          size="sm"
+                          onClick={handleStartSimulation}
+                          leftIcon={<Play className="size-4" />}
+                        >
+                          Resume Simulation
+                        </Button>
+                      )}
+
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleStopSimulation}
+                        leftIcon={<Square className="size-3.5" />}
+                      >
+                        Stop
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleResetSimulation}
+                        leftIcon={<RotateCcw className="size-3.5" />}
+                      >
+                        Reset
+                      </Button>
+                    </div>
+
+                    <Button
+                      variant="teal"
+                      size="sm"
+                      onClick={handleGenerateNote}
+                      loading={isGeneratingNote}
+                      leftIcon={<Sparkles className="size-3.5" />}
+                    >
+                      Generate Draft
+                    </Button>
+                  </div>
+
+                  {/* Simulated Dialogue Turns */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                      <span>Simulated Multi-turn Dialogue ({transcriptTurns.length} turns)</span>
+                      <Badge variant="warning" size="sm">Canned Demo</Badge>
+                    </div>
+
+                    <div className="max-h-[320px] overflow-y-auto space-y-3 pr-1 text-xs">
+                      {transcriptTurns.map((turn) => {
+                        const isDoc = turn.speaker === "doctor";
+                        return (
+                          <div
+                            key={turn.id}
+                            className={cn(
+                              "rounded-xl border p-3 space-y-1.5 transition-colors",
+                              isDoc
+                                ? "border-border/80 bg-muted/30 ml-4"
+                                : "border-accent/30 bg-card mr-4",
+                            )}
+                          >
+                            <div className="flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={cn(
+                                    "font-bold",
+                                    isDoc ? "text-foreground" : "text-accent",
+                                  )}
+                                >
+                                  {turn.speakerName}
+                                </span>
+                                <span className="text-muted-foreground">({turn.language})</span>
+                              </div>
+                              <span className="font-mono text-muted-foreground text-[10px]">
+                                {turn.timestamp}
+                              </span>
+                            </div>
+
+                            <p className="text-foreground leading-relaxed font-normal">
+                              &quot;{turn.originalText}&quot;
+                            </p>
+
+                            {turn.translation && turn.translation !== turn.originalText && (
+                              <div className="rounded-md bg-accent/5 p-2 text-[11px] text-accent border border-accent/15 leading-relaxed">
+                                <span className="font-bold mr-1">[Clinical Translation]:</span>
+                                {turn.translation}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -1547,20 +1767,62 @@ export function ConsultationWorkspacePage() {
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4 text-xs">
-              {/* Document Paper Container */}
-              <div className="rounded-xl border border-border bg-card p-4 space-y-4 shadow-2xs font-sans">
-                {/* Hospital & Note Header */}
-                <div className="border-b border-border pb-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <div>
-                    <span className="font-bold text-foreground uppercase tracking-wider block">
-                      Apollo Hospitals Bengaluru • Outpatient Clinical Record
-                    </span>
-                    <span>Date: {clinicalNote.generatedAt}</span>
-                  </div>
-                  <span className="font-mono text-[10px] text-accent font-semibold">
-                    {clinicalNote.evidenceConfidence}
-                  </span>
+              {isGeneratingNote ? (
+                <div className="rounded-xl border border-accent/30 bg-accent/5 p-8 text-center space-y-3">
+                  <RefreshCw className="mx-auto size-8 text-accent animate-spin" />
+                  <h4 className="font-semibold text-sm text-foreground">Generating Evidence-Grounded SOAP Draft...</h4>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Structuring subjective symptoms, preserving pertinent negations, assessing differential diagnoses, and running deterministic medication safety checks.
+                  </p>
                 </div>
+              ) : (!activeBackendNote && noteProvenance === "none") ? (
+                <div className="rounded-xl border border-dashed border-border p-8 text-center space-y-3 bg-muted/10">
+                  <FileText className="mx-auto size-10 text-muted-foreground/60" />
+                  <h4 className="font-semibold text-sm text-foreground">No Clinical SOAP Note Draft</h4>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Capture consultation speech using the Live Microphone or enter dictation in Manual Input, then click &quot;Generate SOAP Draft&quot;.
+                  </p>
+                  <Button
+                    variant="teal"
+                    size="sm"
+                    onClick={handleGenerateNote}
+                    disabled={isListening}
+                    leftIcon={<Sparkles className="size-3.5" />}
+                  >
+                    Generate SOAP Draft
+                  </Button>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-border bg-card p-4 space-y-4 shadow-2xs font-sans">
+                  {/* Hospital & Note Header */}
+                  <div className="border-b border-border pb-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <div>
+                      <span className="font-bold text-foreground uppercase tracking-wider block">
+                        Apollo Hospitals Bengaluru • Outpatient Clinical Record
+                      </span>
+                      <span>Date: {clinicalNote.generatedAt}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {noteProvenance === "newly_generated" && (
+                        <Badge variant="teal" size="sm">
+                          Newly Generated AI Draft ({backendNoteId})
+                        </Badge>
+                      )}
+                      {noteProvenance === "hydrated_ehr" && (
+                        <Badge variant="outline" size="sm">
+                          Existing EHR Note ({backendNoteId})
+                        </Badge>
+                      )}
+                      {noteProvenance === "simulated" && (
+                        <Badge variant="warning" size="sm">
+                          Simulated Demonstration Draft
+                        </Badge>
+                      )}
+                      <span className="font-mono text-[10px] text-accent font-semibold ml-1">
+                        {clinicalNote.evidenceConfidence}
+                      </span>
+                    </div>
+                  </div>
 
                 {/* Mandatory Clinical AI Draft Disclaimer Notice */}
                 <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] text-amber-900 dark:text-amber-200 font-medium flex items-start gap-2">
@@ -1746,6 +2008,7 @@ export function ConsultationWorkspacePage() {
                   </div>
                 )}
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

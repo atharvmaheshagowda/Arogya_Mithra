@@ -33,6 +33,12 @@ def isolated_test_db(tmp_path, monkeypatch):
     monkeypatch.setattr("app.database.session.engine", test_engine)
     monkeypatch.setattr("app.database.session.SessionLocal", test_session_local)
 
+    # Enforce offline mock adapter for test isolation (zero Gemini API calls during tests)
+    monkeypatch.setattr("app.core.config.settings.LLM_PROVIDER", "mock")
+    from app.services.soap_service import default_soap_service
+    from app.services.adapters.mock_adapter import DeterministicMockSOAPAdapter
+    monkeypatch.setattr(default_soap_service, "_custom_adapter", DeterministicMockSOAPAdapter())
+
     yield test_engine
     test_engine.dispose()
 

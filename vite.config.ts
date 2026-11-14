@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@studio-freight/lenis": fileURLToPath(new URL("./src/lib/lenis-shim.ts", import.meta.url)),
     },
   },
   server: {
