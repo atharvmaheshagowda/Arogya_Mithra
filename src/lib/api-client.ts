@@ -382,10 +382,29 @@ export interface DocumentUploadResponse {
   document_type: string;
   patient_id?: string | null;
   upload_timestamp: string;
-  ocr_confidence: number;
+  extraction_status: string;
+  ocr_confidence?: number | null;
   extracted_biomarkers: ExtractedBiomarker[];
   storage_path: string;
   disclaimer: string;
+}
+
+export interface DocumentSummary {
+  document_id: string;
+  filename: string;
+  original_filename: string;
+  file_size_bytes: number;
+  content_type: string;
+  document_type: string;
+  patient_id?: string | null;
+  upload_timestamp: string;
+  biomarker_count: number;
+  extraction_status: string;
+  ocr_confidence?: number | null;
+}
+
+export interface DocumentDetailResponse extends DocumentUploadResponse {
+  extracted_text?: string | null;
 }
 
 /**
@@ -411,6 +430,40 @@ export async function uploadClinicalDocument(
     },
   );
   return response.data;
+}
+
+/**
+ * List uploaded clinical documents from the FastAPI backend.
+ */
+export async function listClinicalDocuments(patientId?: string): Promise<DocumentSummary[]> {
+  const params: any = {};
+  if (patientId) params.patient_id = patientId;
+  const response = await apiClient.get<DocumentSummary[]>("/api/v1/documents", { params });
+  return response.data;
+}
+
+/**
+ * Get detailed extraction results and text for a specific document.
+ */
+export async function getClinicalDocument(documentId: string): Promise<DocumentDetailResponse> {
+  const response = await apiClient.get<DocumentDetailResponse>(`/api/v1/documents/${documentId}`);
+  return response.data;
+}
+
+/**
+ * Trigger reprocessing of an uploaded document with enhanced text/OCR extraction.
+ */
+export async function reprocessClinicalDocument(documentId: string): Promise<DocumentDetailResponse> {
+  const response = await apiClient.post<DocumentDetailResponse>(`/api/v1/documents/${documentId}/reprocess`);
+  return response.data;
+}
+
+/**
+ * Generate stream URL for inline browser preview (PDF/images).
+ */
+export function getDocumentFileUrl(documentId: string): string {
+  const baseURL = (import.meta as any).env?.VITE_API_URL || "http://localhost:8000";
+  return `${baseURL}/api/v1/documents/${documentId}/file`;
 }
 
 export interface ClinicalStatsResponse {

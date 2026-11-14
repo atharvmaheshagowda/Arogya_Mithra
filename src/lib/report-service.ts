@@ -42,7 +42,14 @@ export interface ReportDocument {
   documentCategory: "Laboratory Report" | "Prescription";
   uploadDate: string;
   reportDate: string;
-  processingStatus: "OCR Complete" | "Requires Verification" | "Processing";
+  processingStatus:
+    | "OCR Complete"
+    | "Requires Verification"
+    | "Processing"
+    | "Text Extracted"
+    | "OCR Extracted"
+    | "Text Incomplete"
+    | "OCR Unconfigured";
   overallConfidence: string;
   patientId: string;
   patientName: string;

@@ -8,9 +8,11 @@ class ExtractedBiomarkerSchema(BaseModel):
     result: str
     unit: str
     reference_range: str
-    flag: str  # "normal", "high", "low", "critical"
-    confidence: float
+    flag: str  # "normal", "high", "low", "critical", "unflagged"
+    confidence: Optional[float] = 100.0
     source_section: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DocumentUploadResponse(BaseModel):
@@ -22,7 +24,8 @@ class DocumentUploadResponse(BaseModel):
     document_type: str
     patient_id: Optional[str] = None
     upload_timestamp: datetime
-    ocr_confidence: float
+    extraction_status: str = "TEXT_EXTRACTED"
+    ocr_confidence: Optional[float] = 100.0
     extracted_biomarkers: List[ExtractedBiomarkerSchema] = Field(default_factory=list)
     storage_path: str
     disclaimer: str = Field(
@@ -42,4 +45,11 @@ class DocumentSummaryResponse(BaseModel):
     patient_id: Optional[str] = None
     upload_timestamp: datetime
     biomarker_count: int
+    extraction_status: str = "TEXT_EXTRACTED"
+    ocr_confidence: Optional[float] = None
 
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentDetailResponse(DocumentUploadResponse):
+    extracted_text: Optional[str] = None

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Activity,
   AlertCircle,
@@ -55,7 +55,14 @@ import { Input, SearchInput } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth";
-import { uploadClinicalDocument } from "@/lib/api-client";
+import {
+  uploadClinicalDocument,
+  listClinicalDocuments,
+  getClinicalDocument,
+  reprocessClinicalDocument,
+  getDocumentFileUrl,
+  type DocumentDetailResponse,
+} from "@/lib/api-client";
 import {
   getReports,
   getReportById,
@@ -92,12 +99,169 @@ export function ReportsPage() {
     selectedReport?.patientId || "AM-94021",
   );
 
-  // Sync associated patient when selected report changes
-  const handleSelectReport = (id: string) => {
+  // Live document details cache: document_id -> DocumentDetailResponse
+  const [liveDocDetails, setLiveDocDetails] = useState<Record<string, DocumentDetailResponse>>({});
+  const [viewMode, setViewMode] = useState<"document" | "raw_text">("document");
+
+  // Load backend documents on mount and merge with reports queue
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBackendDocuments() {
+      try {
+        const backendDocs = await listClinicalDocuments();
+        if (!isMounted || !backendDocs || backendDocs.length === 0) return;
+
+        const convertedReports: ReportDocument[] = backendDocs.map((doc) => {
+          const ext = doc.filename.split(".").pop()?.toLowerCase() || "pdf";
+          const fileType = ext === "pdf" ? "pdf" : ext === "png" ? "png" : "jpg";
+          const patientObj = doc.patient_id ? patients.find((p) => p.id === doc.patient_id) : undefined;
+          return {
+            id: doc.document_id,
+            fileName: doc.filename,
+            fileType: fileType as any,
+            fileSize: `${(doc.file_size_bytes / 1024 / 1024).toFixed(2)} MB`,
+            documentCategory: (doc.document_type as any) || "Laboratory Report",
+            uploadDate: new Date(doc.upload_timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            reportDate: new Date(doc.upload_timestamp).toLocaleDateString(),
+            processingStatus:
+              doc.extraction_status === "TEXT_EXTRACTED"
+                ? "Text Extracted"
+                : doc.extraction_status === "OCR_EXTRACTED"
+                ? "OCR Extracted"
+                : doc.extraction_status === "TEXT_INCOMPLETE"
+                ? "Text Incomplete"
+                : doc.extraction_status === "OCR_NOT_CONFIGURED"
+                ? "Requires Verification"
+                : "Processing",
+            overallConfidence:
+              doc.ocr_confidence != null
+                ? `${doc.ocr_confidence.toFixed(1)}% Conf.`
+                : doc.extraction_status === "TEXT_EXTRACTED"
+                ? "Direct Vector Text"
+                : "0.0%",
+            patientId: doc.patient_id || "SYN-PAT-001",
+            patientName: patientObj?.name || "Ramesh Kumar (Synthetic Fictional)",
+            patientAge: patientObj?.age || 51,
+            patientGender: patientObj?.gender || "Male",
+            facility: "Uploaded Hospital File (SQLite Backend Repository)",
+            accreditation: "Verified Electronic Intake",
+            confidenceBreakdown: {
+              successful: doc.biomarker_count,
+              requiresVerification: 0,
+              unreadable: 0,
+              missing: 0,
+            },
+            missingFields: [],
+            unreadableFields: [],
+            visualDocument: {
+              headerTitle: "UPLOADED CLINICAL DIAGNOSTIC SCAN",
+              subHeader: `Stored in backend/uploads (${doc.filename})`,
+              sampleId: doc.document_id,
+              collectionTime: "Electronic Ingestion",
+              reportingTime: new Date(doc.upload_timestamp).toLocaleTimeString(),
+              labDirector: "Verified Ingestion Engine",
+              pathologistSignature: "Electronic Cloud Verification Signature",
+              hasWatermark: false,
+              hasBarcode: true,
+            },
+            extractedLabData: [],
+          };
+        });
+
+        setReports((prev) => {
+          const backendIds = new Set(convertedReports.map((r) => r.id));
+          const filtered = prev.filter((r) => !backendIds.has(r.id));
+          return [...convertedReports, ...filtered];
+        });
+
+        // Preload details for top backend document
+        if (convertedReports.length > 0) {
+          const firstId = convertedReports[0].id;
+          const details = await getClinicalDocument(firstId);
+          if (isMounted) {
+            setLiveDocDetails((prev) => ({ ...prev, [firstId]: details }));
+            setSelectedReportId(firstId);
+            setAssociatedPatientId(convertedReports[0].patientId);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load backend clinical documents:", err);
+      }
+    }
+
+    loadBackendDocuments();
+    return () => {
+      isMounted = false;
+    };
+  }, [patients]);
+
+  // Sync associated patient and load details when selected report changes
+  const handleSelectReport = async (id: string) => {
     setSelectedReportId(id);
     const rep = reports.find((r) => r.id === id);
     if (rep) {
       setAssociatedPatientId(rep.patientId);
+    }
+    if (id.startsWith("DOC-") && !liveDocDetails[id]) {
+      try {
+        const details = await getClinicalDocument(id);
+        setLiveDocDetails((prev) => ({ ...prev, [id]: details }));
+      } catch (e) {
+        console.error("Failed to load document details for", id, e);
+      }
+    }
+  };
+
+  // Reprocess existing document with enhanced text/OCR engine
+  const [isReprocessing, setIsReprocessing] = useState(false);
+  const handleReprocessCurrentDocument = async () => {
+    if (!selectedReport || !selectedReport.id.startsWith("DOC-")) return;
+    setIsReprocessing(true);
+    try {
+      const updated = await reprocessClinicalDocument(selectedReport.id);
+      setLiveDocDetails((prev) => ({ ...prev, [selectedReport.id]: updated }));
+
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === selectedReport.id
+            ? {
+                ...r,
+                processingStatus:
+                  updated.extraction_status === "TEXT_EXTRACTED"
+                    ? "Text Extracted"
+                    : updated.extraction_status === "OCR_EXTRACTED"
+                    ? "OCR Extracted"
+                    : updated.extraction_status === "TEXT_INCOMPLETE"
+                    ? "Text Incomplete"
+                    : "Requires Verification",
+                overallConfidence:
+                  updated.ocr_confidence != null
+                    ? `${updated.ocr_confidence.toFixed(1)}% Conf.`
+                    : "Direct Vector Text",
+                extractedLabData: updated.extracted_biomarkers.map((b, i) => ({
+                  id: `bm-${updated.document_id}-${i}`,
+                  testName: b.test_name,
+                  result: b.result,
+                  unit: b.unit,
+                  referenceRange: b.reference_range,
+                  flag: (b.flag as any) || "normal",
+                  confidence: b.confidence,
+                  confidenceLevel: "successful" as const,
+                  sourceDocument: b.source_section,
+                })),
+              }
+            : r,
+        ),
+      );
+      toast.success("Document Reprocessed", {
+        description: `Extraction updated: ${updated.extracted_biomarkers.length} diagnostic biomarkers recognized.`,
+      });
+    } catch (err: any) {
+      toast.error("Reprocessing Failed", {
+        description: err?.response?.data?.detail || err?.message || "Failed to reprocess document.",
+      });
+    } finally {
+      setIsReprocessing(false);
     }
   };
 
@@ -152,19 +316,19 @@ export function ReportsPage() {
       return;
     }
 
-    if (file.size > 25 * 1024 * 1024) {
+    if (file.size > 10 * 1024 * 1024) {
       toast.error("File Exceeds Size Limit", {
-        description: "Medical documents must be under 25 MB.",
+        description: "Medical documents must be under 10 MB.",
       });
       return;
     }
 
     setUploadFile(file);
-    startSimulatedUpload(file);
+    handleUploadFile(file);
   };
 
-  // Upload & Extraction Process (Real backend persistence + clinical preview)
-  const startSimulatedUpload = async (file: File) => {
+  // Upload & Extraction Process (Real FastAPI backend persistence + OCR/text extraction)
+  const handleUploadFile = async (file: File) => {
     setUploadStatus("uploading");
     setUploadProgress(25);
 
@@ -181,26 +345,49 @@ export function ReportsPage() {
       const newId = backendDoc.document_id;
       const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
       const fileType = ext === "pdf" ? "pdf" : ext === "png" ? "png" : "jpg";
+      const patientObj = patients.find((p) => p.id === associatedPatientId);
 
+      // Fetch full details including extracted_text
+      let details: DocumentDetailResponse;
+      try {
+        details = await getClinicalDocument(newId);
+      } catch {
+        details = { ...backendDoc, extracted_text: null };
+      }
+      setLiveDocDetails((prev) => ({ ...prev, [newId]: details }));
+
+      const isTextExtracted = backendDoc.extraction_status === "TEXT_EXTRACTED";
       const createdReport: ReportDocument = {
         id: newId,
         fileName: file.name,
         fileType: fileType as any,
-        fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         documentCategory: uploadDocType,
         uploadDate: "Just now",
         reportDate: "Today",
-        processingStatus: "OCR Complete",
-        overallConfidence: "98.8%",
+        processingStatus:
+          backendDoc.extraction_status === "TEXT_EXTRACTED"
+            ? "Text Extracted"
+            : backendDoc.extraction_status === "OCR_EXTRACTED"
+            ? "OCR Extracted"
+            : backendDoc.extraction_status === "TEXT_INCOMPLETE"
+            ? "Text Incomplete"
+            : "Requires Verification",
+        overallConfidence:
+          backendDoc.ocr_confidence != null
+            ? `${backendDoc.ocr_confidence.toFixed(1)}% Conf.`
+            : backendDoc.extraction_status === "TEXT_EXTRACTED"
+            ? "Direct Vector Text"
+            : "0.0%",
         patientId: associatedPatientId,
-        patientName: patients.find((p) => p.id === associatedPatientId)?.name || "Rajesh Kumar",
-        patientAge: patients.find((p) => p.id === associatedPatientId)?.age || 54,
-        patientGender: patients.find((p) => p.id === associatedPatientId)?.gender || "Male",
+        patientName: patientObj?.name || "Ramesh Kumar (Synthetic Fictional)",
+        patientAge: patientObj?.age || 51,
+        patientGender: patientObj?.gender || "Male",
         facility: "Uploaded Hospital File (Stored in backend/uploads)",
         accreditation: "Verified Electronic Intake",
         confidenceBreakdown: {
           successful: backendDoc.extracted_biomarkers.length,
-          requiresVerification: 1,
+          requiresVerification: 0,
           unreadable: 0,
           missing: 0,
         },
@@ -210,11 +397,11 @@ export function ReportsPage() {
           headerTitle: "UPLOADED CLINICAL DIAGNOSTIC SCAN",
           subHeader: `Stored on Server (${backendDoc.filename}) • Verified Automated Ingestion`,
           sampleId: backendDoc.document_id,
-          collectionTime: "Today 08:00 AM",
-          reportingTime: "Today 10:30 AM",
-          labDirector: "Dr. K. S. Murthy, MD",
+          collectionTime: "Today",
+          reportingTime: "Just now",
+          labDirector: "Automated Clinical Extractor",
           pathologistSignature: "Electronic Cloud Verification Signature",
-          hasWatermark: true,
+          hasWatermark: false,
           hasBarcode: true,
         },
         extractedLabData: backendDoc.extracted_biomarkers.map((b, i) => ({
@@ -223,7 +410,7 @@ export function ReportsPage() {
           result: b.result,
           unit: b.unit,
           referenceRange: b.reference_range,
-          flag: b.flag as any,
+          flag: (b.flag as any) || "normal",
           confidence: b.confidence,
           confidenceLevel: "successful" as const,
           sourceDocument: b.source_section,
@@ -232,107 +419,45 @@ export function ReportsPage() {
 
       setUploadProgress(100);
       setUploadStatus("completed");
-      addUploadedReport(createdReport);
       setReports((prev) => [createdReport, ...prev]);
       setSelectedReportId(newId);
 
       toast.success("Document Uploaded & Ingested", {
-        description: `${file.name} saved to backend repository and parsed.`,
+        description: `${file.name} saved to backend repository with ${backendDoc.extracted_biomarkers.length} extracted parameters.`,
       });
-      return;
-    } catch (err) {
-      console.warn("Backend document upload deferred to local simulation:", err);
+    } catch (err: any) {
+      console.error("Backend document upload failed:", err);
+      setUploadStatus("idle");
+      setUploadProgress(0);
+      const detail = err?.response?.data?.detail || err?.message || "Failed to process medical document";
+      toast.error("Document Upload & Extraction Failed", {
+        description: detail,
+      });
     }
-
-    // Local simulation fallback
-    setTimeout(() => {
-      setUploadProgress(45);
-      setUploadStatus("ocr_scanning");
-    }, 600);
-
-    setTimeout(() => {
-      setUploadProgress(80);
-      setUploadStatus("extracting");
-    }, 1200);
-
-    setTimeout(() => {
-      setUploadProgress(100);
-      setUploadStatus("completed");
-
-      const newId = `rep-upload-${Date.now()}`;
-      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
-      const fileType = ext === "pdf" ? "pdf" : ext === "png" ? "png" : "jpg";
-
-      const createdReport: ReportDocument = {
-        id: newId,
-        fileName: file.name,
-        fileType: fileType as any,
-        fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        documentCategory: uploadDocType,
-        uploadDate: "Just now",
-        reportDate: "Today",
-        processingStatus: "OCR Complete",
-        overallConfidence: "98.6%",
-        patientId: associatedPatientId,
-        patientName: patients.find((p) => p.id === associatedPatientId)?.name || "Rajesh Kumar",
-        patientAge: patients.find((p) => p.id === associatedPatientId)?.age || 54,
-        patientGender: patients.find((p) => p.id === associatedPatientId)?.gender || "Male",
-        facility: "Uploaded Hospital File",
-        accreditation: "Verified Electronic Intake",
-        confidenceBreakdown: {
-          successful: 5,
-          requiresVerification: 1,
-          unreadable: 0,
-          missing: 0,
-        },
-        missingFields: [],
-        unreadableFields: [],
-        visualDocument: {
-          headerTitle: "UPLOADED CLINICAL DIAGNOSTIC SCAN",
-          subHeader: "Verified Automated Ingestion via AAROGYA MITHRA READ Engine",
-          sampleId: `UPL-${Math.floor(100000 + Math.random() * 900000)}`,
-          collectionTime: "Today 08:00 AM",
-          reportingTime: "Today 10:30 AM",
-          labDirector: "Dr. K. S. Murthy, MD",
-          pathologistSignature: "Electronic Cloud Verification Signature",
-          hasWatermark: true,
-          hasBarcode: true,
-        },
-        extractedLabData: [
-          {
-            id: `bm-upl-1`,
-            testName: "Blood Urea Nitrogen (BUN)",
-            result: "18",
-            unit: "mg/dL",
-            referenceRange: "7 - 20",
-            flag: "normal",
-            confidence: 99.1,
-            confidenceLevel: "successful",
-            sourceDocument: "Page 1, Table 1",
-          },
-          {
-            id: `bm-upl-2`,
-            testName: "Serum Electrolytes (Sodium)",
-            result: "139",
-            unit: "mEq/L",
-            referenceRange: "135 - 145",
-            flag: "normal",
-            confidence: 98.8,
-            confidenceLevel: "successful",
-            sourceDocument: "Page 1, Table 2",
-          },
-        ],
-      };
-
-      addUploadedReport(createdReport);
-      setReports((prev) => [createdReport, ...prev]);
-      setSelectedReportId(newId);
-
-      toast.success("Document OCR Ingested", {
-        description: `${file.name} successfully processed with 98.6% OCR confidence.`,
-      });
-    }, 1800);
   };
+
+  const isBackendDoc = selectedReport?.id?.startsWith("DOC-") ?? false;
+  const currentDetails = selectedReport ? liveDocDetails[selectedReport.id] : undefined;
+
+  const displayBiomarkers = useMemo(() => {
+    if (isBackendDoc) {
+      if (currentDetails?.extracted_biomarkers) {
+        return currentDetails.extracted_biomarkers.map((b, i) => ({
+          id: `bm-${selectedReport.id}-${i}`,
+          testName: b.test_name,
+          result: b.result,
+          unit: b.unit,
+          referenceRange: b.reference_range,
+          flag: (b.flag as any) || "normal",
+          confidence: b.confidence,
+          confidenceLevel: "successful" as const,
+          sourceDocument: b.source_section,
+        }));
+      }
+      return selectedReport.extractedLabData || [];
+    }
+    return selectedReport.extractedLabData || [];
+  }, [isBackendDoc, currentDetails, selectedReport]);
 
   // Commit to EHR Handler
   const handleCommitToEHR = () => {
@@ -345,8 +470,8 @@ export function ReportsPage() {
 
   // Copy extracted parameters to clipboard
   const handleCopyCleanData = () => {
-    if (selectedReport.extractedLabData) {
-      const summary = selectedReport.extractedLabData
+    if (displayBiomarkers.length > 0) {
+      const summary = displayBiomarkers
         .map((b) => `${b.testName}: ${b.result} ${b.unit} (Ref: ${b.referenceRange}) [${b.flag.toUpperCase()}]`)
         .join("\n");
       navigator.clipboard?.writeText(summary);
@@ -424,7 +549,7 @@ export function ReportsPage() {
         />
         <MetricCard
           label="Lab Biomarkers Extracted"
-          value="18"
+          value={reports.reduce((acc, r) => acc + (r.extractedLabData?.length || 0), 0).toString()}
           subtitle="Normalized with reference intervals"
           icon={FileSpreadsheet}
           badge={<Badge variant="teal" size="sm">Active</Badge>}
@@ -540,36 +665,102 @@ export function ReportsPage() {
                 </div>
 
                 {/* Document Viewer Controls */}
-                <div className="flex items-center gap-1.5 self-start">
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel((z) => Math.max(z - 15, 70))}
-                    className="grid size-7 place-items-center rounded border border-border bg-card text-muted-foreground hover:text-foreground"
-                    title="Zoom Out"
-                  >
-                    <ZoomOut className="size-3.5" />
-                  </button>
-                  <span className="font-mono text-[11px] text-muted-foreground w-12 text-center">
-                    {zoomLevel}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel((z) => Math.min(z + 15, 140))}
-                    className="grid size-7 place-items-center rounded border border-border bg-card text-muted-foreground hover:text-foreground"
-                    title="Zoom In"
-                  >
-                    <ZoomIn className="size-3.5" />
-                  </button>
+                <div className="flex items-center gap-2 self-start">
+                  <div className="flex rounded-lg border border-border bg-card p-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("document")}
+                      className={cn(
+                        "rounded px-2.5 py-1 font-medium transition-colors text-xs",
+                        viewMode === "document"
+                          ? "bg-accent text-white font-semibold"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      Document View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("raw_text")}
+                      className={cn(
+                        "rounded px-2.5 py-1 font-medium transition-colors text-xs",
+                        viewMode === "raw_text"
+                          ? "bg-accent text-white font-semibold"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      Extracted Text
+                    </button>
+                  </div>
+
+                  {viewMode === "document" && !isBackendDoc && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.max(z - 15, 70))}
+                        className="grid size-7 place-items-center rounded border border-border bg-card text-muted-foreground hover:text-foreground"
+                        title="Zoom Out"
+                      >
+                        <ZoomOut className="size-3.5" />
+                      </button>
+                      <span className="font-mono text-[11px] text-muted-foreground w-10 text-center">
+                        {zoomLevel}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.min(z + 15, 140))}
+                        className="grid size-7 place-items-center rounded border border-border bg-card text-muted-foreground hover:text-foreground"
+                        title="Zoom In"
+                      >
+                        <ZoomIn className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardHeader>
 
             <CardContent className="p-4 bg-muted/10 overflow-x-auto">
-              {/* Simulated High-Fidelity Medical Document Page */}
-              <div
-                style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top left" }}
-                className="w-[560px] min-h-[660px] rounded-lg border border-border bg-white text-slate-900 shadow-md p-6 font-sans text-xs relative select-none transition-transform"
-              >
+              {viewMode === "raw_text" ? (
+                <div className="w-full min-h-[660px] rounded-lg border border-border bg-slate-950 p-4 text-xs font-mono text-emerald-400 space-y-2 overflow-auto max-h-[660px] select-text">
+                  <div className="flex items-center justify-between border-b border-emerald-900 pb-2 text-[11px] text-emerald-500">
+                    <span>RAW DOCUMENT TEXT EXTRACTION</span>
+                    <span>Status: {currentDetails?.extraction_status || (isBackendDoc ? "PENDING" : "DEMO")}</span>
+                  </div>
+                  <pre className="whitespace-pre-wrap leading-relaxed text-[11px]">
+                    {isBackendDoc
+                      ? currentDetails?.extracted_text || "No raw text extracted or document has no text streams."
+                      : "// Demonstration Record\n// Text extraction is performed on uploaded medical documents via the FastAPI backend engine."}
+                  </pre>
+                </div>
+              ) : isBackendDoc ? (
+                selectedReport.fileType === "pdf" ? (
+                  <div className="w-full h-[660px] rounded-lg border border-border overflow-hidden bg-white shadow-xs">
+                    <iframe
+                      src={getDocumentFileUrl(selectedReport.id)}
+                      className="w-full h-full border-0"
+                      title={`Preview of ${selectedReport.fileName}`}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-[660px] rounded-lg border border-border overflow-auto bg-slate-950 flex flex-col items-center justify-center p-4">
+                    <img
+                      src={getDocumentFileUrl(selectedReport.id)}
+                      alt={selectedReport.fileName}
+                      className="max-h-[620px] max-w-full object-contain rounded shadow-md"
+                    />
+                  </div>
+                )
+              ) : (
+                /* Simulated High-Fidelity Medical Document Page for demo baseline */
+                <div>
+                  <div className="mb-3 rounded border border-amber-300 bg-amber-50 p-2 text-center text-xs font-semibold text-amber-800">
+                    ⚠️ Demonstration Record — Sample Hospital Simulation
+                  </div>
+                  <div
+                    style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top left" }}
+                    className="w-[560px] min-h-[660px] rounded-lg border border-border bg-white text-slate-900 shadow-md p-6 font-sans text-xs relative select-none transition-transform"
+                  >
                 {/* Simulated Watermark */}
                 {selectedReport.visualDocument.hasWatermark && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] rotate-[-30deg]">
@@ -718,7 +909,9 @@ export function ReportsPage() {
                   </div>
                 </div>
               </div>
-            </CardContent>
+            </div>
+          )}
+        </CardContent>
           </Card>
         </div>
 
@@ -742,9 +935,52 @@ export function ReportsPage() {
                   </CardDescription>
                 </div>
 
-                <Badge variant="teal" size="sm">
-                  Overall Confidence: {selectedReport.overallConfidence}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {isBackendDoc && (
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={handleReprocessCurrentDocument}
+                      disabled={isReprocessing}
+                      leftIcon={<RefreshCw className={cn("size-3", isReprocessing && "animate-spin")} />}
+                    >
+                      {isReprocessing ? "Reprocessing..." : "Reprocess"}
+                    </Button>
+                  )}
+                  <Badge
+                    variant={
+                      isBackendDoc
+                        ? currentDetails?.extraction_status === "TEXT_EXTRACTED" || currentDetails?.extraction_status === "OCR_EXTRACTED"
+                          ? "teal"
+                          : currentDetails?.extraction_status === "OCR_NOT_CONFIGURED" || currentDetails?.extraction_status === "TEXT_INCOMPLETE"
+                          ? "warning"
+                          : "danger"
+                        : "teal"
+                    }
+                    size="sm"
+                  >
+                    {isBackendDoc
+                      ? currentDetails?.extraction_status === "TEXT_EXTRACTED"
+                        ? "Digital Vector Text"
+                        : currentDetails?.extraction_status === "OCR_EXTRACTED"
+                        ? "Tesseract OCR"
+                        : currentDetails?.extraction_status === "TEXT_INCOMPLETE"
+                        ? "Text Incomplete"
+                        : currentDetails?.extraction_status === "OCR_NOT_CONFIGURED"
+                        ? "OCR Unconfigured"
+                        : currentDetails?.extraction_status || selectedReport.processingStatus
+                      : "DEMO RECORD"}
+                  </Badge>
+                  <Badge variant="outline" size="sm" className="font-mono text-xs">
+                    {isBackendDoc
+                      ? currentDetails?.ocr_confidence != null
+                        ? `${currentDetails.ocr_confidence.toFixed(1)}% Mean OCR Conf.`
+                        : currentDetails?.extraction_status === "TEXT_EXTRACTED"
+                        ? "Direct Vector Text"
+                        : "Uncalculated"
+                      : selectedReport.overallConfidence}
+                  </Badge>
+                </div>
               </div>
 
               {/* Confidence Breakdown Strip */}
@@ -752,25 +988,25 @@ export function ReportsPage() {
                 <div className="rounded-lg border border-success/30 bg-success/10 p-2">
                   <span className="text-[10px] text-success font-semibold block">Extracted</span>
                   <strong className="text-success text-sm">
-                    {selectedReport.confidenceBreakdown.successful}
+                    {displayBiomarkers.length}
                   </strong>
                 </div>
                 <div className="rounded-lg border border-warning/30 bg-warning/10 p-2">
                   <span className="text-[10px] text-warning font-semibold block">Verify</span>
                   <strong className="text-warning text-sm">
-                    {selectedReport.confidenceBreakdown.requiresVerification}
+                    {isBackendDoc ? 0 : selectedReport.confidenceBreakdown.requiresVerification}
                   </strong>
                 </div>
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-2">
                   <span className="text-[10px] text-destructive font-semibold block">Unreadable</span>
                   <strong className="text-destructive text-sm">
-                    {selectedReport.confidenceBreakdown.unreadable}
+                    {isBackendDoc ? 0 : selectedReport.confidenceBreakdown.unreadable}
                   </strong>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/30 p-2">
-                  <span className="text-[10px] text-muted-foreground font-semibold block">Missing</span>
-                  <strong className="text-muted-foreground text-sm">
-                    {selectedReport.confidenceBreakdown.missing}
+                  <span className="text-[10px] text-muted-foreground font-semibold block">Engine</span>
+                  <strong className="text-muted-foreground text-xs font-mono truncate block">
+                    {isBackendDoc ? (currentDetails?.extraction_status === "TEXT_EXTRACTED" ? "PDF-TEXT" : "OCR-SCAN") : "SYNTH"}
                   </strong>
                 </div>
               </div>
@@ -786,69 +1022,99 @@ export function ReportsPage() {
               </div>
 
               {/* EXTRACTED LABORATORY REPORT PARAMETERS TABLE */}
-              {selectedReport.documentCategory === "Laboratory Report" && selectedReport.extractedLabData && (
+              {selectedReport.documentCategory === "Laboratory Report" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                    <span>Diagnostic Biomarkers ({selectedReport.extractedLabData.length})</span>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      onClick={handleCopyCleanData}
-                      leftIcon={<Copy className="size-3" />}
-                    >
-                      Copy Clean Data
-                    </Button>
+                    <span>Diagnostic Biomarkers ({displayBiomarkers.length})</span>
+                    {displayBiomarkers.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={handleCopyCleanData}
+                        leftIcon={<Copy className="size-3" />}
+                      >
+                        Copy Clean Data
+                      </Button>
+                    )}
                   </div>
 
-                  <div className="overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-left text-xs">
-                      <thead className="border-b border-border bg-muted/40 text-[10px] font-bold uppercase text-muted-foreground">
-                        <tr>
-                          <th className="px-3.5 py-2.5">Parameter</th>
-                          <th className="px-3 py-2.5">Result</th>
-                          <th className="px-3 py-2.5">Reference</th>
-                          <th className="px-3 py-2.5">Confidence</th>
-                          <th className="px-3 py-2.5 text-right">Flag</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {selectedReport.extractedLabData.map((lab) => (
-                          <tr key={lab.id} className="hover:bg-muted/20">
-                            <td className="px-3.5 py-2.5">
-                              <span className="font-semibold text-foreground block">{lab.testName}</span>
-                              <span className="text-[10px] text-muted-foreground">{lab.sourceDocument}</span>
-                            </td>
-                            <td className="px-3 py-2.5 font-mono font-bold text-foreground">
-                              {lab.result} <span className="text-muted-foreground text-[10px] font-normal">{lab.unit}</span>
-                            </td>
-                            <td className="px-3 py-2.5 text-muted-foreground font-mono">
-                              {lab.referenceRange} {lab.unit}
-                            </td>
-                            <td className="px-3 py-2.5">
-                              {lab.confidenceLevel === "successful" ? (
+                  {displayBiomarkers.length > 0 ? (
+                    <div className="overflow-x-auto rounded-xl border border-border">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-border bg-muted/40 text-[10px] font-bold uppercase text-muted-foreground">
+                          <tr>
+                            <th className="px-3.5 py-2.5">Parameter</th>
+                            <th className="px-3 py-2.5">Result</th>
+                            <th className="px-3 py-2.5">Reference</th>
+                            <th className="px-3 py-2.5">Confidence</th>
+                            <th className="px-3 py-2.5 text-right">Flag</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {displayBiomarkers.map((lab) => (
+                            <tr key={lab.id} className="hover:bg-muted/20">
+                              <td className="px-3.5 py-2.5">
+                                <span className="font-semibold text-foreground block">{lab.testName}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">{lab.sourceDocument}</span>
+                              </td>
+                              <td className="px-3 py-2.5 font-mono font-bold text-foreground">
+                                {lab.result} <span className="text-muted-foreground text-[10px] font-normal">{lab.unit}</span>
+                              </td>
+                              <td className="px-3 py-2.5 text-muted-foreground font-mono">
+                                {lab.referenceRange} {lab.unit}
+                              </td>
+                              <td className="px-3 py-2.5">
                                 <Badge variant="success" size="sm" className="text-[10px]">
                                   {lab.confidence}%
                                 </Badge>
-                              ) : (
-                                <Badge variant="warning" size="sm" className="text-[10px]">
-                                  {lab.confidence}% (Verify)
-                                </Badge>
-                              )}
-                            </td>
-                            <td className="px-3 py-2.5 text-right">
-                              {lab.flag === "high" ? (
-                                <Badge variant="danger" size="sm">ELEVATED</Badge>
-                              ) : lab.flag === "low" ? (
-                                <Badge variant="warning" size="sm">LOW</Badge>
-                              ) : (
-                                <Badge variant="success" size="sm">NORMAL</Badge>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                              </td>
+                              <td className="px-3 py-2.5 text-right">
+                                {lab.flag === "high" ? (
+                                  <Badge variant="danger" size="sm">ELEVATED</Badge>
+                                ) : lab.flag === "low" ? (
+                                  <Badge variant="warning" size="sm">LOW</Badge>
+                                ) : (
+                                  <Badge variant="success" size="sm">NORMAL</Badge>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : isBackendDoc ? (
+                    currentDetails?.extraction_status === "OCR_NOT_CONFIGURED" ? (
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                        <div className="font-bold flex items-center gap-1.5">
+                          <AlertTriangle className="size-4 shrink-0 text-amber-600" />
+                          <span>Scanned Document / Raster Image — Local OCR Engine Unconfigured</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                          Optical character recognition for scanned raster files requires a local Tesseract OCR service which is not configured in this test environment. In compliance with clinical software safety rules, zero synthetic biomarkers were fabricated.
+                        </p>
+                      </div>
+                    ) : currentDetails?.extraction_status === "TEXT_INCOMPLETE" ? (
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                        <div className="font-bold flex items-center gap-1.5">
+                          <AlertTriangle className="size-4 shrink-0 text-amber-600" />
+                          <span>PDF Text Stream Incomplete — Less than 20 characters detected</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                          The document text stream was truncated or incomplete. If this is a scanned document, upload as high-resolution PNG or JPG to invoke local OCR.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
+                        <div className="font-semibold text-foreground flex items-center gap-1.5">
+                          <Info className="size-4 shrink-0 text-accent" />
+                          <span>Direct Vector Text Extracted — No Diagnostic Biomarkers Detected</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed">
+                          Text streams in this document were successfully parsed, but no laboratory tests matching standard clinical reference panels were found. Inspect the Extracted Text View on the left to review raw document content.
+                        </p>
+                      </div>
+                    )
+                  ) : null}
                 </div>
               )}
 
@@ -1105,7 +1371,7 @@ export function ReportsPage() {
               Drag &amp; drop medical document here
             </h4>
             <p className="mt-1 text-xs text-muted-foreground">
-              Supports PDF, JPG, JPEG, PNG up to 25 MB
+              Supports PDF, JPG, JPEG, PNG up to 10 MB
             </p>
 
             <div className="mt-4">
@@ -1135,7 +1401,7 @@ export function ReportsPage() {
                     {uploadStatus === "uploading" && "Uploading Document..."}
                     {uploadStatus === "ocr_scanning" && "Running Multilingual OCR Engine..."}
                     {uploadStatus === "extracting" && "Extracting Biomarkers & Reference Ranges..."}
-                    {uploadStatus === "completed" && "Extraction Complete (98.6% Confidence)"}
+                    {uploadStatus === "completed" && "Document Processing & Extraction Complete"}
                   </span>
                 </span>
                 <span className="font-mono font-bold text-accent">{uploadProgress}%</span>

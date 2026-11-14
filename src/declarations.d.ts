@@ -33,14 +33,10 @@ declare module "@studio-freight/lenis" {
     raf(time: number): void;
     destroy(): void;
     on(event: string, callback: (e: any) => void): void;
-<<<<<<< HEAD
-    scrollTo(target: any, options?: any): void;
-=======
     off(event: string, callback?: (e: any) => void): void;
     start(): void;
     stop(): void;
-    scrollTo(target: string | number | HTMLElement, options?: ScrollToOptions): void;
->>>>>>> 91d607e77116ecc8f87eacee98e56a92d12db3c1
+    scrollTo(target: string | number | HTMLElement | any, options?: ScrollToOptions | any): void;
   }
 }
 
