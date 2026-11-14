@@ -15,9 +15,9 @@ export function LandingHero() {
     offset: ["start start", "end start"],
   });
 
-  const previewRotateX = useTransform(heroProgress, [0, 0.55], [14, 0]);
-  const previewScale = useTransform(heroProgress, [0, 0.55], [0.93, 1]);
-  const previewY = useTransform(heroProgress, [0, 0.55], [0, -35]);
+  const previewRotateX = useTransform(heroProgress, [0, 0.55], [0, 0]);
+  const previewScale = useTransform(heroProgress, [0, 0.55], [0.97, 1]);
+  const previewY = useTransform(heroProgress, [0, 0.55], [0, -15]);
 
   // Parallax Transforms for Frosted Glass Card & Preview
   const cardY = useTransform(heroProgress, [0, 0.8], [0, -45]);
@@ -134,9 +134,9 @@ export function LandingHero() {
           </motion.div>
         </div>
 
-        {/* Product Interface Preview Mockup with 3D Perspective Scroll Elevation */}
+        {/* Product Interface Preview Mockup */}
         <motion.div
-          className="mt-12 sm:mt-16 lg:mt-20 [perspective:1400px]"
+          className="mt-12 sm:mt-16 lg:mt-20"
           style={
             shouldReduceMotion
               ? {}
@@ -150,9 +150,7 @@ export function LandingHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative rounded-3xl sm:rounded-4xl p-2 sm:p-3 glass-morph-card shadow-2xl transition-shadow duration-500 hover:shadow-teal/20">
-            <ProductPreviewDashboard />
-          </div>
+          <ProductPreviewDashboard />
         </motion.div>
       </div>
     </section>
