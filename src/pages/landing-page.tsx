@@ -53,11 +53,11 @@ export function LandingPage() {
     restDelta: 0.0005,
   });
 
-  // Layer 1 (Deep Hospital Architecture Sanctuary): Continuous fluid vertical parallax drift
-  const backgroundY = useTransform(smoothParallax, [0, 0.35, 0.7, 1], ["0%", "-18%", "-36%", "-52%"]);
-  const backgroundScale = useTransform(smoothParallax, [0, 0.5, 1], [1.06, 1.16, 1.28]);
+  // Layer 1 (Deep Hospital Architecture Sanctuary): Continuous fluid vertical parallax drift across all sections
+  const backgroundY = useTransform(smoothParallax, [0, 0.35, 0.7, 1], ["0%", "-14%", "-28%", "-42%"]);
+  const backgroundScale = useTransform(smoothParallax, [0, 0.5, 1], [1.05, 1.15, 1.25]);
   // Camera Focal Shift (Depth-of-Field): 0px blur at top (still & crisp), gently softens (4px) as user scrolls into lower sections
-  const backgroundBlur = useTransform(smoothParallax, [0, 0.45, 0.9], ["blur(0px)", "blur(2px)", "blur(5px)"]);
+  const backgroundBlur = useTransform(smoothParallax, [0, 0.45, 0.9], ["blur(0px)", "blur(2px)", "blur(4px)"]);
 
   // Layer 2 (Atmospheric Jade & Cyan Glow Aurora): Moves at an independent higher parallax velocity
   const auraY = useTransform(smoothParallax, [0, 1], ["0%", "-75%"]);
@@ -82,17 +82,17 @@ export function LandingPage() {
         style={{ scaleX }}
       />
 
-      {/* 2. Cinematic Parallax Background Image (Contained to Hero Viewport, Transitions to Solid Page) */}
-      <div className="absolute top-0 left-0 right-0 h-[140vh] pointer-events-none z-0 overflow-hidden select-none">
-        {/* Layer 1: Crisp Clinical Photography Background with Smooth Parallax */}
+      {/* 2. Global Cinematic Parallax Background Image across All Sections */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        {/* Layer 1: Crisp Clinical Photography Background with Continuous Parallax Drift */}
         <motion.div
           style={{ y: backgroundY, scale: backgroundScale, filter: backgroundBlur }}
-          className="relative w-full h-[170vh] -top-[15vh] will-change-transform"
+          className="relative w-full h-[180vh] -top-[20vh] will-change-transform"
         >
           <img
             src="/images/hero-clinical-bg.jpg"
             alt="Aarogya Mithra Modern Clinical Sanctuary"
-            className="size-full object-cover object-center brightness-100 contrast-[1.04] dark:brightness-[0.92] dark:contrast-[1.10]"
+            className="size-full object-cover object-center brightness-100 contrast-[1.04] dark:brightness-[0.90] dark:contrast-[1.10]"
             loading="eager"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src =
@@ -100,9 +100,9 @@ export function LandingPage() {
             }}
           />
 
-          {/* Clean clinical lighting: crisp at rest, dissolving seamlessly into solid page background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent 45% via-background/60 75% to-background dark:from-black/35 dark:via-transparent 45% dark:via-background/70 75% dark:to-background" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(16,43,63,0.35)_100%)]" />
+          {/* Balanced atmospheric lighting scrim: keeps all text legible while showcasing continuous parallax photography */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-background/25 to-background/50 dark:from-black/35 dark:via-background/30 dark:to-background/60" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(16,43,63,0.30)_100%)]" />
         </motion.div>
 
         {/* Layer 2: Secondary Floating Atmospheric Aurora Depth Plane */}
@@ -110,8 +110,8 @@ export function LandingPage() {
           style={{ y: auraY, scale: auraScale, opacity: auraOpacity }}
           className="absolute inset-0 will-change-transform"
         >
-          <div className="absolute -top-32 left-1/4 size-[600px] rounded-full bg-accent/20 blur-[150px]" />
-          <div className="absolute top-1/2 -right-24 size-[550px] rounded-full bg-teal-400/15 blur-[180px]" />
+          <div className="absolute -top-32 left-1/4 size-[600px] rounded-full bg-accent/15 blur-[150px]" />
+          <div className="absolute top-1/2 -right-24 size-[550px] rounded-full bg-teal-400/10 blur-[180px]" />
         </motion.div>
       </div>
 

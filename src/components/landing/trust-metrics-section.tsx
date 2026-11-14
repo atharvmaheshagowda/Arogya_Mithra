@@ -97,7 +97,7 @@ export function TrustMetricsSection() {
               transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
               <Card
-                className="h-full flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
+                className="h-full flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xl p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg shadow-sm"
               >
                 <div className="space-y-4">
                   <span className="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20">
