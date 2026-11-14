@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-const partnerHospitals = [
-  { name: "Apollo Hospitals", city: "Bengaluru & Chennai" },
-  { name: "Manipal Hospitals", city: "PAN India" },
-  { name: "Narayana Health", city: "Health City" },
-  { name: "AIIMS", city: "New Delhi" },
-  { name: "Fortis Healthcare", city: "National Network" },
+const healthcareTiers = [
+  { name: "Tertiary Care Hospitals", detail: "High-acuity outpatient departments" },
+  { name: "Multi-Specialty Networks", detail: "Cross-department EHR sync" },
+  { name: "District Civil Hospitals", detail: "High-volume patient queues" },
+  { name: "Community Health Centers", detail: "Multilingual regional care" },
+  { name: "Private Clinical Suites", detail: "Streamlined single-physician OPDs" },
 ];
 
 const challenges = [
@@ -57,19 +57,19 @@ export function TrustMetricsSection() {
   return (
     <section className="relative border-y border-border/80 bg-muted/20 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
-        {/* Hospital Trust Strip (Inspired by reference brand ribbon) */}
+        {/* Healthcare Tiers Strip */}
         <div className="text-center space-y-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Benchmarked for High-Volume Outpatient Clinical Workflows
+            Engineered for Outpatient Workflows Across India&apos;s Healthcare Tiers
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-14 pt-1 opacity-75">
-            {partnerHospitals.map((hosp) => (
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-12 pt-1 opacity-80">
+            {healthcareTiers.map((tier) => (
               <div
-                key={hosp.name}
-                className="flex items-center gap-2 text-foreground/80 font-display text-base sm:text-lg font-medium tracking-tight hover:opacity-100 transition-opacity"
+                key={tier.name}
+                className="flex items-center gap-2 text-foreground/80 font-sans text-xs sm:text-sm font-medium tracking-tight hover:opacity-100 transition-opacity"
               >
-                <Building2 className="size-4 text-accent/80 shrink-0" />
-                <span>{hosp.name}</span>
+                <Building2 className="size-3.5 text-accent/80 shrink-0" />
+                <span>{tier.name}</span>
               </div>
             ))}
           </div>

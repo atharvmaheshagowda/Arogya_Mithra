@@ -82,17 +82,17 @@ export function LandingPage() {
         style={{ scaleX }}
       />
 
-      {/* 2. Fixed Cinematic Parallax Background Image (Full Opacity, Still & Scroll Parallax) */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        {/* Layer 1: Crisp, Full-Opacity Clinical Photography Background with Camera Focus */}
+      {/* 2. Cinematic Parallax Background Image (Contained to Hero Viewport, Transitions to Solid Page) */}
+      <div className="absolute top-0 left-0 right-0 h-[140vh] pointer-events-none z-0 overflow-hidden select-none">
+        {/* Layer 1: Crisp Clinical Photography Background with Smooth Parallax */}
         <motion.div
           style={{ y: backgroundY, scale: backgroundScale, filter: backgroundBlur }}
-          className="relative w-full h-[180vh] -top-[20vh] will-change-transform"
+          className="relative w-full h-[170vh] -top-[15vh] will-change-transform"
         >
           <img
             src="/images/hero-clinical-bg.jpg"
             alt="Aarogya Mithra Modern Clinical Sanctuary"
-            className="size-full object-cover object-center brightness-100 contrast-[1.04] dark:brightness-[0.92] dark:contrast-[1.10] opacity-100"
+            className="size-full object-cover object-center brightness-100 contrast-[1.04] dark:brightness-[0.92] dark:contrast-[1.10]"
             loading="eager"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src =
@@ -100,8 +100,8 @@ export function LandingPage() {
             }}
           />
 
-          {/* Clean clinical lighting: crisp and luminous at rest, seamless transition to content below */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background dark:from-black/35 dark:via-transparent dark:to-background" />
+          {/* Clean clinical lighting: crisp at rest, dissolving seamlessly into solid page background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent 45% via-background/60 75% to-background dark:from-black/35 dark:via-transparent 45% dark:via-background/70 75% dark:to-background" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(16,43,63,0.35)_100%)]" />
         </motion.div>
 
