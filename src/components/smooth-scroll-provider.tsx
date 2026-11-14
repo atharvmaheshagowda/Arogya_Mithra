@@ -74,17 +74,28 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
   // Smoothly reset scroll to top on page route transition
   useEffect(() => {
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
+    if (typeof lenisRef.current?.scrollTo === "function") {
+      try {
+        lenisRef.current.scrollTo(0, { immediate: true });
+      } catch {
+        window.scrollTo(0, 0);
+      }
     } else {
       window.scrollTo(0, 0);
     }
   }, [location.pathname]);
 
   const scrollTo = (target: string | number | HTMLElement, options?: Record<string, unknown>) => {
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(target, options);
-    } else if (typeof target === "number") {
+    if (typeof lenisRef.current?.scrollTo === "function") {
+      try {
+        lenisRef.current.scrollTo(target, options);
+        return;
+      } catch {
+        // Fall back to native window/element scrolling below
+      }
+    }
+
+    if (typeof target === "number") {
       window.scrollTo({ top: target, behavior: "smooth" });
     } else if (typeof target === "string") {
       const el = document.querySelector(target);
