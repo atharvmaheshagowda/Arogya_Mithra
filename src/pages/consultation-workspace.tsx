@@ -484,6 +484,40 @@ export function ConsultationWorkspacePage() {
     if (backendNoteId && activeBackendNote) {
       try {
         const baseSoap = activeBackendNote.edited_soap || activeBackendNote.soap;
+
+        // Parse proposed medications vs patient instructions vs follow-up from treatmentPlan
+        const planLines = (clinicalNote.treatmentPlan || "")
+          .split("\n")
+          .map((l) => l.replace(/^[•\-\*]\s*/, "").trim())
+          .filter(Boolean);
+
+        const updatedFollowUp =
+          planLines.find((l) => l.toLowerCase().startsWith("follow-up:")) ||
+          baseSoap.plan.follow_up;
+        const nonFollowUpLines = planLines.filter(
+          (l) => !l.toLowerCase().startsWith("follow-up:"),
+        );
+
+        // Common dosage/medication indicators for clinical extraction
+        const medIndicators = [
+          "mg", "ml", "mcg", "tablet", "tab", "capsule", "cap", "syrup",
+          "daily", "tds", "bd", "od", "prn", "sos", "amoxicillin", "paracetamol",
+          "metformin", "azithromycin", "ciprofloxacin", "aspirin", "ibuprofen",
+          "antibiotic", "drops", "ointment", "dose", "capsules", "tablets"
+        ];
+        const updatedProposedMeds = nonFollowUpLines.filter((line) => {
+          const lower = line.toLowerCase();
+          return (
+            medIndicators.some((k) => lower.includes(k)) ||
+            baseSoap.plan.proposed_medications.some((m) =>
+              line.toLowerCase().includes(m.toLowerCase()) || m.toLowerCase().includes(line.toLowerCase())
+            )
+          );
+        });
+        const updatedInstructions = nonFollowUpLines.filter(
+          (line) => !updatedProposedMeds.includes(line),
+        );
+
         const updatedSoapPayload: SOAPPayload = {
           subjective: {
             chief_complaint: clinicalNote.chiefComplaint || baseSoap.subjective.chief_complaint,
@@ -506,10 +540,10 @@ export function ConsultationWorkspacePage() {
           },
           plan: {
             diagnostic_workup: baseSoap.plan.diagnostic_workup,
-            proposed_medications: baseSoap.plan.proposed_medications,
-            patient_instructions: clinicalNote.treatmentPlan ? [clinicalNote.treatmentPlan] : baseSoap.plan.patient_instructions,
+            proposed_medications: updatedProposedMeds,
+            patient_instructions: updatedInstructions.length > 0 ? updatedInstructions : baseSoap.plan.patient_instructions,
             red_flag_warnings: baseSoap.plan.red_flag_warnings,
-            follow_up: baseSoap.plan.follow_up,
+            follow_up: updatedFollowUp,
             evidence: baseSoap.plan.evidence,
           },
           patient_context: baseSoap.patient_context,
@@ -521,51 +555,192 @@ export function ConsultationWorkspacePage() {
         });
 
         setActiveBackendNote(res);
-        if (res.medication_safety) {
-          setBackendMedSafety(res.medication_safety);
+        setBackendMedSafety(res.medication_safety || null);
+        if (res.unextracted_or_missing) {
+          setBackendMissingInfo(res.unextracted_or_missing);
         }
 
         toast.success("Draft Note Saved", {
-          description: "Edits persisted to backend database. SAFEGUARD recalculated.",
+          description: "Changes persisted to backend database. SAFEGUARD recalculated. Status remains Draft.",
         });
         return;
       } catch (err: any) {
         console.error("Failed to save draft to backend:", err);
+        const errMsg = err.response?.data?.detail || err.message || "Failed to persist draft note to backend.";
+        const errStr = typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg);
+        setGenerationError(errStr);
+        toast.error("Save Draft Failed", {
+          description: errStr,
+        });
+        return;
       }
     }
 
-    toast.success("Draft Note Saved", {
-      description: "Edits stored locally. Remains a draft until doctor signature.",
+    toast.info("Draft Note Saved", {
+      description: "Note changes stored in local session. Generate a backend draft to persist to hospital database.",
     });
   };
 
-  // Doctor Approval Sign-off (calls backend review endpoint)
-  const handleApproveNote = async () => {
-    const doctorName = doctor?.name || "Dr. Anika Rao, MBBS, MD";
-    if (backendNoteId) {
-      try {
-        await reviewClinicalSOAPNote(backendNoteId, {
-          reviewing_doctor: doctorName,
-          action: isNoteEdited ? "reviewed_with_edits" : "approved",
-          doctor_comments: isNoteEdited
-            ? "Doctor verified and amended draft SOAP note."
-            : "Doctor verified and approved AI draft SOAP note without amendments.",
-        });
-      } catch (err: any) {
-        console.warn("Backend review endpoint warning, proceeding with approved status stamp:", err);
+  // Review Modal State (TC-19)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewerName, setReviewerName] = useState("Dr. Harshitha (Demonstration Reviewer)");
+  const [reviewerComments, setReviewerComments] = useState("Clinically verified against patient EHR and approved for outpatient record.");
+  const [reviewAction, setReviewAction] = useState<"approved" | "reviewed_with_edits" | "rejected">("approved");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewModalError, setReviewModalError] = useState<string | null>(null);
+
+  const handleOpenReviewModal = () => {
+    if (!backendNoteId) {
+      toast.error("No Note Generated", {
+        description: "Please generate a SOAP draft before performing doctor review and sign-off.",
+      });
+      return;
+    }
+    setReviewModalError(null);
+    setReviewAction(isNoteEdited ? "reviewed_with_edits" : "approved");
+    setIsReviewModalOpen(true);
+  };
+
+  const handleConfirmReview = async () => {
+    if (!reviewerName.trim()) {
+      setReviewModalError("Reviewer display name is required.");
+      return;
+    }
+    if (!backendNoteId || !activeBackendNote) {
+      setReviewModalError("No active clinical note selected for review.");
+      return;
+    }
+
+    // Check for unresolved critical contraindication before approval
+    if (reviewAction === "approved" || reviewAction === "reviewed_with_edits") {
+      const activeSafety = backendMedSafety || activeBackendNote.medication_safety;
+      if (activeSafety && (activeSafety.has_critical_contraindication || activeSafety.overall_status === "critical")) {
+        const contra = activeSafety.warnings?.find(
+          (w) => w.severity === "critical" || w.rule_id === "ALLERGY-CONF-001"
+        );
+        const contraMsg = contra
+          ? `[${contra.rule_id}] ${contra.affected_medication}: ${contra.explanation || contra.message}`
+          : "Unresolved critical allergy contraindication.";
+        setReviewModalError(
+          `Cannot sign off on clinical note with unresolved critical contraindication: ${contraMsg}. Please remove or amend the contraindicated medication in the treatment plan first.`
+        );
+        return;
       }
     }
-    setClinicalNote((prev) => ({
-      ...prev,
-      status: "Doctor Approved & Signed",
-      signedBy: doctorName,
-      signedAt: "Just now",
-    }));
-    setWorkflowState("approved");
-    setIsEditingNote(false);
-    toast.success("Clinical Note Approved & Signed", {
-      description: `Signed by ${doctorName}. Committed to hospital EHR repository.`,
-    });
+
+    setIsSubmittingReview(true);
+    setReviewModalError(null);
+
+    try {
+      let editedSoapPayload: SOAPPayload | undefined = undefined;
+      if (reviewAction === "reviewed_with_edits" || isNoteEdited) {
+        const baseSoap = activeBackendNote.edited_soap || activeBackendNote.soap;
+        const planLines = (clinicalNote.treatmentPlan || "")
+          .split("\n")
+          .map((l) => l.replace(/^[•\-\*]\s*/, "").trim())
+          .filter(Boolean);
+
+        const updatedFollowUp =
+          planLines.find((l) => l.toLowerCase().startsWith("follow-up:")) ||
+          baseSoap.plan.follow_up;
+        const nonFollowUpLines = planLines.filter(
+          (l) => !l.toLowerCase().startsWith("follow-up:"),
+        );
+
+        const medIndicators = [
+          "mg", "ml", "mcg", "tablet", "tab", "capsule", "cap", "syrup",
+          "daily", "tds", "bd", "od", "prn", "sos", "amoxicillin", "paracetamol",
+          "metformin", "azithromycin", "ciprofloxacin", "aspirin", "ibuprofen",
+          "antibiotic", "drops", "ointment", "dose", "capsules", "tablets"
+        ];
+        const updatedProposedMeds = nonFollowUpLines.filter((line) => {
+          const lower = line.toLowerCase();
+          return (
+            medIndicators.some((k) => lower.includes(k)) ||
+            baseSoap.plan.proposed_medications.some((m) =>
+              line.toLowerCase().includes(m.toLowerCase()) || m.toLowerCase().includes(line.toLowerCase())
+            )
+          );
+        });
+        const updatedInstructions = nonFollowUpLines.filter(
+          (line) => !updatedProposedMeds.includes(line),
+        );
+
+        editedSoapPayload = {
+          subjective: {
+            chief_complaint: clinicalNote.chiefComplaint || baseSoap.subjective.chief_complaint,
+            history_of_present_illness: clinicalNote.relevantHistory || baseSoap.subjective.history_of_present_illness,
+            reported_symptoms: clinicalNote.symptoms.length > 0 ? clinicalNote.symptoms : baseSoap.subjective.reported_symptoms,
+            pertinent_negatives: baseSoap.subjective.pertinent_negatives,
+            evidence: baseSoap.subjective.evidence,
+          },
+          objective: {
+            vital_signs_summary: baseSoap.objective.vital_signs_summary,
+            physical_examination: clinicalNote.observations ? [clinicalNote.observations] : baseSoap.objective.physical_examination,
+            investigations_reviewed: baseSoap.objective.investigations_reviewed,
+            evidence: baseSoap.objective.evidence,
+          },
+          assessment: {
+            primary_impression: clinicalNote.clinicianAssessment || baseSoap.assessment.primary_impression,
+            differential_diagnoses: baseSoap.assessment.differential_diagnoses,
+            chronic_conditions_status: baseSoap.assessment.chronic_conditions_status,
+            evidence: baseSoap.assessment.evidence,
+          },
+          plan: {
+            diagnostic_workup: baseSoap.plan.diagnostic_workup,
+            proposed_medications: updatedProposedMeds,
+            patient_instructions: updatedInstructions.length > 0 ? updatedInstructions : baseSoap.plan.patient_instructions,
+            red_flag_warnings: baseSoap.plan.red_flag_warnings,
+            follow_up: updatedFollowUp,
+            evidence: baseSoap.plan.evidence,
+          },
+          patient_context: baseSoap.patient_context,
+        };
+      }
+
+      const res = await reviewClinicalSOAPNote(backendNoteId, {
+        reviewing_doctor: reviewerName.trim(),
+        action: reviewAction,
+        doctor_comments: reviewerComments.trim(),
+        edited_soap: editedSoapPayload,
+      });
+
+      setActiveBackendNote(res);
+      if (res.medication_safety) {
+        setBackendMedSafety(res.medication_safety);
+      }
+
+      const statusLabel =
+        reviewAction === "approved"
+          ? "Doctor Approved & Signed"
+          : reviewAction === "reviewed_with_edits"
+            ? "Doctor Reviewed with Edits & Signed"
+            : "Doctor Rejected Note";
+
+      setClinicalNote((prev) => ({
+        ...prev,
+        status: statusLabel as any,
+        signedBy: reviewerName.trim(),
+        signedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }));
+      setWorkflowState("approved");
+      setIsEditingNote(false);
+      setIsReviewModalOpen(false);
+
+      toast.success("Clinical Note Reviewed & Signed", {
+        description: `Signed by ${reviewerName.trim()} with action '${reviewAction}'. Stored in EHR repository.`,
+      });
+    } catch (err: any) {
+      console.error("Review sign-off failure:", err);
+      const errMsg = err.response?.data?.detail || err.message || "Failed to sign note on backend.";
+      const errStr = typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg);
+      setReviewModalError(errStr);
+      toast.error("Review Sign-off Failed", {
+        description: errStr,
+      });
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   // Manual Transcript Submission
@@ -1582,114 +1757,162 @@ export function ConsultationWorkspacePage() {
             </CardHeader>
 
             {isSafetyOpen && (
-              <CardContent className="space-y-2.5 pt-1 text-xs border-t border-border/50">
-                {/* BACKEND DETERMINISTIC MEDICATION SAFETY WARNINGS */}
-                {backendMedSafety && backendMedSafety.warnings.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="font-semibold text-muted-foreground text-[10px] uppercase tracking-wider">
-                      Deterministic Medication Safety Warnings
+              <CardContent className="space-y-3 pt-2 text-xs border-t border-border/50">
+                {/* DOMAIN A: VERIFIED PATIENT ALLERGIES (EHR BASELINE) */}
+                <div className="rounded-lg border border-border bg-muted/20 p-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <ShieldAlert className="size-3 text-destructive" />
+                      Domain A: Documented Patient Allergies
                     </span>
-                    {backendMedSafety.warnings.map((warn, idx) => (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "rounded-lg border p-2.5 text-xs space-y-1",
-                          warn.severity === "critical"
-                            ? "border-destructive/40 bg-destructive/10 text-destructive"
-                            : "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200",
-                        )}
-                      >
-                        <span className="font-bold flex items-center gap-1">
-                          <AlertTriangle className="size-3.5 shrink-0" />
-                          [{warn.rule_id}] {warn.explanation || warn.message || warn.affected_medication}
-                        </span>
-                        {(warn.clinical_rationale || warn.evidence) && (
-                          <p className="text-[11px] leading-relaxed opacity-90 pl-4">
-                            Rationale: {warn.clinical_rationale || warn.evidence}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                    <Badge variant={patient.allergies.length > 0 ? "danger" : "outline"} size="sm">
+                      {patient.allergies.length > 0 ? `${patient.allergies.length} on file` : "NKDA"}
+                    </Badge>
                   </div>
-                )}
-
-                {/* UNABLE TO VERIFY MEDICATIONS */}
-                {backendMedSafety && backendMedSafety.unable_to_verify.length > 0 && (
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs space-y-0.5">
-                    <span className="font-bold flex items-center gap-1 text-amber-800 dark:text-amber-300">
-                      <AlertCircle className="size-3.5 shrink-0" />
-                      Unverified Proposed Medications
-                    </span>
-                    <p className="text-[11px] text-muted-foreground">
-                      Could not resolve standard formulary match for:{" "}
-                      {backendMedSafety.unable_to_verify.join(", ")}. Physician verification required.
-                    </p>
-                  </div>
-                )}
-
-                {/* BACKEND MISSING CLINICAL DOMAINS / GAPS */}
-                {backendMissingInfo.length > 0 && (
-                  <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-xs space-y-1">
-                    <span className="font-semibold text-muted-foreground text-[10px] uppercase tracking-wider flex items-center gap-1">
-                      <Info className="size-3 text-accent" />
-                      Clinical Information Gaps & Missing Domains
-                    </span>
-                    <ul className="list-disc pl-4 text-[11px] text-muted-foreground space-y-0.5">
-                      {backendMissingInfo.map((gap, idx) => (
-                        <li key={idx}>{gap}</li>
+                  {patient.allergies.length > 0 ? (
+                    <div className="space-y-1">
+                      {patient.allergies.map((alg, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-[11px] p-1.5 rounded bg-background/50 border border-border/40">
+                          <span className="font-semibold text-destructive">{alg.allergen}</span>
+                          <span className="text-muted-foreground text-[10px]">{alg.reaction} ({alg.severity})</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground italic">No drug allergies recorded in EHR profile.</p>
+                  )}
+                </div>
+
+                {/* DOMAIN B: PROPOSED MEDICATIONS IN ACTIVE SOAP PLAN */}
+                <div className="rounded-lg border border-border bg-muted/20 p-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Pill className="size-3 text-teal-600 dark:text-teal-400" />
+                      Domain B: Proposed Medications in Plan
+                    </span>
+                    <Badge variant="outline" size="sm">
+                      {(activeBackendNote?.edited_soap?.plan?.proposed_medications || activeBackendNote?.soap?.plan?.proposed_medications || []).length} Candidates
+                    </Badge>
                   </div>
-                )}
+                  {(activeBackendNote?.edited_soap?.plan?.proposed_medications || activeBackendNote?.soap?.plan?.proposed_medications || []).length > 0 ? (
+                    <div className="space-y-1">
+                      {(activeBackendNote?.edited_soap?.plan?.proposed_medications || activeBackendNote?.soap?.plan?.proposed_medications || []).map((med, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-[11px] p-1.5 rounded bg-background/50 border border-border/40 font-mono">
+                          <Pill className="size-3 text-accent shrink-0" />
+                          <span className="text-foreground">{med}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground italic">No pharmacological therapies proposed in this plan.</p>
+                  )}
+                </div>
 
-                {/* FALLBACK / INITIAL STATE: SESSION SAFETY AUDIT */}
-                {!backendMedSafety && (
-                  <>
-                    {session.safetyAudit.allergyAlerts.map((alert, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive space-y-1"
-                      >
-                        <span className="font-bold flex items-center gap-1">
-                          <AlertTriangle className="size-3.5 shrink-0" />
-                          {alert.title}
-                        </span>
-                        <p className="text-[11px] leading-relaxed text-destructive/90">
-                          {alert.description}
+                {/* DOMAIN C: DETERMINISTIC SAFETY EVALUATION FINDINGS */}
+                <div className="space-y-2">
+                  <span className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Activity className="size-3 text-warning" />
+                    Domain C: Deterministic Safety Evaluation
+                  </span>
+
+                  {/* Active Warnings */}
+                  {backendMedSafety && backendMedSafety.warnings.length > 0 && (
+                    <div className="space-y-2">
+                      {backendMedSafety.warnings.map((warn, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "rounded-lg border p-2.5 text-xs space-y-1.5",
+                            warn.severity === "critical"
+                              ? "border-destructive/50 bg-destructive/10 text-destructive"
+                              : "border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold flex items-center gap-1 text-[11px]">
+                              <AlertTriangle className="size-3.5 shrink-0" />
+                              Rule [{warn.rule_id}]
+                            </span>
+                            <Badge variant={warn.severity === "critical" ? "danger" : "warning"} size="sm">
+                              {warn.severity.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <div className="text-[11px] font-semibold">
+                            {warn.explanation || warn.message}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[10px] opacity-90 pt-1 border-t border-current/20">
+                            <div>
+                              <span className="font-medium text-muted-foreground block">Proposed Med:</span>
+                              <span>{warn.affected_medication || "Extracted in plan"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-muted-foreground block">Contraindication:</span>
+                              <span>{warn.contraindicated_allergen || warn.interacting_medication || "Allergy conflict"}</span>
+                            </div>
+                          </div>
+                          {(warn.clinical_rationale || warn.evidence) && (
+                            <p className="text-[10px] leading-relaxed opacity-85 pt-1">
+                              Rationale: {warn.clinical_rationale || warn.evidence}
+                            </p>
+                          )}
+                          <p className="text-[9px] text-muted-foreground italic pt-0.5">
+                            * Limitation: Evaluated deterministically against active hospital formulary rules &amp; documented patient allergies.
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Unable to Verify */}
+                  {backendMedSafety && backendMedSafety.unable_to_verify.length > 0 && (
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs space-y-1">
+                      <span className="font-bold flex items-center gap-1 text-amber-800 dark:text-amber-300 text-[11px]">
+                        <AlertCircle className="size-3.5 shrink-0" />
+                        Unverified Formulary Candidates
+                      </span>
+                      <p className="text-[11px] text-muted-foreground">
+                        Could not resolve trusted hospital catalogue match for:{" "}
+                        <strong>{backendMedSafety.unable_to_verify.join(", ")}</strong>. Clinical manual review required.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* All Cleared / Safe */}
+                  {backendMedSafety && backendMedSafety.warnings.length === 0 && (
+                    <div className="rounded-lg border border-success/40 bg-success/10 p-2.5 text-xs text-success flex items-start gap-2">
+                      <CheckCircle2 className="size-4 shrink-0 text-success mt-0.5" />
+                      <div>
+                        <span className="font-bold block text-[11px]">All Proposed Medications Cleared</span>
+                        <p className="text-[11px] text-success/90">
+                          Deterministic safety engine evaluated proposed prescriptions against patient allergies and active medications. No conflicts found.
                         </p>
-                        <span className="block text-[10px] text-muted-foreground">
-                          Ref: {alert.ruleSource}
-                        </span>
                       </div>
-                    ))}
+                    </div>
+                  )}
 
-                    {session.safetyAudit.patientHistoryInconsistencies.map((inc, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-300 space-y-0.5"
-                      >
-                        <span className="font-bold flex items-center gap-1">
-                          <AlertCircle className="size-3.5 shrink-0" />
-                          History Inconsistency Detected
-                        </span>
-                        <p className="text-[11px] leading-relaxed">{inc}</p>
-                      </div>
-                    ))}
+                  {/* Idle / Uninitialized state */}
+                  {!backendMedSafety && (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      <ShieldCheck className="mx-auto size-5 text-muted-foreground/60 mb-1" />
+                      <p className="text-[11px]">Safety evaluation idle. Generate a draft note or save plan amendments to trigger deterministic checks.</p>
+                    </div>
+                  )}
 
-                    {session.safetyAudit.missingInformation.length > 0 && (
-                      <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-xs space-y-1">
-                        <span className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">
-                          Information Gap / Clarification Needed
-                        </span>
-                        <ul className="list-disc pl-4 text-[11px] text-muted-foreground space-y-0.5">
-                          {session.safetyAudit.missingInformation.map((item, idx) => (
-                            <li key={idx}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
-                )}
+                  {/* Information Gaps */}
+                  {backendMissingInfo.length > 0 && (
+                    <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-xs space-y-1">
+                      <span className="font-semibold text-muted-foreground text-[10px] uppercase tracking-wider flex items-center gap-1">
+                        <Info className="size-3 text-accent" />
+                        Clinical Information Gaps
+                      </span>
+                      <ul className="list-disc pl-4 text-[10px] text-muted-foreground space-y-0.5">
+                        {backendMissingInfo.map((gap, idx) => (
+                          <li key={idx}>{gap}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             )}
           </Card>
@@ -1753,13 +1976,13 @@ export function ConsultationWorkspacePage() {
                     <Button
                       variant="teal"
                       size="xs"
-                      onClick={handleApproveNote}
+                      onClick={handleOpenReviewModal}
                       disabled={clinicalNote.status === "Doctor Approved & Signed" || isGeneratingNote}
                       leftIcon={<Check className="size-3" />}
                     >
                       {clinicalNote.status === "Doctor Approved & Signed"
                         ? "Approved"
-                        : "Approve & Sign"}
+                        : "Review & Sign Note"}
                     </Button>
                   )}
                 </div>
@@ -2013,6 +2236,125 @@ export function ConsultationWorkspacePage() {
           </Card>
         </div>
       </div>
+
+      {/* ====================================================================
+          PHYSICIAN REVIEW & SIGN-OFF MODAL (TC-19)
+          ==================================================================== */}
+      <Modal
+        open={isReviewModalOpen}
+        onOpenChange={setIsReviewModalOpen}
+        title="Physician Review & Clinical Sign-off"
+        description="Verify, amend, or officially sign off on this outpatient clinical SOAP draft."
+        size="md"
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsReviewModalOpen(false)}
+              disabled={isSubmittingReview}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="teal"
+              size="sm"
+              onClick={handleConfirmReview}
+              loading={isSubmittingReview}
+              leftIcon={<Check className="size-4" />}
+            >
+              Confirm &amp; Sign Note
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-1 text-xs">
+          {/* Critical Warning Hard-Stop Banner */}
+          {(backendMedSafety?.has_critical_contraindication || backendMedSafety?.overall_status === "critical") && (
+            <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-3 text-destructive space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-xs">
+                <AlertTriangle className="size-4 shrink-0" />
+                Unresolved Critical Medication Safety Contraindication
+              </div>
+              <p className="text-[11px] leading-relaxed text-destructive/90">
+                This note proposes a medication that conflicts with a documented patient allergy.
+                Clinical safety policy requires that contraindicated medications must be removed from the treatment plan before sign-off.
+              </p>
+            </div>
+          )}
+
+          {reviewModalError && (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-destructive flex items-center gap-2">
+              <AlertCircle className="size-4 shrink-0" />
+              <span>{reviewModalError}</span>
+            </div>
+          )}
+
+          {/* Reviewer Display Name */}
+          <div className="space-y-1.5">
+            <label className="font-semibold text-foreground flex items-center justify-between">
+              <span>Reviewing Physician Display Name *</span>
+              <span className="text-[10px] text-muted-foreground">Required</span>
+            </label>
+            <Input
+              value={reviewerName}
+              onChange={(e) => setReviewerName(e.target.value)}
+              placeholder="e.g. Dr. Harshitha, MBBS"
+              className="text-xs"
+            />
+            {/* Synthetic Testing Quick-Select Buttons */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-muted-foreground">Demo shortcuts:</span>
+              <button
+                type="button"
+                onClick={() => setReviewerName("Dr. Harshitha (Demonstration Reviewer)")}
+                className="text-[10px] text-accent hover:underline"
+              >
+                Dr. Harshitha
+              </button>
+              <span className="text-[10px] text-muted-foreground">•</span>
+              <button
+                type="button"
+                onClick={() => setReviewerName("Dr. Ananya Sharma, MD")}
+                className="text-[10px] text-accent hover:underline"
+              >
+                Dr. Ananya Sharma
+              </button>
+            </div>
+          </div>
+
+          {/* Review Action */}
+          <div className="space-y-1.5">
+            <label className="font-semibold text-foreground">Review Action</label>
+            <select
+              value={reviewAction}
+              onChange={(e) => setReviewAction(e.target.value as any)}
+              className="w-full rounded-lg border border-border bg-input p-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            >
+              <option value="approved">Approve Note (Verified without amendments)</option>
+              <option value="reviewed_with_edits">Reviewed with Edits (Doctor amended draft)</option>
+              <option value="rejected">Reject Draft (Unusable or erroneous)</option>
+            </select>
+          </div>
+
+          {/* Review Comments */}
+          <div className="space-y-1.5">
+            <label className="font-semibold text-foreground">Physician Review Remarks / Comments</label>
+            <textarea
+              rows={3}
+              value={reviewerComments}
+              onChange={(e) => setReviewerComments(e.target.value)}
+              placeholder="Enter clinical rationale, verification remarks, or instructions..."
+              className="w-full rounded-lg border border-border bg-input p-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            />
+          </div>
+
+          {/* Academic Demonstration Disclaimer */}
+          <div className="rounded-lg border border-border bg-muted/30 p-2.5 text-[10px] text-muted-foreground leading-relaxed">
+            <strong>Demonstration Notice:</strong> This electronic verification is committed to the local hospital SQLite EHR database for academic evaluation. It does not constitute a legally authenticated digital signature under IT Act 2000.
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -416,9 +416,12 @@ class SOAPNoteService:
         return draft_note
 
     def get_by_note_id(self, db: Session, note_id: str) -> ClinicalSOAPNote:
-        note = db.execute(
-            select(ClinicalSOAPNote).where(ClinicalSOAPNote.note_id == note_id)
-        ).scalar_one_or_none()
+        stmt = select(ClinicalSOAPNote).where(ClinicalSOAPNote.note_id == note_id)
+        note = db.execute(stmt).scalar_one_or_none()
+        if not note and str(note_id).isdigit():
+            note = db.execute(
+                select(ClinicalSOAPNote).where(ClinicalSOAPNote.id == int(note_id))
+            ).scalar_one_or_none()
         if not note:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -464,6 +467,33 @@ class SOAPNoteService:
                 detail="Action 'reviewed_with_edits' requires an 'edited_soap' payload containing the modified sections.",
             )
 
+        if not review_req.reviewing_doctor or not review_req.reviewing_doctor.strip():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Reviewing doctor name cannot be empty.",
+            )
+
+        # Validate that unresolved critical medication safety warnings prevent approval
+        if review_req.action == ClinicalNoteStatus.APPROVED:
+            current_safety = None
+            if note.edited_soap_data and isinstance(note.edited_soap_data, dict):
+                current_safety = note.edited_soap_data.get("medication_safety")
+            elif note.soap_data and isinstance(note.soap_data, dict):
+                current_safety = note.soap_data.get("medication_safety")
+
+            if current_safety and isinstance(current_safety, dict):
+                has_critical = current_safety.get("has_critical_contraindication") is True
+                if not has_critical:
+                    for w in current_safety.get("warnings", []):
+                        if isinstance(w, dict) and (w.get("severity") == "critical" or w.get("rule_id") == "ALLERGY-CONF-001"):
+                            has_critical = True
+                            break
+                if has_critical:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cannot approve clinical note with unresolved critical medication safety contraindications. Amend the treatment plan to remove contraindicated medications before approval.",
+                    )
+
         note.status = review_req.action.value
         note.reviewing_doctor = review_req.reviewing_doctor.strip()
         note.reviewed_at = datetime.now()
@@ -487,6 +517,20 @@ class SOAPNoteService:
                     )
             else:
                 review_req.edited_soap.medication_safety = None
+
+            # Enforce that critical contraindications cannot be signed off even with edits if retained
+            if review_req.action == ClinicalNoteStatus.APPROVED and review_req.edited_soap.medication_safety:
+                med_safety = review_req.edited_soap.medication_safety
+                has_crit = getattr(med_safety, "has_critical_contraindication", False) or any(
+                    getattr(w, "severity", "").lower() == "critical" or getattr(w, "rule_id", "") == "ALLERGY-CONF-001"
+                    for w in getattr(med_safety, "warnings", [])
+                )
+                if has_crit:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cannot sign off on clinical note with unresolved critical medication contraindications. Remove contraindicated medications from the treatment plan before sign-off.",
+                    )
+
             note.edited_soap_data = review_req.edited_soap.model_dump(mode="json")
 
         db.commit()

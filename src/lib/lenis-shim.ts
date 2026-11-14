@@ -3,5 +3,6 @@ export default class Lenis {
   raf(_time: number): void {}
   destroy(): void {}
   on(_event: string, _callback: (e: any) => void): void {}
+  scrollTo(_target: any, _options?: any): void {}
 }
 

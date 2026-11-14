@@ -17,9 +17,9 @@ router = APIRouter(prefix="/clinical-notes", tags=["Clinical SOAP Notes & Docume
 
 
 def _format_note_response(note: ClinicalSOAPNote) -> ClinicalSOAPNoteResponse:
-    soap = SOAPPayload.model_validate(note.soap_data)
+    orig_soap = SOAPPayload.model_validate(note.soap_data)
     edited_soap = SOAPPayload.model_validate(note.edited_soap_data) if note.edited_soap_data else None
-    active_safety = edited_soap.medication_safety if edited_soap is not None else soap.medication_safety
+    active_safety = edited_soap.medication_safety if edited_soap is not None else orig_soap.medication_safety
     return ClinicalSOAPNoteResponse(
         id=note.id,
         note_id=note.note_id,
@@ -30,7 +30,7 @@ def _format_note_response(note: ClinicalSOAPNote) -> ClinicalSOAPNoteResponse:
         encounter_id=note.encounter_identifier,
         language_code=note.language_code,
         consultation_text=note.consultation_text,
-        soap=soap,
+        soap=orig_soap,
         unextracted_or_missing=note.unextracted_or_missing or [],
         confidence_notes=note.confidence_notes,
         created_at=note.created_at,
@@ -38,7 +38,7 @@ def _format_note_response(note: ClinicalSOAPNote) -> ClinicalSOAPNoteResponse:
         reviewing_doctor=note.reviewing_doctor,
         doctor_comments=note.doctor_comments,
         edited_soap=edited_soap,
-        patient_context=soap.patient_context,
+        patient_context=orig_soap.patient_context,
         medication_safety=active_safety,
     )
 

@@ -8,6 +8,8 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "@studio-freight/lenis": fileURLToPath(new URL("./src/lib/lenis-shim.ts", import.meta.url)),
+      "gsap/ScrollTrigger": fileURLToPath(new URL("./src/lib/gsap-shim.ts", import.meta.url)),
+      "gsap": fileURLToPath(new URL("./src/lib/gsap-shim.ts", import.meta.url)),
     },
   },
   server: {
