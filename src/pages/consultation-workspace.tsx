@@ -147,8 +147,8 @@ export function ConsultationWorkspacePage() {
   const [isNoteEdited, setIsNoteEdited] = useState(false);
   const [noteProvenance, setNoteProvenance] = useState<NoteProvenance>("none");
 
-  // Workflow Progression State
-  const [workflowState, setWorkflowState] = useState<WorkflowState>("started");
+  // Workflow Progression State (defaults to draft_generated since consultation draft is loaded)
+  const [workflowState, setWorkflowState] = useState<WorkflowState>("draft_generated");
 
   // Audio Recording & Scribe State
   const [isSimulationRecording, setIsSimulationRecording] = useState(false);
@@ -157,8 +157,8 @@ export function ConsultationWorkspacePage() {
     "Kannada" | "Hindi" | "English" | "Code-Mixed"
   >("English");
 
-  // Center Panel View Mode: "live" | "manual" | "simulation"
-  const [listenMode, setListenMode] = useState<"live" | "manual" | "simulation">("live");
+  // Center Panel View Mode: "live" | "manual" | "simulation" (defaults to simulation for instant live demonstration)
+  const [listenMode, setListenMode] = useState<"live" | "manual" | "simulation">("simulation");
   const [manualTranscriptInput, setManualTranscriptInput] = useState("");
   const [editableLiveTranscript, setEditableLiveTranscript] = useState("");
   const [transcriptTurns, setTranscriptTurns] = useState<SpeechTurn[]>(

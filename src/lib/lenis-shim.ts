@@ -1,12 +1,4 @@
 export default class Lenis {
-<<<<<<< HEAD
-  constructor(_options?: any) {}
-  raf(_time: number): void {}
-  destroy(): void {}
-  on(_event: string, _callback: (e: any) => void): void {}
-  scrollTo(_target: any, _options?: any): void {}
-}
-=======
   scroll: number = 0;
   limit: number = 0;
   velocity: number = 0;
@@ -15,7 +7,6 @@ export default class Lenis {
   isSmooth: boolean = true;
   isScrolling: boolean = false;
   isStopped: boolean = false;
->>>>>>> 91d607e77116ecc8f87eacee98e56a92d12db3c1
 
   constructor(_options?: Record<string, unknown>) {}
 
